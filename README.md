@@ -1,39 +1,30 @@
-# SWOS Port - Self-Contained Build
+# SWOS Portable
 
-A self-contained, zero-dependency build of Sensible World of Soccer 96/97 for Windows.
+A pure C++ port of Sensible World of Soccer 96/97 with a self-contained, zero-dependency build system.
 
-## Credits
+## What This Project Is
 
-This project is a fork of the excellent [swos-port](https://github.com/zlatkok/swos-port) by **zlatkok**. The original project is an incredible achievement - a complete reverse-engineering and modern port of the classic DOS game using SDL.
+This is a **complete C++ port** of SWOS that runs the game through a virtual machine emulating the original CPU architecture. Unlike the original codebase which relies heavily on assembly, this version is 100% C++ and can be compiled with any standard C++ compiler.
 
-All credit for the core game code, reverse engineering work, and game logic belongs to the original author. This fork focuses solely on simplifying the build process.
+The project includes:
+- **SwosVM**: A virtual machine that emulates 68000 (A0-A6, D0-D7) and x86 registers
+- **~520,000 lines of generated C++** that implement the original game logic
+- **Self-contained build**: Bundled MinGW compiler and CMake - no external tools required
+- **Static linking**: Single executable with no DLL dependencies
 
-## What This Fork Does Differently
+## Comparison with Original Project
 
-| Aspect | Original Project | This Fork |
-|--------|-----------------|-----------|
+This is a fork of [swos-port](https://github.com/zlatkok/swos-port) by **zlatkok**, which provided the foundational reverse-engineering work and SDL integration.
+
+| Aspect | Original (zlatkok/swos-port) | This Fork |
+|--------|------------------------------|-----------|
+| **Code** | 59.7% Assembly, 31.8% C++ | 100% C++ |
+| **Approach** | Hybrid assembly/C++ | Pure C++ virtual machine |
+| **Compiler** | Visual Studio + MASM | Any C++ compiler (GCC, Clang, MSVC) |
 | **Build System** | Meson | CMake |
-| **Compiler** | Visual Studio 2015/2019 + MASM | MinGW GCC (bundled) |
-| **Dependencies** | External SDL2 DLLs required | All libraries statically linked |
-| **Tools Required** | VS, Python, gperf, Cygwin (optional) | None - everything bundled |
-| **Build Process** | Multi-step with dependency chain | Single `build.bat` |
+| **Dependencies** | External SDL2 DLLs | All statically linked |
+| **Tools Required** | VS, Python, MASM, etc. | None - everything bundled |
 | **Output** | Executable + DLLs | Single standalone .exe |
-
-## Why This Fork Exists
-
-The original swos-port requires significant setup:
-- Visual Studio 2015 or 2019
-- MASM assembler
-- Python 3.8+ with specific packages
-- SDL2 development libraries
-- Multiple configuration steps
-
-This fork provides a **truly portable build** that:
-- Bundles MinGW compiler in `tools/mingw32/`
-- Bundles CMake in `tools/cmake/`
-- Includes all SDL2 libraries pre-compiled for MinGW
-- Produces a single executable with no DLL dependencies
-- Builds with one double-click on `build.bat`
 
 ## Building
 
@@ -48,22 +39,19 @@ This fork provides a **truly portable build** that:
 2. Double-click `build.bat`
 3. Find your executable in `bin/swos-port-Win32-Release.exe`
 
-The build script automatically:
-- Uses the bundled MinGW compiler
-- Uses the bundled CMake
-- Configures and builds the project
-- Outputs a statically-linked executable
+The build script uses the bundled MinGW compiler and CMake. No external tools or configuration needed.
 
 ## Project Structure
 
 ```
-swos-c-port/
+swos-portable/
 ├── 3rd-party/
 │   ├── mingw32/      # Pre-compiled MinGW libraries (SDL2, SDL2_image, SDL2_mixer, minizip)
 │   ├── SimpleIni/    # Header-only INI parser
 │   └── dirent/       # POSIX directory functions for Windows
-├── src/              # Game source code
-├── tmp/              # Generated code (swos-cpp-gen output)
+├── src/              # Game source code (~280k lines)
+├── tmp/
+│   └── swos-cpp-gen-32/  # Generated VM code (~240k lines)
 ├── tools/
 │   ├── cmake/        # Bundled CMake 3.28
 │   └── mingw32/      # Bundled MinGW GCC
@@ -71,32 +59,34 @@ swos-c-port/
 └── CMakeLists.txt    # CMake configuration
 ```
 
-## Technical Changes
+## Technical Details
 
-### GCC Compatibility Fixes
+### The Virtual Machine
 
-The original code used MSVC-specific behavior where `goto` can jump over variable initializations. GCC enforces standard C++ rules, so several functions in `playerFunctions.cpp` were modified to wrap variable declarations in explicit scopes.
+The core of this port is `SwosVM`, which provides:
+- Emulated 68000 registers (A0-A6, D0-D7) from the original Amiga version
+- Emulated x86 registers (eax, ebx, ecx, edx, esi, edi, ebp)
+- Memory simulation matching the original game's memory layout
+- CPU flags emulation for condition codes
 
-### Static Linking
+The original game logic has been translated to C++ functions that manipulate these virtual registers and memory, allowing the game to run without any actual assembly code.
 
-All dependencies are statically linked:
-- SDL2
-- SDL2_image
-- SDL2_mixer
-- minizip-ng
+### GCC Compatibility
 
-The resulting executable has no external DLL dependencies beyond standard Windows system libraries.
+Several fixes were made to compile with GCC/MinGW:
+- Standard C++ compliance for `goto` statements crossing variable initializations
+- Wrapped variable declarations in explicit scopes where needed
 
 ## Running the Game
 
 You'll need the original SWOS game data files. Place them according to the original project's documentation.
 
-## License
+## Credits
 
-This fork maintains the same license as the original project. See the original repository for license details.
+- **zlatkok** - Original [swos-port](https://github.com/zlatkok/swos-port) project, reverse engineering, SDL integration
+- **Sensible Software** - Original Sensible World of Soccer
 
 ## Links
 
 - **Original Project**: https://github.com/zlatkok/swos-port
-- **Original Author**: zlatkok
 - **Discord**: discord.gg/b275aMwjuX (original project community)
