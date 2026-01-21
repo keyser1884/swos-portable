@@ -1,0 +1,115 @@
+#pragma once
+
+#include "windowManager.h"
+#include "PackedSprite.h"
+
+struct Color;
+class SharedTexture;
+
+enum SpriteIndices
+{
+    kSmallZeroSprite = 8,
+    kSmallNineSprite = 17,
+    kBlockSprite = 44,
+    kLeftArrowSprite = 179,
+    kRightArrowSprite = 175,
+    kUpArrowSprite = 183,
+    kDownArrowSprite = 184,
+    kMaxMenuSprite = 226,
+    kSquareGridForResultSprite = 252,
+    kBenchRedCardSprite = 253,
+    kBenchYellowCardSprite = 254,
+    kTeam1PlayerNamesStartSprite = 255,
+    kTeam1PlayerNamesEndSprite = 270,
+    kTeam2PlayerNamesStartSprite = 271,
+    kTeam2PlayerNamesEndSprite = 286,
+    kBigZeroSprite = 287,
+    kBigNineSprite = 296,
+    kBigZero2Sprite = 297,
+    kTeam1NameSprite = 307,
+    kTeam2NameSprite = 308,
+    kBigDashSprite = 309,
+    kTeam1Scorer1NameSprite = 310,
+    kTeam1Scorer8NameSprite = 317,
+    kTeam2Scorer1NameSprite = 318,
+    kTeam2Scorer8NameSprite = 325,
+    kHalftimeSprite = 326,
+    kFullTimeSprite = 327,
+    kTimeSprite8Mins = 328,
+    kTimeSprite88Mins = 329,
+    kTimeSprite118Mins = 330,
+    kBigTimeDigitSprite0 = 331,
+    kBigTimeDigitSprite1 = 332,
+    kTeam1WhitePlayerSpriteStart = 341,
+    kTeam1GingerPlayerSpriteStart = 442,
+    kTeam1BlackPlayerSpriteStart = 542,
+    kTeam1BlackPlayerSpriteEnd = 643,
+    kTeam2WhitePlayerSpriteStart = 644,
+    kTeam2BlackPlayerSpriteEnd = 946,
+    kTeam1MainGoalkeeperSpriteStart = 947,
+    kTeam1MainGoalkeeperSpriteEnd = 1004,
+    kTeam1ReserveGoalkeeperSpriteStart = 1005,
+    kTeam1ReserveGoalkeeperSpriteEnd = 1062,
+    kTeam2MainGoalkeeperSpriteStart = 1063,
+    kTeam2MainGoalkeeperSpriteEnd = 1020,
+    kTeam2ReserveGoalkeeperSpriteStart = 1121,
+    kTeam2ReserveGoalkeeperSpriteEnd = 1178,
+    kBallSprite1 = 1179,
+    kBallSprite2 = 1180,
+    kBallSprite3 = 1181,
+    kBallSprite4 = 1182,
+    kBallShadowSprite = 1183,
+    kCornerFlagSpriteStart = 1184,
+    kCornerFlagSpriteEnd = 1187,
+    kSmallDigit1 = 1188,
+    kSmallDigit16 = 1203,
+    kPlayerMarkSprite = 1204,
+    kTopGoalSprite = 1205,
+    kBottomGoalSprite = 1206,
+    kReplayFrame00Sprite = 1209,
+    kBigSSpriteStart = 1241,
+    kBigSSpriteEnd = 1272,
+    kRefereeSpriteStart = 1273,
+    kRefereeSpriteEnd = 1283,
+    kSubstitutesArrowSprite = 1284,
+    kSubstitutesLegendSprite = 1288,
+    kTacticsLegendSprite = 1289,
+    kRedCrossInjurySprite = 1290,
+    kRedCardSprite = 1291,
+    kYellowCardSprite = 1292,
+    kWhiteFaceSprite = 1293,
+    kGingerFaceSprite = 1294,
+    kBlackFaceSprite = 1295,
+    kCoach1SittingStartSprite = 1296,
+    kCoach1StandingStartSprite = 1299,
+    kCoach2SittingStartSprite = 1303,
+    kTeam1BenchPlayerSpriteStart = 1310,
+    kBenchGoalkeeperSittingWhite = 1310,
+    kBenchGoalkeeperSittingGinger = 1311,
+    kBenchGoalkeeperSittingBlack = 1312,
+    kBenchPlayerSittingWhite = 1313,
+    kBenchPlayerSittingGinger = 1314,
+    kBenchPlayerSittingBlack = 1315,
+    kBenchGoalkeeperStandingWhite = 1316,
+    kBenchGoalkeeperStandingGinger = 1317,
+    kBenchGoalkeeperStandingBlack = 1318,
+    kBenchPlayerStandingWhite = 1319,
+    kBenchPlayerStandingGinger = 1320,
+    kBenchPlayerStandingBlack = 1321,
+    kTeam2BenchPlayerSpriteStart = 1322,
+    kNumSprites = 1334,
+    kExitIcon = 1334,
+};
+
+void initSprites();
+void finishSprites();
+void initMatchSprites(const TeamGame *topTeam, const TeamGame *bottomTeam);
+void initMenuSprites();
+const PackedSprite& getSprite(int index);
+SDL_Texture *getTexture(const PackedSprite& sprite);
+void setMenuSpritesColor(const Color& color);
+void fillPlayerSprites(SharedTexture *topTeamTextures, SharedTexture *bottomTeamTextures, int numTextures,
+    const PackedSprite *sprites, int numSprites);
+void fillGoalkeeperSprites(SharedTexture *topTeamTextures, SharedTexture *bottomTeamTextures, int numTextures,
+    const PackedSprite *sprites, int numSprites);
+void fillBenchSprites(SharedTexture *topTeamTexture, SharedTexture *bottomTeamTexture, const PackedSprite *sprites, int numSprites);

@@ -1,0 +1,947 @@
+#
+# list of functions and variables to remove completely
+# to remove a range, list beginning and ending function separated by - (minus)
+# ranges are semi-open, just like in C++
+#
+
+@remove
+# procs
+__int_3 - SelectAndShowSquadToView
+cseg_1994F
+# + commentary options handler
+ChangeCommentary - SaveOptions
+OptionsMenuBeforeDraw
+FindFiles
+InitMenuEntry - Int2Ascii
+QuitToDosPromptLoop - SWOSMainMenuInit
+
+# game loop + intro pics + animations
+UpdateCornerFlagSprite - FadeAndPlayWinCupAnimation
+FadeAndPlayRelegatedAnimation - PlayNewSeasonAnimations
+ShowRestOfPics - StartingMatch
+ClearSaveFlagForGoalSprites - MarkPlayer
+copySpriteAllowAND - stateGoal
+
+# advertisements + some of sprites code
+CopyAdvertisementsData - InitTeamsData
+# + game time + pitch type tables + ref. booking tables
+advertIndex - team1StatsData
+
+# result + bunch of sprites
+big_S_Sprite - playerMarkSprite
+isGoalAttempt - resultTimer
+team1NameLength - dseg_114C96
+
+# sprites
+aSprite_dat
+UnchainSpriteInMenus - DrawSpriteCentered
+ClearSprite - ShowMenu
+DrawSprite_entry2
+UpdatePlayers - AI_SetControlsDirection
+MovePlayers
+numberBuffer - prevLastPlayer
+bookedPlayerCardOrNumberSprite
+allSpritesArray - lastSelectedTeam
+numSpritesToRender
+
+# game init & sprite coloring
+teamFilenamesTable - inGameTeamPlayerOffsets
+useIndividualPlayerSkinColor - fireCounter
+team1Ptr - aCharset_dat
+spriteFixupFlag - g_skipNonCompetitionFiles
+# do not touch these, they overlap with DIY competition buffer
+#topTeamSaved - numSpritesToRender
+playerCardChances3min - ballOutOfGameTimer
+team1MostFrequentFace - statsTimer
+whiteGuyConvertTable - topTeamPtr
+kBallSpeedBounceFactorTable - kGravityConstant
+
+# pitches
+ReadPitchFile - ActivateReferee
+ResetAnimatedPatterns - cseg_63919
+SwapTwoRandomIndicesFromAnimPatternsTable
+DrawPatternFromIndex
+# also removes game initialization error strings
+aChris_0 - aDataPoolplyr_d
+# + convertKeysTable + outerFrameColorsTable + nextEntryDirectionOffsets
+aGrafsLoader00_ - g_pitchDatBuffer
+# remove intro image reel data too
+aSfxFlcWincup_r - big_S_pictureIndexArray
+fansSidesSwapped
+animPatternsIndex - animPatternsState
+
+# color palette
+dseg_17192A - optionsMenu
+
+# InputText
+InputTextKeyLoop - InitUserTactics
+g_inputtingText
+inMenuKeyboardBuffer
+
+# menus
+LoadFillAndSwtitle - ReadTimerDelta
+InitMainMenuStuff
+MenuProc
+UnpackMenu
+RestorePreviousMenu
+DrawBackAllItems - CopyWholeSprite
+DrawMenuItemOuterFrame
+EuropeanChampionshipInit - DrawAnimatedPatterns
+continueMenu - DesignDIYTournamentInit
+continueAbortMenu - designDiyTournamentMenu
+errorPromptsEnabled - dseg_114BE0
+cseg_1E1A6
+cseg_216A2
+g_currentMenuPtr
+kColorTableShine - viewTeamsColumn1
+menuStatus - controlMask
+menuTextBlinkCounter - shirtColorTable
+DrawMenuText - ZeroOutStars
+controlsHeldTimer
+lastControls
+replaySelected
+# select files menu
+dta - dseg_17FCB8
+
+# options
+OptionsMenuSelected
+
+# CD ROM routines
+# removes select files menu functions as well
+FindFirstFile - SelectFileToSaveDialog
+
+# controls/joypads
+# + FadeOut & SetPalette
+UpdateAndApplyTeamControls
+FadeOutToBlack - InitMenuMusic
+# + char tables + camera vars
+smallCharsTable - pl1Fire
+pl1SecondaryFire - pl2Fire
+pl2SecondaryFire - fadingMenuDeadVar01
+# pitch patterns + setup.dat vars
+dstBytesDiv4 - g_joy1Fire1
+g_joy1Fire2 - dosMemOfs60c00h
+
+# commentary & SFX
+PlayHitFrameComment
+SetVolumeOrStopChants - EnqueueCornerSample
+nullsub_1 - PlayFansChant10lSample
+PlayEndGameWhistleSample
+#g_commentary   # career file buffer
+# + intro stuff
+g_muteCommentary - goodPassTimer
+deletedSampleTimer
+itsAnInterestingGame - soundEffectsTable
+
+# music
+ChangeMenuMusic
+#g_menuMusic    # career file buffer
+
+# some comments, intro, chairman and win/lose animations, sample loading
+PlayCommentarySample - RingABell
+# + SWOS(), game loop, statistics
+InitIntroAnimation - Rand
+# merge with top range
+introSampleStarted - menuCursorFrame
+g_gotExtraMemoryForSamples - playingCornerSample
+substituteSampleTimer - playingThrowInSample
+
+# referee
+UpdateReferee - PlayStopGoodPassSampleIfNeeded
+InitRefereeAnimationTable
+kRefereeSpeed
+
+# big S sprite + some misc.
+big_S_pictureIndexArray - goodPassSampleCommand
+bumpBigSFrame
+
+# big removal: all the EGA crap + AIL + C-lib
+nullsub_F10 - dseg
+dataStart - aChairmanScenes
+# get rid of comments too
+introTeamChantIndices - PIT_countdown
+aSwos_xmi - dosMemSegment
+# this removes CD-ROM and pitch routines too
+PlaySwosXmi - ConvertSpriteColors
+dseg_16AECB
+dosVariablesStart - dseg_185BA8
+dseg_185BA8
+sfxLowerQualityTable - introTeamChantsTable
+startGameSamples - endGameCrowdSamples
+aSfxFx11Bgcrd3l - aSfxFxCombrown_
+
+# bench
+EnqueueTacticsChangedSample - PlayPenaltyComment
+PlayGoodPassComment
+subsWriteOnly
+subsTeamsSwapped - g_inSubstitutesMenu
+benchOff - g_waitForPlayerToGoInTimer
+g_goToSubsTimer - plComingX
+benchWriteOnly02 - g_substituteInProgress
+g_benchPlayerIndex - seed
+# + camera and some of hil variables
+benchPickTeamCounter - currentScorer
+# also includes goal minute placeholder strings
+substitutedPlX - throwInPassOrKick
+tacticsStringTable - avgTeamValueBases
+
+# stats + bench, highlights, sprite coloring
+WriteStatsNumber - UpdateControlledPlayerNumbers
+AllowStatistics - DrawStatistics
+
+# random number generator and some MainKeysCheck() variables
+randXorIndex - playerPositionsScoringChances
+
+# misc. variables
+linAdr384k - playGame
+dosMemOfs4fc00h - poolplyrDatBuffer
+g_midiPlaying - instantReplayFlag
+# also removes chain font buffer and keyboard variables
+aBenc2_dat
+aDemo_dat
+optionsMenu - friendlyGameMenu
+dseg_110344 - g_spriteGraphicsPtr
+menuSize - g_exitMenu
+# + pitch patterns
+europeanChampionshipMenu - patternsGoalCounter
+nextCameraDirections
+lastKey
+kAngleCoeficients - importMenuSelectedTactics
+
+# highlights
+HighlightsMenu
+# + chairman animations + controls/joypads
+HighlightsMenuInit - cseg_87D60
+LoadHilFile - SetTeamGlobalNumbers
+# gets rid of darkened calculation and some of the sample loading routines too
+MainKeysCheck - AssignFakeGoalsToScorers
+ReplayExitMenuAfterFriendly - PlayMissGoalSample
+# highlights + camera
+SetPitchTypeAndNumber - ScrollToCurrent
+
+throwInDeadVar
+hilStarted
+deadHilVar
+# removes some pitch variables too
+currentHilBuffer - averagePlayerPrice
+goalBasePtr - userRequestedReplay
+currentGoalPtr - cameraCoordinatesValid
+hilLeftTeamGoals - winningTeamPtr
+
+# CD-ROM variables
+dosMemSegment
+dosMemSelector
+dosMemLinAdr - aSensibleWorldOfSoccerV2_0
+
+
+#
+# turn these into null procs, consisting of retn only
+#
+
+@null
+ProgramPIT
+CallDrawMultipleItems
+
+# sound
+InitMenuMusic
+CycleMenuMusic
+EnqueueDeletedSample
+
+# sprites
+ConvertSpriteColors
+CopyWholeSprite
+DrawSprite
+DrawSpriteCentered
+
+# pitch patterns
+ResetAnimatedPatternsForBothTeams
+
+# animations
+FadeAndPlayWinCupAnimation
+FadeAndPlayLoseCupAnimation
+FadeAndPlayWinMatchAnimation
+FadeAndPlayLoseMatchAnimation
+PlayNewSeasonAnimations
+PlayChairmanScene
+
+
+#
+# replace variable's content with what's given here
+#
+
+@replace
+# be careful when changing strings in string pool, as offsets must not change
+
+# make room for long filenames (though it will be limited by the UI)
+competitionFilename, 256 dup(0)
+importTacticsFilename, 256 dup(0)
+
+
+#
+# [obsolete along with x86 ASM version]
+#
+# these functions destroy registers C++ assumes will not change with a function call,
+# so inject the code to save and restore them
+# warning! do not to list procs with multiple exit points (i.e. that can jump to other procs)
+# note:
+#   always include or exclude both DrawSprite and DrawSpriteCentered, since later jumps into former
+#
+
+@save-regs
+CommonMenuExit
+CalcMenuEntryAddress
+SetCurrentEntry
+ZeroOutStars
+SetDefaultNameAndSurname
+InitHighestScorersTable
+InitUserTactics
+EndFirstHalf
+EndOfGame
+EndFirstExtraTime
+StartPenalties
+StartFirstExtraTime
+
+
+#
+# list of symbols to export to header file so they can be accessible from C++
+# inside ASM files they will be prefixed with underscore, and made public
+# syntax is:
+# <symbol> [, function |, (array | pointer | ptr | functionPointer) <type>['['<size>']'] |, <type>] [(align: <n>)]
+#
+
+@export
+
+# controls
+menuControlsDirection, int16_t
+menuControlsDirection2, int16_t
+fire, word
+shortFire, word
+longFireTime, word
+longFireFlag, word
+up, byte
+down, byte
+left, byte
+right, byte
+pl1Fire, byte
+pl2Fire, byte
+fireBlocked, word
+fireCounter, int16_t
+skipFireEveryOtherFrame, word
+pl1SkipFireCounter, word
+leaveFireFlag, word
+pl2SkipFireCounter, word
+
+# menus
+CommonMenuExit, function
+SetExitMenuFlag, function
+CalcMenuEntryAddress, function
+# enforce dword alignment
+g_currentMenu, array char[6500] (align: 4)
+# play match menu symbol not needed, but we must force dword alignment
+playMatchMenu, array char (align: 4)
+previousMenuItem, MenuEntry *
+g_exitMenu, word
+menuCursorFrame, word
+g_allowShorterMenuItemsWithFrames, word
+
+# main menu
+EditTacticsMenu, function
+FriendlyMenu, function
+DIYCompetitionMenu, function
+PresetCompetitionMenu, function
+SeasonMenu, function
+CareerMenu, function
+StartContest, function
+SaveContest, function
+LoadOldCompetitionMenu, function
+EditCustomTeamMenu, function
+ExitSelectTeams, function
+abortSelectTeams, word
+teamsType, word
+choosingPreset, word
+chosenTactics, word
+diySelected, word
+currentTeamNumber, word
+diyCompetitionMenu, PackedMenu
+
+aEditTactics, array const char
+aEditCustomTeam, array const char
+aHighlights, array const char
+aFriendly, array const char
+aDiyCompetition, array const char
+aPresetCompetit, array const char
+aSeason, array const char
+aCareer, array const char
+saveFileTitle, array const char
+aLoadOldCompeti, array const char
+aReturnToGame, array const char
+
+aHigh, array const char
+aPreset, array const char
+aTact, array const char
+aDiy, array const char
+
+InitCareerVariables, function
+SetDefaultNameAndSurname, function
+InitHighestScorersTable, function
+InitUserTactics, function
+ApplyTeamTactics, function
+
+# select files menu
+aAbort, array const char
+aSave, array const char
+g_skipNonCompetitionFiles, word
+
+# options
+ChangeGameLength, function
+ChangePitchType, function
+ChangeAutoReplays, function
+ChangeAllPlTeamsEqual, function
+ChangeAutoSaveHighlights, function
+g_gameLength, int16_t
+g_autoReplays, int16_t
+g_autoSaveHighlights, int16_t
+g_allPlayerTeamsEqual, int16_t
+g_pitchType, int16_t
+
+# options menu
+aOptions, array const char
+aExit, array const char
+aReplay, array const char
+controlMask, word
+aFriendlyDiyGam, array const char
+aPlus, array const char
+aMinus, array const char
+aCustom, array const char
+aOk, array const char
+aCancel, array const char
+
+# sprites
+spritesIndex, array SpriteGraphics *
+g_spriteGraphicsPtr, SpriteGraphics **
+team1SpritesTable, array Sprite * [11]
+team2SpritesTable, array Sprite * [11]
+bookedPlayer, Sprite *
+ballSprite, Sprite
+goal1TopSprite, Sprite
+goal2BottomSprite, Sprite
+ballShadowSprite, Sprite
+goalie1Sprite, Sprite
+team1Player2Sprite, Sprite
+team1Player3Sprite, Sprite
+team1Player4Sprite, Sprite
+team1Player5Sprite, Sprite
+team1Player6Sprite, Sprite
+team1Player7Sprite, Sprite
+team1Player8Sprite, Sprite
+team1Player9Sprite, Sprite
+team1Player10Sprite, Sprite
+team1Player11Sprite, Sprite
+goalie2Sprite, Sprite
+team2Player2Sprite, Sprite
+team2Player3Sprite, Sprite
+team2Player4Sprite, Sprite
+team2Player5Sprite, Sprite
+team2Player6Sprite, Sprite
+team2Player7Sprite, Sprite
+team2Player8Sprite, Sprite
+team2Player9Sprite, Sprite
+team2Player10Sprite, Sprite
+team2Player11Sprite, Sprite
+team1CurPlayerNumSprite, Sprite
+team2CurPlayerNumSprite, Sprite
+playerMarkSprite, Sprite
+
+# pitch
+g_pitchDatBuffer, array char[10032]
+pitchBallSpeedFactor, word
+gamePitchTypeOrSeason, word
+gamePitchType, int16_t
+gameSeason, word
+
+# highlights
+playHighlightFlag, word
+userRequestedReplay, word
+saveHighlightScene, word
+instantReplayFlag, word
+fadeAndSaveHighlightScene, word
+gameMinSubstitutes, word
+gameMaxSubstitutes, word
+spaceReplayTimer, word
+gameName, array char[40]
+gameRound, array char[40]
+
+# highlights menu
+aViewHighlights, array const char
+aLoadHighlights, array const char
+aSaveHighlights, array const char
+aNotAHighlights, array const char
+
+# camera
+cameraCoordinatesValid, word
+cameraDirection, int16_t
+cameraXVelocity, int16_t
+cameraYVelocity, int16_t
+breakCameraMode, word
+
+# comments
+playingGoodPassTimer, int16_t
+playingThrowInSample, int16_t
+playingCornerSample, int16_t
+goalCounter, int16_t
+
+goodPassTimer, word
+soundEffectsTable, array const char *
+introTeamChantsTable, array const char *
+loadCrowdChantSampleFlag, word
+
+penaltiesState, int16_t
+
+resultChantFilenames, array const char *
+endGameCrowdSamples, array const char *
+
+# bench
+SetPlayerAnimationTable, function
+GoalkeeperClaimedTheBall, function
+kTeamsStartingCoordinates, array int16_t [44]
+dseg_130FF9, word
+lastPlayerTurnFlags, word
+g_inSubstitutesMenu, word
+g_substituteInProgress, int16_t
+plComingX, word
+plComingY, word
+hideBall, word
+# make sure no alignment or it breaks tests
+playerNormalStandingAnimTable, PlayerAnimationTable (align: 1)
+stoppageTimerTotal, word
+stoppageTimerActive, word
+pl1Tactics, word
+pl2Tactics, word
+positionsTable, PositionsTable
+playerPositionsStringTable, array const char *
+teamThatSubstitutes, TeamGeneralInfo *
+substitutedPlSprite, Sprite *
+substitutedPlDestX, word
+substitutedPlDestY, word
+plSubstitutedX, word
+plSubstitutedY, word
+g_tacticsTable, array TeamTactics * [18]
+playerXQuadrantsCoordinates, array int16_t [15]
+playerYQuadrantCoordinates, array int16_t [16]
+playerXQuadrantOffset, int16_t
+playerYQuadrantOffset, int16_t
+ballQuadrantIndex, int16_t
+
+# current player indicator
+ExtractSurname, function
+currentPlayerNameSprite, Sprite
+nobodysBallTimer, word
+
+# memory buffers
+dosMemOfs60c00h, char *
+
+# game loop
+UpdateBall, function
+DoGoalkeeperSprites, function
+MarkPlayer, function
+UpdateControlledPlayerNumbers, function
+frameCount, word
+goalCameraMode, word
+isGameFriendly, word
+team1NumAllowedInjuries, word
+team2NumAllowedInjuries, word
+stoppageEventTimer, word
+ballInGoalkeeperArea, word
+
+# game
+InitAndPlayGame, function
+UpdateCameraBreakMode, function
+UpdateControlledPlayer, function
+UpdatePlayerBeingPassedTo, function
+UpdatePlayerInjuries, function
+AssignFakeGoalsToScorers, function
+SetInGameTeamsPrimaryColors, function
+SetNextPlayerFrame, function
+cseg_2F0E2, function
+cseg_2F194, function
+cseg_2F3AB, function
+cseg_30BD1, function
+cseg_8F66C, function
+SetTeamSecondaryColors, function
+GetAveragePlayerPriceInSelectedTeams, function
+GetNumberOfAvailablePlayers, function
+InitInGameTeamStructure, function
+team1AppPercent, word
+team2AppPercent, word
+averagePlayerPrice, word
+g_gameType, word
+plg_D0_param, word
+plg_D3_param, word
+team1Computer, word
+team2Computer, word
+whichCard, word
+refState, word
+lastTeamBooked, TeamGeneralInfo *
+currentScorer, Sprite *
+lastTeamScored, TeamGeneralInfo *
+lastPlayerPlayed, Sprite *
+lastPlayerBeforeGoalkeeper, Sprite *
+penalty, word
+strikeDestX, word
+playersLeavingPitchBottom, array word[22]
+playersLeavingPitchTop, array word[22]
+
+# game constants
+kKeeperSaveDistance, word
+kBallGroundConstant, word
+kBallAirConstant, word
+kGravityConstant, dword
+kGoalkeeperDiveDeltas, array FixedPoint[8]
+
+# referee
+# careful with these tables, must be no alignment bytes or they ruin all frame tables
+refComingAnimTable, word (align: 1)
+refWaitingAnimTable, word (align: 1)
+refYellowCardAnimTable, word (align: 1)
+refRedCardAnimTable, word (align: 1)
+refSecondYellowAnimTable, word (align: 1)
+foulXCoordinate, word
+foulYCoordinate, word
+refTimer, word
+
+# result
+resultTimer, int16_t
+timeVar, int16_t
+
+# goals
+team1TotalGoals, word
+team2TotalGoals, word
+statsTeam1Goals, word
+statsTeam2Goals, word
+statsTeam1GoalsCopy, word
+statsTeam2GoalsCopy, word
+team1GoalsFirstLeg, word
+team2GoalsFirstLeg, word
+team1GoalsDigit1, word
+team1GoalsDigit2, word
+team2GoalsDigit1, word
+team2GoalsDigit2, word
+team1PenaltyGoals, word
+team2PenaltyGoals, word
+
+# teams
+gameTeam1, TeamFile *
+gameTeam2, TeamFile *
+topTeamInGame, TeamGame
+bottomTeamInGame, TeamGame
+topTeamPtr, TeamGame *
+bottomTeamPtr, TeamGame *
+topTeamData, TeamGeneralInfo
+bottomTeamData, TeamGeneralInfo
+lastTeamPlayed, TeamGeneralInfo *
+lastTeamPlayedBeforeBreak, TeamGeneralInfo *
+teamScoredDataPtr, TeamGeneralInfo *
+chooseTacticsTeamPtr, void *
+winningTeamPtr, TeamGame *
+team1StatsData, TeamStatsData
+team2StatsData, TeamStatsData
+teamPlayingUp, word
+teamStarting, word
+
+# must not get alignment, it's inside the load competition buffer
+selTeamsPtr, dword (align: 1)
+
+# init match
+playerCardChance, word
+gameRandValue, word
+ballSpeedBounceFactor, word
+ballBounceFactor, word
+dontShowScorers, word
+statsTimer, int16_t
+g_cameraLeavingSubsTimer, word
+g_waitForPlayerToGoInTimer, word
+team1NumSubs, word
+team2NumSubs, word
+showFansCounter, word
+
+# random number generator
+randomSeed, word
+seed, byte
+seed2, byte
+randXorIndex2, byte
+randXorKey2, byte
+kRandomTable, array byte[256]
+
+# versus/stadium menus
+topTeamCoachNo, word
+bottomTeamCoachNo, word
+topTeamPlayerNo, word
+bottomTeamPlayerNo, word
+
+# misc
+Randomize2, function
+ReadTimerDelta, function
+ZeroOutStars, function
+StartingMatch, function
+
+aSensibleWorldOfSoccerV2_0, array const char
+skillsPerQuadrant, array char[245]
+currentTick, word
+currentGameTick, word
+lastGameTick, word
+aChairmanScenes, array const char
+animPatternsState, word
+playGame, word
+twoPlayers, word
+flipOnOff, word
+inFriendlyMenu, word
+isNationalTeam, word
+fireResetFlag, word
+dseg_10E848, word
+dseg_10E846, word
+dseg_11F41C, word
+coachOrPlayer, word
+plNationality, byte
+competitionOver, word
+teamsLoaded, word
+poolplyrLoaded, word
+importTacticsFilename, array char[256]
+g_trainingGame, word
+# careful, a member of load competition buffer here
+trainingGameCopy, word (align: 1)
+
+# added for career file buffer continuity check
+careerFileBuffer, word
+
+g_exitGameFlag, word
+gameCanceled, word
+careerTeam, array char[1292]
+currentTeam, TeamFile (align: 1)
+
+# play match menu
+playerNumThatStarted, word
+careerTeamCoachOnly, word
+isFirstPlayerChoosingTeam, word
+playMatchTeam1Ptr, TeamFile *
+playMatchTeam2Ptr, TeamFile *
+squadChangesAllowed, word
+
+StartPenalties, function
+gameStatePl, GameState
+gameState, GameState
+playingPenalties, word
+stateGoal, word
+secondLeg, word
+playing2ndGame, word
+playerTurnFlags, word
+gameNotInProgressCounterWriteOnly, word
+
+# time
+EndFirstHalf, function
+EndFirstExtraTime, function
+EndOfGame, function
+StartFirstExtraTime, function
+lastFrameTicks, word
+extraTimeState, word
+gameLengthInGame, word
+
+# update ball
+goalScored, word
+runSlower, word
+lastTeamScoredNumber, word
+lastPlayerScored, Sprite *
+goalTypeScored, word
+
+# keep these so the competition buffer integrity static assert could work
+competitionFileBuffer, word
+g_numSelectedTeams, word (align: 1)
+g_selectedTeams, array char[68400]
+
+# needed for tests
+PlayTrainingGame, function
+pitchTypeOrSeason, word
+friendlySeason, word
+minSubstitutes, word
+maxSubstitutes, word
+animTablesStart, array char (align: 2)
+animTablesEnd, array char
+frameIndicesTablesStart, array char (align: 2)
+jumpHeaderTeam1UpFrames, array char
+refSecondYellowFrames, array int16_t
+ballMovingFrameIndices, array int16_t
+ballStaticFrameIndices, array int16_t
+kPlayerShotChanceTable, array int16_t[30]
+kGoalieSkillTables, array int16_t *[8]
+AI_turnDirection, word
+USER_A, TeamTactics (align: 1)
+
+### debug dump
+#AI_attackHalf, word
+
+
+#
+# at the beginning of each listed proc Foo insert a call to external Foo_OnEnter
+#
+
+@on-enter
+
+
+#
+# insert a call to given C++ function into a proc at a given line
+# in the form: <proc name>, <line number>[, <hook name>]
+#
+# if <hook_name> is not given a default name will be generated in the form of: <proc name>_<line number>
+# it's effectively an import entry
+#
+# special hook name @remove can be used to remove lines
+#
+
+@insert-hook
+AdjustPlayerSkills, 248, FixTwoCPUsGameCrash
+ViewOpponentsSelect, 66, RecalculateReachableEntries
+ReturnFromViewOpponent, 9, RecalculateReachableEntries
+
+CheckIfBallOutOfPlay, 252, FixPenaltyBug
+PlayerHittingJumpHeader, 161, PlayHeaderComment
+PlayerTackled, 59, PlayInjuryComment
+UpdateCameraBreakMode, 321, EnqueueCrowdChantsReload
+
+# small part of Amiga mode support in AI_SetControlsDirection
+AI_SetControlsDirection, 1248, CheckForAmigaModeDirectionFlipBan
+AI_SetControlsDirection, 820, WriteAmigaModeDirectionFlip
+
+
+#
+# list of symbols (functions) that will be replaced by the C++ code
+# it is assumed to be a label in assembly, and a parameterless function in C++, returning void or int
+# they'll go to SWOS namespace to avoid name clashes
+#
+
+@import
+WaitRetrace
+DrawAnimatedPatterns
+Rand
+Rand2
+
+# files
+LoadFile, int
+WriteFile, int
+GetFilenameAndExtension, int
+SelectFileToSaveDialog, int
+
+# main menu
+SWOSMainMenuInit
+
+# menus
+MenuCheckControls
+ShowMenu
+DrawMenu
+DrawMenuItem
+DrawMultipleItems
+ActivateMenu
+SetCurrentEntry
+DoContinueAbortMenu
+ShowErrorMenu
+
+# controls
+Player1StatusProc
+Player2StatusProc
+
+# referee
+ActivateReferee
+RemoveReferee
+
+# game
+InitializeInGameTeamsAndStartGame
+PrepareForInitialKick
+InitPlayersBeforeEnteringPitch
+StopAllPlayers
+SetPlayerWithNoBallDestination
+SetBallPosition
+FirstHalfJustEnded
+PlayersLeavingPitch
+GoToHalftime
+CheckIfGoalkeeperClaimedTheBall
+ToMainGameLoop
+GoalScored
+GameOver
+CalculateDeltaXAndY
+
+# sprites/game graphics
+DrawStatistics
+ScrollToCurrent
+
+# text
+InputText
+
+# music
+TryMidiPlay
+
+# intro
+IntroEnsureFrameDataLoaded
+IntroDrawFrame
+CloseSoccerBin
+
+# current player indicator
+SetCurrentPlayerName
+SwapPlayerNameData
+
+PlayMatchSelected
+
+# commentary/sfx
+PlayPenaltyComment
+PlayFoulComment
+PlayDangerousPlayComment
+PlayGoodTackleComment
+PlayPostHitComment
+PlayBarHitComment
+PlayKeeperClaimedComment
+PlayNearMissComment
+PlayGoalkeeperSavedComment
+PlayOwnGoalComment
+PlayGoalComment
+PlayMissGoalSample
+PlayHomeGoalSample
+PlayAwayGoalSample
+PlayRefereeWhistleSample
+PlayFoulWhistleSample
+PlayKickSample
+PlayBallBounceSample
+PlayFansChant8lSample
+PlayFansChant10lSample
+PlayIntroChantSample
+PlayResultSample
+
+EndProgram
+Int2Ascii
+
+#
+# Convert constant access to variable access, Generate and initialize given variable. Format:
+# <proc name>, <line number>, <variable name>, <constant value>
+#
+
+@constant-to-variable
+UpdateCameraBreakMode, 8, penaltiesInterval, 110
+UpdateCameraBreakMode, 39, initalKickInterval, 825
+UpdateCameraBreakMode, 281, goalCameraInterval, 55
+UpdateCameraBreakMode, 537, letPlayerControlCameraInterval, 550
+PlayerBeginTackling, 15, playerDownTacklingInterval, 55
+PlayerAttemptingJumpHeader, 9, playerDownHeadingInterval, 55
+AI_SetControlsDirection, 127, clearResultInterval, 660
+AI_SetControlsDirection, 133, clearResultInterval, 660
+AI_SetControlsDirection, 139, clearResultHalftimeInterval, 385
+
+#
+# Let ida2asm know about the sizes of types used in the export section so it can generate offsets properly.
+#
+
+@type-sizes
+PackedMenu, 16
+GameState, 2
+TeamStatsData, 14
+FixedPoint, 4
+PlayerAnimationTable, 130
+PositionsTable, 72
+TeamTactics, 370
+TeamFile, 684
+TeamGame, 1704

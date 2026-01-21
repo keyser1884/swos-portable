@@ -1,0 +1,132 @@
+//
+// Joint replays & highlights menu
+//
+
+#include "common.mh"
+
+Menu replaysMenu
+{
+    kTitleX = 92
+    kTitleY = 0
+    kTitleWidth = 120
+
+    kButtonWidth = 140
+    kButtonHeight = 15
+    kStartingY = 60
+
+    kYDifference = 30
+
+    kColumn1X = (@kScreenWidth - 2 * kButtonWidth) / 3
+    kColumn2X = kColumn1X + kButtonWidth + kColumn1X
+
+    kButtonColor = @kGreen
+
+    x: -kMenuOffset
+    onInit: replaysMenuOnInit
+    onReturn: updateMenuButtonsState
+    initialEntry: viewHighlights
+
+    defaultX: kColumn1X
+    defaultHeight: kButtonHeight
+
+    defaultColor: kButtonColor
+
+    Entry title {
+        x: kTitleX
+        y: kTitleY
+        width: kTitleWidth
+        text: "REPLAYS"
+        color: kHeaderColor
+    }
+
+    defaultWidth: kButtonWidth
+    defaultY: @prevY + kYDifference
+
+    Entry viewHighlights {
+        y: kStartingY
+
+        text: swos.aViewHighlights
+
+        downEntry: loadHighlights
+        rightEntry: viewReplays
+
+        skipLeft: loadHighlights
+        directionLeft: @kDown
+
+        onSelect: playHighlights
+    }
+
+    Entry loadHighlights {
+        text: swos.aLoadHighlights
+
+        upEntry: viewHighlights
+        downEntry: saveHighlights
+        rightEntry: loadReplays
+
+        onSelect: selectHighlightToLoad
+    }
+
+    Entry saveHighlights {
+        text: swos.aSaveHighlights
+
+        upEntry: loadHighlights
+        downEntry: exit
+        rightEntry: saveReplays
+
+        skipLeft: loadHighlights
+        directionLeft: @kUp
+
+        onSelect: selectHighlightToSave
+    }
+
+    defaultX: kColumn2X
+
+    Entry viewReplays {
+        y: kStartingY
+
+        text: "VIEW REPLAY"
+
+        downEntry: loadReplays
+        leftEntry: viewHighlights
+
+        skipRight: loadReplays
+        directionRight: @kDown
+
+        onSelect: playReplay
+    }
+
+    Entry loadReplays {
+        text: "LOAD REPLAY"
+
+        upEntry: viewReplays
+        downEntry: saveReplays
+        leftEntry: loadHighlights
+
+        onSelect: selectReplayToLoad
+    }
+
+    Entry saveReplays {
+        text: "SAVE REPLAY"
+
+        upEntry: loadReplays
+        downEntry: exit
+        leftEntry: saveHighlights
+
+        skipRight: loadReplays
+        directionRight: @kUp
+
+        onSelect: selectReplayToSave
+    }
+
+    Entry exit {
+        x: (@kScreenWidth - kButtonWidth) / 2
+        y: kExitY
+
+        text: swos.aExit
+        color: kExitColor
+
+        onSelect: ~SetExitMenuFlag
+
+        upEntry: saveHighlights
+    }
+}

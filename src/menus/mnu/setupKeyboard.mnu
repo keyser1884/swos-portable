@@ -1,0 +1,211 @@
+//
+// Setup Keyboard menu
+//
+
+#include "common.mh"
+
+Menu setupKeyboardMenu
+{
+    export kMaxKeyEntriesShown = 7
+
+    kKeyEntriesStartY = 18
+
+    kKeyEntryWidth = 150
+    kActionEntryWidth = 110
+    kKeyAndActionEntryHeight = 12
+
+    kKeyAndActionEntryGap = 8
+    export kVerticalGap = 2
+
+    kColumn1X = (@kScreenWidth - (kKeyEntryWidth + kKeyAndActionEntryGap + kActionEntryWidth)) / 2 - kMenuOffset
+    kColumn2X = kColumn1X + kKeyEntryWidth + kKeyAndActionEntryGap
+
+    onInit: setupKeyboardMenuOnInit
+    onReturn: setupKeyboardMenuOnRestore
+    onDraw: setupKeyboardMenuOnDraw
+
+    initialEntry: exit
+
+    Entry header {
+        x: kBaseX
+        y: 0
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+
+        text: @kAlloc
+        color: kHeaderColor
+    }
+
+    defaultX: kColumn1X
+    defaultY: @prevEndY + kVerticalGap
+    defaultWidth: kKeyEntryWidth
+    defaultHeight: kKeyAndActionEntryHeight
+
+    Entry {
+        y: kKeyEntriesStartY
+        text: "KEYS:"
+    }
+
+    TemplateEntry {
+        text: @kAlloc
+        onSelect: deleteKey
+    }
+
+#repeat kMaxKeyEntriesShown
+    Entry #join(key, #{i}:02) {
+        color: @kLightBlue
+
+        upEntry: <
+        downEntry: >
+        leftEntry: #{i < kMaxKeyEntriesShown / 2 ? :leftUpArrow : :leftDownArrow}
+        rightEntry: #join(action, #{i}:02)
+    }
+#endRepeat
+
+    ResetTemplate
+
+    Entry keyLegend {
+        text: "(SELECT TO DELETE)"
+    }
+
+    defaultX: kColumn2X
+    defaultWidth: kActionEntryWidth
+
+    Entry {
+        y: kKeyEntriesStartY
+        text: "ACTIONS:"
+    }
+
+    TemplateEntry {
+        text: @kAlloc
+        onSelect: updateAction
+    }
+
+#repeat kMaxKeyEntriesShown
+    Entry #join(action, #{i}:02) {
+        color: @kGreen
+
+        upEntry: <
+        downEntry: >
+        leftEntry: #join(key, #{i}:02)
+        rightEntry: #{i < kMaxKeyEntriesShown / 2 ? :rightUpArrow : :rightDownArrow}
+    }
+#endRepeat
+
+    ResetTemplate
+
+    Entry actionLegend {
+        text: "(SELECT TO CHANGE)"
+    }
+
+    entryAlias firstKey = key00
+    entryAlias lastKey = #join(key, #{kMaxKeyEntriesShown - 1}:02)
+
+    entryAlias firstAction = action00
+    entryAlias lastAction = #join(action, #{kMaxKeyEntriesShown - 1}:02)
+
+    firstKey.upEntry = leftUpArrow
+    firstAction.upEntry = rightUpArrow
+
+    lastKey.downEntry = addMapping
+    lastAction.downEntry = addMapping
+
+    //
+    // scroll arrows
+    //
+
+    kScrollArrowGap = 2
+
+    defaultWidth: kScrollArrowWidth
+    defaultHeight: kScrollArrowHeight
+
+    Entry leftUpArrow {
+        x: firstKey.x - kScrollArrowWidth - kScrollArrowGap
+        y: firstKey.y
+
+        rightEntry: firstKey
+        downEntry: leftDownArrow
+
+        sprite: kUpArrowSpriteIndex
+        onSelect: onScrollUp
+    }
+
+    Entry leftDownArrow {
+        x: @prevX
+        y: lastKey.endY - kScrollArrowHeight
+
+        rightEntry: lastKey
+        upEntry: leftUpArrow
+
+        sprite: kDownArrowSpriteIndex
+        onSelect: onScrollDown
+    }
+
+    Entry rightUpArrow {
+        x: firstAction.endX + kScrollArrowGap
+        y: firstAction.y
+
+        leftEntry: firstAction
+        downEntry: rightDownArrow
+
+        sprite: kUpArrowSpriteIndex
+        onSelect: onScrollUp
+    }
+
+    Entry rightDownArrow {
+        x: @prevX
+        y: lastAction.endY - kScrollArrowHeight
+
+        leftEntry: lastAction
+        upEntry: rightUpArrow
+
+        sprite: kDownArrowSpriteIndex
+        onSelect: onScrollDown
+    }
+
+    defaultX: kBaseX
+    defaultWidth: kBigButtonWidth
+    defaultHeight: kBigButtonHeight - 3
+    defaultColor: @kDarkBlue
+
+    //
+    // bottom buttons
+    //
+
+    Entry addMapping {
+        y: lastKey.endY + kKeyAndActionEntryHeight + kVerticalGap + 4
+        text: "ADD MAPPING"
+        upEntry: lastKey
+        downEntry: >
+
+        onSelect: addKeyMapping
+    }
+
+    Entry quickConfig {
+        text: "QUICK CONFIG"
+        upEntry: <
+        downEntry: >
+
+        onSelect: redefineKeys
+    }
+
+    Entry test {
+        text: "TEST"
+        upEntry: <
+        downEntry: >
+
+        onSelect: testKeyboard
+    }
+
+    Entry exit {
+        y: @kScreenHeight - @prevHeight
+        width: kBigButtonWidth
+
+        text: swos.aExit
+        color: kExitColor
+
+        onSelect: ~SetExitMenuFlag
+
+        upEntry: <
+    }
+}

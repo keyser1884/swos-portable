@@ -1,0 +1,160 @@
+//
+// Menu for selecting files from root directory, used in many places
+//
+
+#include "common.mh"
+
+Menu selectFilesMenu
+{
+    export kMaxColumns = 3
+    export kMaxEntriesPerColumn = 15
+    export kNumFilenameItems = kMaxColumns * kMaxEntriesPerColumn
+    export kFilenameHeight = 8
+
+    kDescriptionWidth = 39
+    export kMaxSaveFilenameChars = 38
+    kSaveFileInputWidth = (kMaxSaveFilenameChars + 1) * 6
+
+    onInit: selectFilesOnInit
+    onReturn: selectFilesOnReturn
+
+    initialEntry: #join(fileEntry_,#{kMaxEntriesPerColumn}:02)
+
+    Entry title {
+        x: 2
+        y: 0
+        width: 300
+        height: kBigButtonHeight
+
+        color: kHeaderColor
+        text: @kNull
+    }
+
+    TemplateEntry {
+        width: 42
+
+        color: @kLightBrownWithYellowFrame
+        text: @kAlloc
+
+        onSelect: selectFile
+        beforeDraw: drawDescription
+    }
+
+    export kFirstFileEntry = @currentOrd + 1
+
+#repeat kMaxColumns => column
+    #repeat kMaxEntriesPerColumn => row
+        Entry #join(fileEntry_, #{column * kMaxEntriesPerColumn + row}:02) {
+            height: kFilenameHeight
+
+            leftEntry: #{column ? kFirstFileEntry + (column - 1) * kMaxEntriesPerColumn + row : @kNoEntry}
+            rightEntry: #{column < kMaxColumns - 1 ? kFirstFileEntry + (column + 1) * kMaxEntriesPerColumn + row : @kNoEntry}
+            upEntry: #{row > 0 ? kFirstFileEntry + column * kMaxEntriesPerColumn + row - 1 : @kNoEntry}
+            downEntry: #{row < kMaxEntriesPerColumn - 1 ? kFirstFileEntry + column * kMaxEntriesPerColumn + row + 1 : @kNoEntry}
+
+            skipLeft: #{column == 0 && row > 0 ? kFirstFileEntry + kMaxEntriesPerColumn - 1 : @kNoEntry}
+            directionLeft: #{column == 0 && row > 0 ? @kUp : @kNoEntry}
+
+            skipRight: #{column && row > 1 ? kFirstFileEntry + (column + 1) * kMaxEntriesPerColumn - 1 : @kNoEntry}
+            directionRight: #{column && row > 1 ? @kUp : @kNoEntry}
+        }
+    #endRepeat
+#endRepeat
+
+    ResetTemplate
+
+#repeat kMaxColumns => column
+    #join(fileEntry_, #{(column + 1) * kMaxEntriesPerColumn - 1}:02)
+        .downEntry = inputSaveFilename
+    #join(fileEntry_, #{column * kMaxEntriesPerColumn}:02)
+        .upEntry = arrowUp
+#endRepeat
+
+#repeat kMaxEntriesPerColumn / 2 => row
+    #join(fileEntry_, #{(kMaxColumns - 1) * kMaxEntriesPerColumn + row}:02)
+        .rightEntry = arrowUp
+#endRepeat
+
+#repeat (kMaxEntriesPerColumn + 1) / 2 => row
+    #join(fileEntry_, #{(kMaxColumns - 1) * kMaxEntriesPerColumn + kMaxEntriesPerColumn / 2 + row}:02)
+        .rightEntry = arrowDown
+#endRepeat
+
+    export kLastFilenameOrdinal = @prevOrdinal
+
+    Entry description {
+        width: kDescriptionWidth
+        height: kFilenameHeight
+        invisible: true
+        color: @kOrangeWithOrangeFrame
+        text: @kNull
+    }
+
+    Entry inputSaveFilename {
+        x: (@kScreenWidth - kSaveFileInputWidth - 8) / 2
+        y: 152
+        width: kSaveFileInputWidth
+        height: kFilenameHeight
+
+        invisible: true
+        color: @kLightBlue
+        text: @kAlloc
+
+        upEntry: #{kFirstFileEntry + ((kMaxColumns - 1) / 2 + 1) * kMaxEntriesPerColumn - 1}
+        downEntry: saveLabel
+
+        onSelect: inputFilenameToSave
+    }
+
+    Entry saveLabel {
+        x: 121
+        y: 165
+        width: 62
+        height: 15
+
+        invisible: true
+        color: @kGreen
+        text: swos.aSave
+
+        leftEntry: kFirstFileEntry + kMaxEntriesPerColumn - 1
+        rightEntry: kFirstFileEntry + kMaxColumns * kMaxEntriesPerColumn - 1
+        upEntry: inputSaveFilename
+        downEntry: abort
+
+        onSelect: saveFileSelected
+    }
+
+    Entry abort {
+        x: 121
+        y: 185
+        width: 62
+        height: 15
+
+        color: @kRed
+        text: swos.aAbort
+
+        leftEntry: saveLabel.leftEntry
+        rightEntry: saveLabel.rightEntry
+        upEntry: saveLabel
+
+        onSelect: abortSelectFile
+    }
+
+    export kDefaultArrowX = @kScreenWidth - kScrollArrowWidth - 14
+
+    defaultX: kDefaultArrowX
+    defaultWidth: kScrollArrowWidth
+    defaultHeight: kScrollArrowHeight
+
+    Entry arrowUp {
+        sprite: kUpArrowSpriteIndex
+        downEntry: arrowDown
+        onSelect: scrollUp
+    }
+
+    Entry arrowDown {
+        sprite: kDownArrowSpriteIndex
+        upEntry: arrowUp
+        onSelect: scrollDown
+    }
+}

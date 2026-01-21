@@ -1,0 +1,204 @@
+//
+// Options menu entered from the main menu, and its sub-menus
+//
+
+#include "common.mh"
+
+Menu optionsMenu
+{
+    kEntryVerticalDistance = 12
+    kBaseY = 48
+
+    defaultX: kBaseX
+    defaultWidth: kBigButtonWidth
+    defaultHeight: kBigButtonHeight
+    defaultColor: @kGreen
+
+    initialEntry: controls
+
+    Entry header {
+        text: swos.aOptions
+        color: kHeaderColor
+    }
+
+    defaultY: @prevEndY + kEntryVerticalDistance
+
+    Entry controls {
+        y: kBaseY
+        text: "CONTROLS"
+        downEntry: >
+        onSelect: doShowControlOptionsMenu
+    }
+
+    Entry video {
+        text: "VIDEO"
+        upEntry: <
+        downEntry: >
+        onSelect: doShowVideoOptionsMenu
+    }
+
+    Entry audio {
+        text: "AUDIO"
+        upEntry: <
+        downEntry: >
+        onSelect: doShowAudioOptionsMenu
+    }
+
+    Entry gameplay {
+        text: "GAMEPLAY"
+        upEntry: <
+        downEntry: >
+        onSelect: showGameplayOptions
+    }
+
+    Entry portedFunctions {
+        text: "PORTED FUNCTIONS"
+        upEntry: <
+        downEntry: >
+        onSelect: doShowPortedFunctionsMenu
+    }
+
+    Entry exit {
+        y: kExitY
+        text: swos.aExit
+        color: kExitColor
+        upEntry: <
+        onSelect: exitOptions
+        controlMask: @kControlShortFire | @kControlDown
+    }
+
+    Entry secret {
+        x: -8
+        y: 0
+        width: @kScreenWidth
+        text: "WHO'S JOHNNY? SHE SAID AND SMILED IN HER SPECIAL WAY"
+        textFlags: @kYellowText
+        color: @kRed | @kYellowFrame
+        invisible: true
+    }
+}
+
+//
+// Gameplay options menu, most of the standard SWOS options are here
+//
+
+Menu gameplayOptionsMenu
+{
+    onInit: initGamePlayOptions
+    onReturn: initGamePlayOptions
+
+    defaultWidth: kOptionWidth
+    defaultHeight: kOptionHeight
+    initialEntry: gameLength
+
+    kGamePlayOptionsStartY = kOptionsStartY - kOptionHeight
+
+    Entry header {
+        x: kBaseX
+        y: 0
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+        text: "GAMEPLAY OPTIONS"
+        color: kHeaderColor
+    }
+
+    defaultX: kOptionsColumn1X
+
+    TemplateEntry {
+        color: kOptionsColumn1Color
+    }
+
+    Entry {
+        y: kGamePlayOptionsStartY
+        text: swos.aFriendlyDiyGam
+    }
+
+    defaultY: @prevEndY + kOptionsRowDistance
+
+    Entry { text: "FIX PITCH TYPE" }
+    Entry { text: "AUTO REPLAYS" }
+    Entry { text: "ALL PLAYER TEAMS EQUAL" }
+    Entry { text: "AUTO SAVE HIGHLIGHTS" }
+    Entry { text: "AUTO SAVE REPLAYS" }
+    Entry { text: "SHOW PRE-MATCH MENUS" }
+    Entry { text: "GAME STYLE" }
+
+    // start of column 2, where the actual controls are
+    defaultX: kOptionsColumn2X
+
+    TemplateEntry {
+        color: kOptionsColumn2Color
+    }
+
+    Entry gameLength {
+        y: kGamePlayOptionsStartY
+        stringTable: [
+            swos.g_gameLength,
+            "3 MINS", "5 MINS", "7 MINS", "10 MINS"
+        ]
+        onSelect: swos.ChangeGameLength
+        downEntry: >
+    }
+
+    Entry {
+        stringTable: [
+            swos.g_pitchType, -2,
+            "SEASONAL", "RANDOM", "FROZEN", "MUDDY", "WET", "SOFT", "NORMAL", "DRY", "HARD"
+        ]
+        onSelect: swos.ChangePitchType
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry {
+        stringTable: [ swos.g_autoReplays, "OFF", "ON" ]
+        onSelect: swos.ChangeAutoReplays
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry {
+        stringTable: [ swos.g_allPlayerTeamsEqual, "OFF", "ON" ]
+        onSelect: swos.ChangeAllPlTeamsEqual
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry {
+        stringTable: [ swos.g_autoSaveHighlights, "OFF", "ON" ]
+        onSelect: swos.ChangeAutoSaveHighlights
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry autoSaveReplays {
+        text: @kAlloc
+        onSelect: toggleAutoSaveReplays
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry {
+        boolOption: showPreMatchMenus, setPreMatchMenus, "pre-match menus"
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry gameStyle {
+        stringTable: [ ~m_gameStyle, "PC", "AMIGA" ]
+        onSelect: toggleGameStyle
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry exit {
+        x: kBaseX
+        y: kExitY
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+        text: swos.aExit
+        color: kExitColor
+        onSelect: swos.SetExitMenuFlag
+        upEntry: <
+    }
+}

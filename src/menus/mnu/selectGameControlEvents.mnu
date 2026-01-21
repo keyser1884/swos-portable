@@ -1,0 +1,370 @@
+//
+// Menu for selecting/unselecting game control events
+//
+
+#include "common.mh"
+
+Menu selectGameControlEvents {
+    kToggleWidth = 120
+    kStatusWidth = 26
+    kButtonHeight = 16
+    kStatusGap = 4
+    export kLowerButtonsGap = 10
+
+    kRowLength = kToggleWidth + kStatusWidth + kStatusGap
+    kColumnGap = 6
+    kRowGap = 2
+
+    // events and their status (ON/OFF) are split into two columns
+    kColumn1X = (@kScreenWidth - 2 * kRowLength - kStatusGap * 3) / 2 - kMenuOffset
+    kColumn1StatusX = kColumn1X + kToggleWidth + kStatusGap
+    kColumn2X = kColumn1X + kRowLength + kColumnGap
+    kColumn2StatusX = kColumn2X + kToggleWidth + kStatusGap
+
+    kEventHeaderLabelY = 21
+    kToggleStartY = 44
+    kWarningY = 186
+
+    export kOnColor = @kGreen
+    export kOffColor = @kGray
+
+    onInit: selectGameControlEventsOnInit
+    onRestore: selectGameControlEventsOnRestore
+    onDraw: selectGameControlEventsOnDraw
+
+    defaultLeftEntry: ok
+    defaultRightEntry: cancel
+
+    initialEntry: upToggle
+
+    Entry header {
+        x: kBaseX
+        y: 0
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+        text: @kAlloc
+        color: kHeaderColor
+    }
+
+    Entry eventHeaderLabel {
+        x: -kMenuOffset
+        y: kEventHeaderLabelY
+        width: @kScreenWidth
+        height: 10
+        textFlags: @kCenterAligned
+        text: @kAlloc
+    }
+
+    TemplateEntry {
+        color: kOffColor
+        onSelect: toggleEvent
+    }
+
+    defaultX: kColumn1X
+    defaultY: @prevEndY + kRowGap
+    defaultWidth: kToggleWidth
+    defaultHeight: kButtonHeight
+
+    Entry upToggle {
+        y: kToggleStartY
+        rightEntry: upStatus
+        downEntry: >
+
+        text: "UP"
+    }
+
+    Entry downToggle {
+        rightEntry: downStatus
+        upEntry: <
+        downEntry: >
+
+        text: "DOWN"
+    }
+
+    Entry leftToggle {
+        rightEntry: leftStatus
+        upEntry: <
+        downEntry: >
+
+        text: "LEFT"
+    }
+
+    Entry rightToggle {
+        rightEntry: rightStatus
+        upEntry: <
+        downEntry: >
+
+        text: "RIGHT"
+    }
+
+    Entry kickToggle {
+        rightEntry: kickStatus
+        upEntry: <
+        downEntry: >
+
+        text: "KICK"
+    }
+
+    Entry benchToggle {
+        rightEntry: benchStatus
+        upEntry: <
+        downEntry: ok
+
+        text: "BENCH"
+    }
+
+    defaultX: kColumn2X
+
+    Entry pauseToggle {
+        y: kToggleStartY
+        leftEntry: upStatus
+        rightEntry: pauseStatus
+        downEntry: >
+
+        text: "PAUSE"
+    }
+
+    Entry replayToggle {
+        leftEntry: downStatus
+        rightEntry: replayStatus
+        upEntry: <
+        downEntry: >
+
+        text: "REPLAY"
+    }
+
+    Entry saveHighlightToggle {
+        leftEntry: leftStatus
+        rightEntry: saveHighlightStatus
+        upEntry: <
+        downEntry: >
+
+        text: "SAVE HIGHLIGHT"
+    }
+
+    Entry zoomInToggle {
+        leftEntry: rightStatus
+        rightEntry: zoomInStatus
+        upEntry: <
+        downEntry: >
+
+        text: "ZOOM IN"
+    }
+
+    Entry zoomOutToggle {
+        leftEntry: kickStatus
+        rightEntry: zoomOutStatus
+        upEntry: <
+        downEntry: cancel
+
+        text: "ZOOM OUT"
+    }
+
+    Entry invertedToggle {
+        invisible: true
+
+        leftEntry: benchStatus
+        rightEntry: invertedStatus
+        upEntry: <
+        downEntry: next
+
+        text: "INVERTED"
+
+        onSelect: toggleInverted
+    }
+
+    ResetTemplate
+
+    TemplateEntry {
+        color: @kGray
+        text: @kAlloc
+        onSelect: toggleEventFromStatus
+    }
+
+    defaultX: kColumn1StatusX
+    defaultWidth: kStatusWidth
+
+    Entry upStatus {
+        y: kToggleStartY
+        leftEntry: upToggle
+        rightEntry: pauseToggle
+        downEntry: >
+    }
+
+    Entry downStatus {
+        leftEntry: downToggle
+        rightEntry: replayToggle
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry leftStatus {
+        leftEntry: leftToggle
+        rightEntry: saveHighlightToggle
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry rightStatus {
+        leftEntry: rightToggle
+        rightEntry: zoomInToggle
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry kickStatus {
+        leftEntry: kickToggle
+        rightEntry: zoomOutToggle
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry benchStatus {
+        leftEntry: benchToggle
+        rightEntry: zoomOutToggle
+        upEntry: <
+        downEntry: ok
+    }
+
+    defaultX: kColumn2StatusX
+
+    Entry pauseStatus {
+        y: kToggleStartY
+        leftEntry: pauseToggle
+        downEntry: >
+    }
+
+    Entry replayStatus {
+        leftEntry: replayToggle
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry saveHighlightStatus {
+        leftEntry: saveHighlightToggle
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry zoomInStatus {
+        leftEntry: zoomInToggle
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry zoomOutStatus {
+        leftEntry: zoomOutToggle
+        upEntry: <
+        downEntry: cancel
+    }
+
+    Entry invertedStatus {
+        invisible: true
+
+        leftEntry: invertedToggle
+        rightEntry: next
+        upEntry: <
+        downEntry: next
+
+        onSelect: toggleInverted
+    }
+
+    ResetTemplate
+
+    entryAlias firstEventToggle = upToggle
+    entryAlias lastEventToggle = invertedToggle
+
+    entryAlias firstEventStatus = upStatus
+    entryAlias lastEventStatus = invertedStatus
+
+    kOkCancelWidth = (kToggleWidth + kStatusWidth) / 2
+    kOkX = (@kScreenWidth - 2 * kOkCancelWidth - kStatusGap) / 2 - kMenuOffset
+    kCancelX = kOkX + kOkCancelWidth + kStatusGap
+
+    defaultColor: kExitColor
+    defaultWidth: kOkCancelWidth
+    defaultHeight: kBigButtonHeight
+
+    Entry ok {
+        x: kOkX
+        y: @kScreenHeight - kBigButtonHeight - 4
+
+        skipDown: cancel
+        leftEntry: @kNoEntry
+        rightEntry: cancel
+        upEntry: benchToggle
+
+        text: swos.aOk
+
+        onSelect: onOk
+    }
+
+    defaultY: @prevY
+
+    Entry cancel {
+        x: kCancelX
+
+        leftEntry: ok
+        rightEntry: @kNoEntry
+        upEntry: lastEventToggle
+
+        text: swos.aCancel
+
+        onSelect: onCancel
+    }
+
+    // overlaid entries (prev/exit/next)
+    kTotalWidth = kToggleWidth + kStatusWidth - kStatusGap
+    kPrevExitNextWidth = kTotalWidth / 3
+
+    Entry prev {
+        x: kOkX
+        width: kPrevExitNextWidth
+
+        rightEntry: exit
+        upEntry: benchToggle
+
+        sprite: kLeftArrowSpriteIndex
+
+        onSelect: selectPreviousEvent
+    }
+
+    Entry exit {
+        x: @prevEndX + kStatusGap
+        width: kPrevExitNextWidth + (kTotalWidth % 3 > 0)
+
+        text: swos.aExit
+
+        leftEntry: prev
+        rightEntry: next
+        upEntry: benchStatus
+
+        onSelect: ~SetExitMenuFlag
+    }
+
+    Entry next {
+        x: @prevEndX + kStatusGap
+        width: kPrevExitNextWidth + (kTotalWidth % 3 > 1)
+
+        sprite: kRightArrowSpriteIndex
+
+        leftEntry: exit
+        upEntry: zoomOutToggle
+
+        onSelect: selectNextEvent
+    }
+
+    Entry warning {
+        x: -kMenuOffset
+        y: kWarningY
+        width: @kScreenWidth
+
+        invisible: true
+
+        color: @kNoBackground
+        textFlags: @kYellowText
+        text: @kAlloc
+
+        beforeDraw: updateWarning
+    }
+}

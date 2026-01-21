@@ -1,0 +1,37 @@
+//
+// Replay/Exit menu after a friendly game
+//
+
+#include "common.mh"
+
+Menu replayExitMenu
+{
+    defaultX: kPromptItemsX
+    defaultWidth: kPromptButtonWidth
+    defaultHeight: kPromptButtonHeight
+    defaultTextFlags: @kBigFont
+
+    onInit: replayExitMenuOnInit
+
+    Entry replay {
+        y: kPromptTopItemY
+
+        color: @kGreen
+        text: "PLAY AGAIN"
+
+        downEntry: >
+
+        onSelect: replayOnSelect
+    }
+
+    Entry exit {
+        y: kPromptBottomItemY
+
+        color: @kLightBrownWithOrangeFrame
+        text: swos.aExit
+
+        upEntry: <
+
+        onSelect: exitOnSelect
+    }
+}

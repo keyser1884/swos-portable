@@ -1,0 +1,30 @@
+//
+// Simple menu to show an error message with a "CONTINUE" button below
+//
+
+Menu continueMenu
+{
+    onInit: continueOnInit
+    initialEntry: continueButton
+
+    Entry errorText {
+        x: 2
+        y: 40
+        width: 300
+        height: 40
+        color: @kLightBrownWithRedFrame
+        textFlags: @kBigFont
+        text: @kAlloc
+    }
+
+    Entry continueButton {
+        x: 102
+        y: 185
+        width: 100
+        height: 15
+        color: @kLightBrownWithRedFrame
+        textFlags: @kBigFont
+        text: "CONTINUE"
+        onSelect: ~SetExitMenuFlag
+    }
+}

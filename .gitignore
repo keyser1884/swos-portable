@@ -1,0 +1,16 @@
+# Build output
+build/
+bin/
+
+# IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Claude Code
+.claude/
+
+# Temporary files
+*.tmp
+*.log

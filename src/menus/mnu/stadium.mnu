@@ -1,0 +1,111 @@
+//
+// Stadium menu, showing teams with stadium in the background right before the game
+//
+
+#allowZeroWidthHeightEntries
+
+Menu stadiumMenu
+{
+    export kNumPlayerSprites = 11
+    export kNumPlayerNames = 16
+
+    kTeamNameY = 28
+    kTeamNameWidth = 137
+    kTeamNameHeight = 12
+
+    y: -kTeamNameY
+    initialEntry: nullEntry
+    onInit: stadiumMenuOnInit
+    onDestroy: stadiumMenuOnDestroy
+
+    // there is no vertical space to place game name and game round, keep them out for now
+
+    Entry leftTeamName {
+        y: kTeamNameY
+        width: kTeamNameWidth
+        height: kTeamNameHeight
+        color: @kOrangeWithOrangeFrame
+
+        textFlags: @kBigText | @kRightAligned
+        text: @kAlloc
+    }
+
+    Entry letterV {
+        x: 142
+        y: kTeamNameY
+        width: 20
+        height: kTeamNameHeight
+
+        textFlags: @kBigText | @kCenterAligned
+        text: "V"
+    }
+
+    Entry rightTeamName {
+        x: 167
+        y: kTeamNameY
+        width: kTeamNameWidth
+        height: kTeamNameHeight
+        color: @kOrangeWithOrangeFrame
+
+        textFlags: @kBigText | @kLeftAligned
+        text: @kAlloc
+    }
+
+    x: -1
+    y: 22
+
+#repeat kNumPlayerSprites
+    Entry #join(leftTeamPlayerSprite, #i) {
+        x: 142
+        y: 13 * #i
+        menuSpecificSprite: -1
+    }
+#endRepeat
+
+    entryAlias leftTeamPlayerSpritesStart = leftTeamPlayerSprite0
+
+    x: 0
+    y: 17
+
+#repeat kNumPlayerNames
+    Entry #join(leftTeamPlayerName, #i) {
+        x: 132
+        y: #{i >= 11 ? "@prevY + 9" : 13 * i}:t
+        height: 10
+
+        textFlags: #{@kRightAligned | (i >= 11 ? @kDarkGrayText : 0)}
+        text: @kAlloc
+    }
+#endRepeat
+
+    entryAlias lefTeamPlayerNamesStart = leftTeamPlayerName0
+
+    y: 22
+
+#repeat kNumPlayerSprites
+    Entry #join(rightTeamPlayerSprite, #i) {
+        x: 162
+        y: 13 * #i
+        menuSpecificSprite: -1
+    }
+#endRepeat
+
+    entryAlias rightTeamPlayerSpritesStart = rightTeamPlayerSprite0
+
+    y: 17
+
+#repeat kNumPlayerNames
+    Entry #join(rightTeamPlayerName, #i) {
+        x: 172
+        y: #{i >= 11 ? "@prevY + 9" : 13 * i}:t
+        height: 10
+
+        textFlags: #{@kLeftAligned | (i >= 11 ? @kDarkGrayText : 0)}
+        text: @kAlloc
+    }
+#endRepeat
+
+    entryAlias rightTeamPlayerNamesStart = rightTeamPlayerName0
+
+    Entry nullEntry {}
+}

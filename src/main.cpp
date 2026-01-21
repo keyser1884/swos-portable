@@ -1,0 +1,77 @@
+#include "log.h"
+#include "init.h"
+#include "options.h"
+#include "portedFunctions.h"
+#include "render.h"
+#include "windowManager.h"
+#include "pitch.h"
+#include "audio.h"
+#include "file.h"
+#include "embeddedAssets.h"
+#include "crash.h"
+#include "joypads.h"
+
+static void turnOnDebugHeap()
+{
+#ifndef NDEBUG
+# ifdef _WIN32
+    auto flags = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+    _CrtSetDbgFlag(flags | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_DELAY_FREE_MEM_DF | _CRTDBG_DELAY_FREE_MEM_DF);
+# endif
+#endif
+}
+
+static void setSdlHints()
+{
+#ifdef __ANDROID__
+    SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
+#endif
+    SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+}
+
+int main(int argc, char **argv)
+{
+    turnOnDebugHeap();
+
+    auto commandLineWarnings = parseCommandLine(argc, argv);
+
+    atexit(finishLog);          // dispose log last
+    initLog();
+    initEmbeddedAssets();
+
+    logInfo("SWOS port compiled at %s, %s", __DATE__, __TIME__);
+
+    for (const auto& logItem : commandLineWarnings)
+        log(logItem.category, "%s", logItem.text.c_str());
+
+    installCrashHandler();
+    loadOptions();
+    parseCommandLine(argc, argv);   // parse command line options again to override ini settings
+    setSdlHints();
+
+    auto flags = IMG_INIT_JPG | IMG_INIT_PNG;
+    if (IMG_Init(flags) != flags)
+        logWarn("Failed to properly initialize SDL Image");
+
+    initRendering();
+    normalizeOptions();
+    initJoypads();
+
+    // set zoom again since the window wasn't created at the time options were loaded
+    setZoomFactor(getZoomFactor());
+
+    atexit(finishRendering);
+    atexit(saveOptions);        // must be saved only after finishRendering
+    atexit(finishAudio);
+    atexit(IMG_Quit);
+
+    SDL_StopTextInput();
+
+    if (g_quickMatchMode) {
+        startQuickMatch();
+    } else {
+        startMainMenuLoop();
+    }
+
+    return EXIT_SUCCESS;
+}

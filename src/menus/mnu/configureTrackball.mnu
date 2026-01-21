@@ -1,0 +1,156 @@
+#include "common.mh"
+
+Menu configureTrackballMenu
+{
+    kEventLabelWidth = #textWidth("Y+:") + 2
+    kEventFieldWidth = kBigButtonWidth
+    kEventFieldHeight = 14
+
+    kRowGap = 4
+    kColumnGap = 4
+
+    kBottomButtonsColumnGap = 2
+    kBottomButtonWidth = 40
+    kBottomButtonStartX = (@kScreenWidth - 3 * kBottomButtonWidth - 2 * kBottomButtonsColumnGap) / 2 - kMenuOffset
+
+    kColumn2X = kBottomButtonStartX
+    kColumn1X = kColumn2X - kEventLabelWidth - kColumnGap
+
+    kEventsY = (@kScreenHeight - 4 * (kEventFieldHeight + kRowGap)) / 2 + 10
+    kTrackballLabelY = kEventsY - 32
+    kBottomButtonsY = kEventsY + 4 * (kEventFieldHeight + kRowGap) + 16
+
+    onInit: configureTrackballMenuOnInit
+    onRestore: configureTrackballMenuOnRestore
+    onDraw: configureTrackballMenuOnDraw
+
+    initialEntry: xPosEvent
+
+    Entry header {
+        x: kBaseX
+        y: 0
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+
+        color: kHeaderColor
+
+        text: "CONFIGURE TRACKBALL"
+    }
+
+    defaultHeight: #textHeight()
+
+    Entry trackballLabel {
+        x: -kMenuOffset
+        y: kTrackballLabelY
+        width: @kScreenWidth
+
+        text: @kAlloc
+    }
+
+    defaultX: @prevX
+    defaultY: @prevEndY + kRowGap
+    defaultWidth: kEventLabelWidth
+    defaultHeight: kEventFieldHeight
+
+    Entry xPosLabel {
+        x: kColumn1X
+        y: kEventsY
+
+        textFlags: @kRightAligned
+        text: "X+:"
+    }
+
+    Entry xNegLabel {
+        textFlags: @kRightAligned
+        text: "X-:"
+    }
+
+    Entry yPosLabel {
+        textFlags: @kRightAligned
+        text: "Y+:"
+    }
+
+    Entry yNegLabel {
+        textFlags: @kRightAligned
+        text: "Y-:"
+    }
+
+    defaultWidth: kEventFieldWidth
+    defaultHeight: kEventFieldHeight
+
+    TemplateEntry {
+        color: @kLightBlue
+        text: @kAlloc
+        onSelect: selectEvents
+    }
+
+    Entry xPosEvent {
+        x: kColumn2X
+        y: kEventsY
+
+        leftEntry: prevBall
+        rightEntry: nextBall
+        downEntry: >
+    }
+
+    Entry xNegEvent {
+        leftEntry: prevBall
+        rightEntry: nextBall
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry yPosEvent {
+        leftEntry: prevBall
+        rightEntry: nextBall
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry yNegEvent {
+        leftEntry: prevBall
+        rightEntry: nextBall
+        upEntry: <
+        downEntry: >
+    }
+
+    ResetTemplate
+
+    defaultX: @prevEndX + kBottomButtonsColumnGap
+    defaultY: kBottomButtonsY
+    defaultWidth: kBottomButtonWidth
+    defaultHeight: kBigButtonHeight
+
+    Entry prevBall {
+        x: kBottomButtonStartX
+
+        rightEntry: exit
+        upEntry: yNegEvent
+
+        color: kExitColor
+        sprite: kLeftArrowSpriteIndex
+
+        onSelect: goToPreviousBall
+    }
+
+    Entry exit {
+        color: kExitColor
+        text: swos.aExit
+
+        leftEntry: prevBall
+        rightEntry: nextBall
+        upEntry: yNegEvent
+
+        onSelect: ~SetExitMenuFlag
+    }
+
+    Entry nextBall {
+        leftEntry: exit
+        upEntry: yNegEvent
+
+        color: kExitColor
+        sprite: kRightArrowSpriteIndex
+
+        onSelect: goToNextBall
+    }
+}

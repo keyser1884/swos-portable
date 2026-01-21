@@ -1,0 +1,182 @@
+//
+// Ported Functions Toggle Menu - switch between C++ and assembly implementations
+//
+
+#include "common.mh"
+
+Menu portedFunctionsMenu
+{
+    kVisibleToggles = 12
+    kToggleHeight = 11
+    kToggleLabelWidth = 135
+    kToggleValueWidth = 30
+    kToggleStartY = 28
+
+    kColumn1X = 10
+    kColumn2X = 150
+
+    onInit: portedFunctionsMenuOnInit
+    onReturn: portedFunctionsMenuOnReturn
+    initialEntry: toggle_00
+
+    Entry header {
+        x: kBaseX - 10
+        y: 0
+        width: 145
+        height: kBigButtonHeight
+        text: "PORTED FUNCTIONS"
+        color: kHeaderColor
+    }
+
+    Entry scrollInfo {
+        x: 240
+        y: 4
+        width: 70
+        height: 10
+        text: @kAlloc
+        color: @kGray
+        beforeDraw: updateScrollInfo
+    }
+
+    // Column 1: Function names (labels) - use template entry
+    defaultX: kColumn1X
+    defaultWidth: kToggleLabelWidth
+    defaultHeight: kToggleHeight
+
+    TemplateEntry {
+        color: kOptionsColumn1Color
+        text: @kAlloc
+        beforeDraw: drawToggleLabel
+    }
+
+    export kFirstLabelEntry = @currentOrd + 1
+
+#repeat kVisibleToggles => row
+    Entry #join(label_, #{row}:02) {
+        y: #{kToggleStartY + row * (kToggleHeight + 1)}
+    }
+#endRepeat
+
+    ResetTemplate
+
+    // Column 2: ON/OFF toggles - use template entry
+    defaultX: kColumn2X
+    defaultWidth: kToggleValueWidth
+    defaultHeight: kToggleHeight
+
+    TemplateEntry {
+        color: kOptionsColumn2Color
+        text: @kAlloc
+        beforeDraw: drawToggleValue
+        onSelect: selectToggle
+    }
+
+    export kFirstToggleEntry = @currentOrd + 1
+
+#repeat kVisibleToggles => row
+    Entry #join(toggle_, #{row}:02) {
+        y: #{kToggleStartY + row * (kToggleHeight + 1)}
+
+        leftEntry: #{kFirstLabelEntry + row}
+        upEntry: #{row > 0 ? kFirstToggleEntry + row - 1 : @kNoEntry}
+        downEntry: #{row < kVisibleToggles - 1 ? kFirstToggleEntry + row + 1 : @kNoEntry}
+    }
+#endRepeat
+
+    ResetTemplate
+
+    // First toggle goes up to scrollUp, last toggle goes down to enableAllCpp
+    toggle_00.upEntry = scrollUp
+    #join(toggle_, #{kVisibleToggles - 1}:02).downEntry = enableAllCpp
+
+    // Scroll arrows
+    Entry scrollUp {
+        x: 200
+        y: kToggleStartY + 30
+        width: kScrollArrowWidth
+        height: kScrollArrowHeight
+        sprite: kUpArrowSpriteIndex
+        leftEntry: toggle_02
+        downEntry: scrollDown
+        onSelect: doScrollUp
+    }
+
+    Entry scrollDown {
+        x: 200
+        y: kToggleStartY + 80
+        width: kScrollArrowWidth
+        height: kScrollArrowHeight
+        sprite: kDownArrowSpriteIndex
+        leftEntry: toggle_08
+        upEntry: scrollUp
+        downEntry: enableAllCpp
+        onSelect: doScrollDown
+    }
+
+    // Action buttons - row 1
+    Entry enableAllCpp {
+        x: 10
+        y: 175
+        width: 85
+        height: 12
+        text: "ALL C++"
+        color: @kGreen
+        upEntry: #join(toggle_, #{kVisibleToggles - 1}:02)
+        rightEntry: enableAllAsm
+        downEntry: compareToggle
+        onSelect: doEnableAllCpp
+    }
+
+    Entry enableAllAsm {
+        x: 100
+        y: 175
+        width: 85
+        height: 12
+        text: "ALL ASM"
+        color: @kLightBrownWithOrangeFrame
+        upEntry: scrollDown
+        leftEntry: enableAllCpp
+        rightEntry: exit
+        downEntry: compareToggle
+        onSelect: doEnableAllAsm
+    }
+
+    Entry exit {
+        x: 200
+        y: 175
+        width: 90
+        height: 12
+        text: swos.aExit
+        color: kExitColor
+        upEntry: scrollDown
+        leftEntry: enableAllAsm
+        downEntry: compareToggle
+        onSelect: doSaveAndExit
+    }
+
+    // Action buttons - row 2 (comparison mode)
+    Entry compareToggle {
+        x: 10
+        y: 189
+        width: 100
+        height: 12
+        text: @kAlloc
+        color: @kLightBrownWithRedFrame
+        upEntry: enableAllCpp
+        rightEntry: compareStatus
+        beforeDraw: drawCompareToggle
+        onSelect: toggleCompareMode
+    }
+
+    Entry compareStatus {
+        x: 115
+        y: 189
+        width: 175
+        height: 12
+        text: @kAlloc
+        color: @kGray
+        upEntry: exit
+        leftEntry: compareToggle
+        beforeDraw: drawCompareStatus
+    }
+}

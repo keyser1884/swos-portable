@@ -1,0 +1,200 @@
+//
+// Recreation of the SWOS main menu
+//
+
+Menu mainMenu
+{
+    kExitIconSprite = 1334
+
+    y: 1
+    onInit: mainMenuOnInit
+    initialEntry: friendly
+
+    kButtonWidth = 150
+    kButtonHeight = 16
+
+    kLongButtonWidth = 250
+    kLongButtonHeight = 14
+
+    kColumn1X = 0
+    kColumn2X = 154
+    kBottomEntriesX = 27
+    kStartY = 40
+
+    kExitWidth = 31
+    kExitHeight = 17
+
+    defaultX: kColumn1X
+    defaultY: @prevEndY + 4
+
+    defaultWidth: kButtonWidth
+    defaultHeight: kButtonHeight
+
+    defaultTextFlags: @kBigText
+
+    Entry editTactics {
+        y: kStartY
+
+        color: @kDarkBlue
+
+        downEntry: editCustomTeams
+        rightEntry: friendly
+
+        text: swos.aEditTactics
+        onSelect: swos.EditTacticsMenu
+    }
+
+    Entry editCustomTeams {
+        color: @kDarkBlue
+
+        upEntry: editTactics
+        downEntry: replays
+        rightEntry: diyCompetition
+
+        text: swos.aEditCustomTeam
+        onSelect: swos.EditCustomTeamMenu
+    }
+
+    Entry replays {
+        color: @kPurple
+
+        upEntry: editCustomTeams
+        downEntry: options
+        rightEntry: presetCompetition
+
+        text: "REPLAYS"
+        onSelect: ~showReplaysMenu
+    }
+
+    Entry options {
+        color: @kDarkBlue
+
+        upEntry: replays
+        downEntry: career
+        rightEntry: season
+
+        text: swos.aOptions
+        onSelect: ~showOptionsMenu
+    }
+
+    // invisible entry in place of "SAVE DISK FILING" to keep everything in place
+    Entry {
+        invisible: true
+    }
+
+    defaultX: kColumn2X
+
+    Entry friendly {
+        y: kStartY
+
+        color: @kLightBrownWithRedFrame
+
+        downEntry: diyCompetition
+        leftEntry: editTactics
+
+        text: swos.aFriendly
+        onSelect: swos.FriendlyMenu
+    }
+
+    Entry diyCompetition {
+        color: @kLightBrownWithOrangeFrame
+
+        upEntry: friendly
+        downEntry: presetCompetition
+        leftEntry: editCustomTeams
+
+        text: swos.aDiyCompetition
+        onSelect: swos.DIYCompetitionMenu
+    }
+
+    Entry presetCompetition {
+        color: @kLightBrownWithOrangeFrame
+
+        upEntry: diyCompetition
+        downEntry: season
+        leftEntry: replays
+
+        text: swos.aPresetCompetit
+        onSelect: swos.PresetCompetitionMenu
+    }
+
+    Entry season {
+        color: @kLightBrownWithOrangeFrame
+
+        upEntry: presetCompetition
+        downEntry: career
+        leftEntry: options
+
+        text: swos.aSeason
+        onSelect: swos.SeasonMenu
+    }
+
+    Entry career {
+        x: 79
+        color: @kLightBrownWithOrangeFrame
+
+        upEntry: season
+        downEntry: continueContest
+
+        text: swos.aCareer
+        onSelect: swos.CareerMenu
+    }
+
+    x: 0
+    y: 0
+
+    defaultX: kBottomEntriesX
+    defaultWidth: kLongButtonWidth
+    defaultHeight: kLongButtonHeight
+    defaultTextFlags: 0
+
+    Entry continueContest {
+        y: 144
+
+        color: @kGreen
+
+        upEntry: career
+        downEntry: saveContest
+
+        text: @kAlloc
+        onSelect: swos.StartContest
+    }
+
+    Entry saveContest {
+        y: 165
+
+        color: @kRed
+
+        upEntry: continueContest
+        downEntry: loadOldCompetition
+
+        text: swos.saveFileTitle
+        onSelect: swos.SaveContest
+    }
+
+    Entry loadOldCompetition {
+        y: 182
+
+        color: @kLightBrownWithOrangeFrame
+
+        upEntry: saveContest
+        downEntry: exit
+        leftEntry: exit
+
+        text: swos.aLoadOldCompeti
+        onSelect: swos.LoadOldCompetitionMenu
+    }
+
+    Entry exit {
+        x: kColumn1X - 6
+        y: @kScreenHeight - kExitHeight - 2
+        width: kExitWidth
+        height: kExitHeight
+
+        upEntry: loadOldCompetition
+        rightEntry: loadOldCompetition
+
+        sprite: kExitIconSprite
+        onSelect: showQuitMenu
+    }
+}

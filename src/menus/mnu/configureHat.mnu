@@ -1,0 +1,292 @@
+//
+// Menu for configuring a single joypad hat
+//
+
+#include "common.mh"
+
+Menu configureHatMenu
+{
+    kEventLabelWidth = 140
+    kEventStatusWidth = 26
+    kLabelHeight = 10
+
+    kColumnGap = 2
+    export kRowGap = 2
+    kSwitchBindingBoxWidth = 20
+
+    kFullWidth = kEventLabelWidth + kEventStatusWidth + kColumnGap
+
+    kCurrentBindingLabelY = 20
+    kBindingSwitchY = kCurrentBindingLabelY + 10
+    kEventsY = 56
+    kMaskLabelY = kEventsY - 10
+
+    kEventLabelX = (@kScreenWidth - kEventLabelWidth - kEventStatusWidth - kColumnGap) / 2 - kMenuOffset
+    kEventStatusX = kEventLabelX + kEventLabelWidth + kColumnGap
+
+    export kOnColor = @kGreen
+    export kOffColor = @kGray
+    kButtonColor = kExitColor
+
+    defaultY: @prevEndY + kRowGap
+    defaultHeight: kLabelHeight
+
+    onInit: configureHatMenuOnInit
+    onRestore: configureHatMenuOnRestore
+    onDraw: configureHatMenuOnDraw
+
+    initialEntry: createNewBinding
+
+    Entry header {
+        x: kBaseX
+        y: 0
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+
+        color: kHeaderColor
+        text: @kAlloc
+    }
+
+    Entry bindingLabel {
+        x: -kMenuOffset
+        y: kCurrentBindingLabelY
+        width: @kScreenWidth
+
+        text: @kAlloc
+    }
+
+    defaultX: 60
+    defaultWidth: kSwitchBindingBoxWidth
+
+    kCurrentBindingWidth = 20
+
+    Entry prevBinding {
+        x: (@kScreenWidth - 2 * kSwitchBindingBoxWidth - kCurrentBindingWidth - 2 * kRowGap) / 2 - kMenuOffset
+        y: kBindingSwitchY
+
+        color: @kDarkBlue
+        sprite: kLeftArrowSpriteIndex
+
+        rightEntry: >
+        downEntry: leftLabel
+
+        onSelect: showPreviousBinding
+    }
+    Entry currentBinding {
+        x: @prevEndX + kRowGap
+        y: @prevY
+        width: kCurrentBindingWidth
+        color: @kLightBlue
+
+        leftEntry: <
+        rightEntry: >
+        downEntry: leftLabel
+
+        number: 0
+        onSelect: inputCurrentBinding
+    }
+    Entry nextBinding {
+        x: @prevEndX + kRowGap
+        y: @prevY
+
+        color: @kDarkBlue
+        sprite: kRightArrowSpriteIndex
+
+        leftEntry: <
+        downEntry: leftLabel
+
+        onSelect: showNextBinding
+    }
+
+    //
+    // hat events
+    //
+
+    defaultX: kEventLabelX
+    defaultWidth: kEventLabelWidth
+
+    Entry {
+        x: -kMenuOffset
+        y: kMaskLabelY
+        width: @kScreenWidth
+        text: "HAT MASK:"
+    }
+
+    TemplateEntry {
+        color: kOffColor
+    }
+
+    Entry leftLabel {
+        y: kEventsY
+        text: "LEFT"
+
+        upEntry: prevBinding
+        rightEntry: leftStatus
+        downEntry: >
+
+        onSelect: toggleEvent
+    }
+    Entry rightLabel {
+        text: "RIGHT"
+
+        rightEntry: rightStatus
+        upEntry: <
+        downEntry: >
+
+        onSelect: toggleEvent
+    }
+    Entry upLabel {
+        text: "UP"
+
+        rightEntry: upStatus
+        upEntry: <
+        downEntry: >
+
+        onSelect: toggleEvent
+    }
+    Entry downLabel {
+        text: "DOWN"
+
+        rightEntry: downStatus
+        upEntry: <
+        downEntry: >
+
+        onSelect: toggleEvent
+    }
+    Entry invertedLabel {
+        text: "INVERTED"
+
+        rightEntry: invertedStatus
+        upEntry: <
+        downEntry: events
+
+        onSelect: toggleInverted
+    }
+
+    ResetTemplate
+
+    Entry eventsLabel {
+        x: -kMenuOffset
+        width: @kScreenWidth
+        text: "EVENTS:"
+    }
+    Entry events {
+        y: @prevY + 10
+        width: kFullWidth
+        color: @kLightBlue
+        text: @kAlloc
+
+        upEntry: invertedLabel
+        downEntry: createNewBinding
+
+        onSelect: pickEvents
+    }
+
+    //
+    // event on/off switches
+    //
+
+    defaultX: kEventStatusX
+    defaultWidth: kEventStatusWidth
+
+    TemplateEntry {
+        color: kOffColor
+        text: @kAlloc
+    }
+
+    Entry leftStatus {
+        y: kEventsY
+
+        leftEntry: leftLabel
+        upEntry: nextBinding
+        downEntry: >
+
+        onSelect: toggleEvent
+    }
+    Entry rightStatus {
+        leftEntry: rightLabel
+        upEntry: <
+        downEntry: >
+
+        onSelect: toggleEvent
+    }
+    Entry upStatus {
+        leftEntry: upLabel
+        upEntry: <
+        downEntry: >
+
+        onSelect: toggleEvent
+    }
+    Entry downStatus {
+        leftEntry: downLabel
+        upEntry: <
+        downEntry: >
+
+        onSelect: toggleEvent
+    }
+    Entry invertedStatus {
+        leftEntry: invertedLabel
+        upEntry: <
+        downEntry: events
+
+        onSelect: toggleInverted
+    }
+
+    ResetTemplate
+
+    entryAlias firstEventLabel = leftLabel
+    entryAlias lastEventLabel = downLabel
+
+    entryAlias firstEventStatus = leftStatus
+    entryAlias lastEventStatus = downStatus
+
+    //
+    // bottom buttons
+    //
+
+    Entry createNewBinding {
+        x: kBaseX
+        y: kExitY - 2 * kBigButtonHeight - 4 * kRowGap
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+
+        color: @kGreen
+        text: "CREATE NEW BINDING"
+
+        upEntry: events
+        downEntry: >
+
+        onSelect: createBinding
+    }
+
+    Entry deleteBinding {
+        x: kBaseX
+        y: kExitY - kBigButtonHeight - 2 * kRowGap
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+
+        color: @kGreen
+        text: "DELETE BINDING"
+
+        upEntry: <
+        downEntry: exit
+
+        onSelect: deleteCurrentBinding
+    }
+
+    defaultColor: kButtonColor
+
+    Entry exit {
+        x: kBaseX
+        y: kExitY
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+
+        color: kExitColor
+        text: "EXIT"
+
+        onSelect: ~SetExitMenuFlag
+
+        upEntry: deleteBinding
+    }
+}

@@ -1,0 +1,48 @@
+//
+// commonly used menu constants
+//
+
+kMenuOffset = 8
+
+kBigButtonWidth = 125
+kBigButtonHeight = 15
+kBaseX = (@kScreenWidth - kBigButtonWidth) / 2 - kMenuOffset
+
+kPromptButtonWidth = 150
+kPromptButtonHeight = 20
+
+kPromptItemsX = 85
+kPromptTopItemY = 66
+kPromptBottomItemY = 116
+
+kPromptTopItemColor = @kGreen
+kPromptBottomItemColor = @kLightBrownWithOrangeFrame
+
+kHeaderColor = @kGray | @kGrayFrame
+
+kExitY = @kScreenHeight - kBigButtonHeight
+kExitColor = @kLightBrownWithOrangeFrame
+
+kOptionWidth = 140
+kOptionHeight = 11
+
+kOptionsColumn1X = 10
+kOptionsColumn2X = 154
+kOptionsStartY = 60
+
+kOptionsRowDistance = 1
+
+kOptionsColumn1Color = @kGray
+kOptionsColumn2Color = @kLightBlue
+
+kChangerWidth = 16
+kChangerColor = @kDarkBlue
+kChangerOptionWidth = kOptionWidth - 2 * kChangerWidth - 2
+
+kScrollArrowWidth = 8
+kScrollArrowHeight = 14
+
+kLeftArrowSpriteIndex = 179
+kRightArrowSpriteIndex = 175
+kUpArrowSpriteIndex = 183
+kDownArrowSpriteIndex = 184

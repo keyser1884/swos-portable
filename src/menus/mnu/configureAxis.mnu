@@ -1,0 +1,272 @@
+//
+// Menu for configuring a single joypad axis
+//
+
+#include "common.mh"
+
+Menu configureAxisMenu
+{
+    kAxisLabelY = 20
+    kIntervalLabelY = 46
+    kFromY = 78
+
+    kSwitchBoxWidth = 20
+    kFromLabelWidth = 28
+    kFromInputWidth = 48
+
+    kFromInputHeight = 10
+    kLabelHeight = 10
+
+    export kRowGap = 2
+    kColumnGap = 2
+
+    onInit: configureAxisMenuOnInit
+    onRestore: configureAxisMenuOnRestore
+    onDraw: configureAxisMenuOnDraw
+
+    initialEntry: currentInterval
+
+    Entry header {
+        x: kBaseX
+        y: 0
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+
+        color: kHeaderColor
+        text: @kAlloc
+    }
+
+    defaultHeight: kLabelHeight
+
+    defaultX: @prevEndX + kRowGap
+    defaultY: @prevY
+
+    kInputBoxWidth = 20
+
+    //
+    // current axis switching
+    //
+
+    Entry axisLabel {
+        x: -kMenuOffset
+        y: kAxisLabelY
+        width: @kScreenWidth
+
+        text: @kAlloc
+    }
+
+    Entry prevAxis {
+        x: (@kScreenWidth - 2 * kSwitchBoxWidth - kInputBoxWidth - 2 * kRowGap) / 2 - kMenuOffset
+        y: @prevEndY + kColumnGap
+        width: kSwitchBoxWidth
+
+        color: @kDarkBlue
+        sprite: kLeftArrowSpriteIndex
+
+        rightEntry: currentAxis
+        downEntry: currentInterval
+
+        onSelect: goToPreviousAxis
+    }
+
+    Entry currentAxis {
+        width: kInputBoxWidth
+        color: @kLightBlue
+
+        number: 0
+
+        leftEntry: prevAxis
+        rightEntry: nextAxis
+        downEntry: currentInterval
+
+        onSelect: inputCurrentAxis
+    }
+
+    Entry nextAxis {
+        width: kSwitchBoxWidth
+        color: @kDarkBlue
+        sprite: kRightArrowSpriteIndex
+
+        leftEntry: currentAxis
+        downEntry: currentInterval
+
+        onSelect: goToNextAxis
+    }
+
+    //
+    // current interval switching
+    //
+
+    Entry intervalLabel {
+        x: -kMenuOffset
+        y: kIntervalLabelY
+        width: @kScreenWidth
+
+        text: @kAlloc
+    }
+
+    Entry prevInterval {
+        x: (@kScreenWidth - 2 * kSwitchBoxWidth - kInputBoxWidth - 2 * kRowGap) / 2 - kMenuOffset
+        y: @prevEndY + kColumnGap
+        width: kSwitchBoxWidth
+
+        color: @kDarkBlue
+        sprite: kLeftArrowSpriteIndex
+
+        rightEntry: currentInterval
+        upEntry: prevAxis
+        downEntry: fromInput
+
+        onSelect: goToPreviousInterval
+    }
+
+    Entry currentInterval {
+        width: kInputBoxWidth
+        color: @kLightBlue
+
+        number: 0
+
+        leftEntry: prevInterval
+        rightEntry: nextInterval
+        upEntry: currentAxis
+        downEntry: fromInput
+
+        onSelect: inputCurrentInterval
+    }
+
+    Entry nextInterval {
+        width: kSwitchBoxWidth
+        color: @kDarkBlue
+        sprite: kRightArrowSpriteIndex
+
+        leftEntry: currentInterval
+        upEntry: nextAxis
+        downEntry: fromInput
+
+        onSelect: goToNextInterval
+    }
+
+    //
+    // interval data
+    //
+
+    defaultX: @prevEndX + 2 * kRowGap
+    defaultHeight: kFromInputHeight
+
+    kFromX = (@kScreenWidth - kFromLabelWidth - kFromInputWidth - 2 * kRowGap) / 2 - kMenuOffset
+
+    Entry {
+        x: kFromX
+        y: kFromY
+        width: kFromLabelWidth
+
+        textFlags: @kRightAligned
+        text: "FROM:"
+    }
+
+    Entry fromInput {
+        width: kFromInputWidth
+        color: @kLightBlue
+
+        upEntry: currentInterval
+        downEntry: toInput
+
+        text: @kAlloc
+
+        onSelect: inputIntervalStart
+    }
+
+    Entry {
+        x: kFromX
+        y: kFromY + kFromInputHeight + 1
+        width: kFromLabelWidth
+
+        textFlags: @kRightAligned
+        text: "TO:"
+    }
+
+    Entry toInput {
+        width: kFromInputWidth
+        color: @kLightBlue
+
+        upEntry: fromInput
+        downEntry: events
+
+        text: @kAlloc
+
+        onSelect: inputIntervalEnd
+    }
+
+    Entry {
+        x: -kMenuOffset
+        y: @prevY + kFromInputHeight + 2 * kRowGap
+        width: @kScreenWidth
+
+        text: "(MIN: -32768  MAX: 32767)"
+    }
+
+    Entry {
+        x: -kMenuOffset
+        y: @prevY + kFromInputHeight + 2 * kRowGap
+        width: @kScreenWidth
+
+        text: "EVENTS:"
+    }
+
+    Entry events {
+        x: kBaseX
+        y: @prevY + kFromInputHeight + kRowGap - 1
+        width: kBigButtonWidth
+
+        upEntry: toInput
+        downEntry: addNewInterval
+
+        color: @kLightBlue
+        text: @kAlloc
+
+        onSelect: pickEvents
+    }
+
+    //
+    // bottom buttons
+    //
+
+    defaultX: kBaseX
+    defaultWidth: kBigButtonWidth
+    defaultHeight: kBigButtonHeight - 2
+
+    Entry addNewInterval {
+        y: kExitY - 2 * (kBigButtonHeight + kRowGap)
+
+        upEntry: events
+        downEntry: deleteInterval
+
+        color: @kGreen
+        text: "ADD NEW INTERVAL"
+
+        onSelect: createInterval
+    }
+
+    Entry deleteInterval {
+        y: kExitY - kBigButtonHeight - kRowGap
+
+        upEntry: addNewInterval
+        downEntry: exit
+
+        color: @kGreen
+        text: "DELETE INTERVAL"
+
+        onSelect: deleteCurrentInterval
+    }
+
+    Entry exit {
+        y: kExitY
+
+        color: kExitColor
+        text: swos.aExit
+
+        upEntry: deleteInterval
+
+        onSelect: ~SetExitMenuFlag
+    }
+}

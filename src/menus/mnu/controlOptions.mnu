@@ -1,0 +1,282 @@
+//
+// Controls menu
+//
+
+#include "common.mh"
+
+Menu controlOptionsMenu
+{
+    kStartY = 30
+    kNextPartGap = 10
+
+    kRedefineControls = "SETUP CONTROLS"
+
+    export kControlButtonWidth = 144
+
+    kColumnDistance = 6
+    // offset the +8 (kMenuOffset) that SWOS adds to menu coordinates to set the calculations straight
+    kColumn1X = (@kScreenWidth - 2 * kControlButtonWidth - kColumnDistance) / 2 - kMenuOffset
+    kColumn2X = kColumn1X + kControlButtonWidth + kColumnDistance
+
+    kScrollArrowDistance = 2
+    kPl1ScrollArrowX = kColumn1X - kScrollArrowWidth - kScrollArrowDistance
+    kPl2ScrollArrowX = kColumn2X + kControlButtonWidth + kScrollArrowDistance
+
+    export kNumControlEntries = 4
+
+    defaultWidth: kControlButtonWidth
+    defaultHeight: kOptionHeight + 1
+
+    onInit: controlOptionsMenuInit
+    onRestore: controlOptionsMenuOnDraw
+    onDraw: controlOptionsMenuOnDraw
+    initialEntry: pl1FirstControl
+
+    Entry header {
+        x: kBaseX
+        y: 0
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+
+        text: "SELECT CONTROLS"
+        color: kHeaderColor
+    }
+
+    defaultX: kColumn1X
+    defaultY: @prevEndY + 2
+
+    Entry {
+        y: kStartY
+
+        text: "PLAYER 1"
+    }
+
+#repeat kNumControlEntries
+    Entry #join(pl1Control, #i) {
+        color: @kLightBlue
+        text: @kAlloc
+
+        upEntry: <
+        downEntry: >
+        leftEntry: #{i < kNumControlEntries / 2 ? :pl1ScrollUp : :pl1ScrollDown}
+        rightEntry: #join(pl2Control, #i)
+
+        skipLeft: <
+        directionLeft: @kUp
+        skipUp: <
+        skipDown: >
+
+        onSelect: pl1SelectControls
+    }
+#endRepeat
+
+    entryAlias pl1FirstControl = pl1Control0
+    entryAlias pl1LastControl = #join(pl1Control, #{kNumControlEntries - 1})
+
+    pl1FirstControl.upEntry = @kNoEntry
+    pl1FirstControl.skipUp = @kNoEntry
+    pl1LastControl.downEntry = pl1RedefineControls
+    pl1LastControl.skipDown = pl1RedefineControls
+
+    Entry pl1ScrollUp {
+        x: kPl1ScrollArrowX
+        y: pl1FirstControl.y
+        width: kScrollArrowWidth
+        height: kScrollArrowHeight
+
+        sprite: kUpArrowSpriteIndex
+
+        downEntry: pl1ScrollDown
+        rightEntry: pl1FirstControl
+
+        onSelect: pl1ScrollUpSelected
+    }
+
+    Entry pl1ScrollDown {
+        x: kPl1ScrollArrowX
+        y: pl1LastControl.y
+        width: kScrollArrowWidth
+        height: kScrollArrowHeight
+
+        sprite: kDownArrowSpriteIndex
+
+        upEntry: pl1ScrollUp
+        downEntry: pl1RedefineControls
+        rightEntry: pl1LastControl
+
+        onSelect: pl1ScrollDownSelected
+    }
+
+    defaultX: kColumn2X
+
+    Entry {
+        y: kStartY
+
+        text: "PLAYER 2"
+    }
+
+#repeat kNumControlEntries
+    Entry #join(pl2Control, #i) {
+        color: @kLightBlue
+        text: @kAlloc
+
+        upEntry: <
+        downEntry: >
+        leftEntry: #join(pl1Control, #i)
+        rightEntry: #{i < kNumControlEntries / 2 ? :pl2ScrollUp : :pl2ScrollDown}
+
+        skipRight: <
+        directionRight: @kUp
+        skipUp: <
+        skipDown: >
+
+        onSelect: pl2SelectControls
+    }
+#endRepeat
+
+    entryAlias pl2FirstControl = pl2Control0
+    entryAlias pl2LastControl = #join(pl2Control, #{kNumControlEntries - 1})
+
+    pl2FirstControl.upEntry = @kNoEntry
+    pl2FirstControl.skipUp = @kNoEntry
+    pl2LastControl.downEntry = pl2RedefineControls
+    pl2LastControl.skipDown = pl2RedefineControls
+
+    Entry pl2ScrollUp {
+        x: kPl2ScrollArrowX
+        y: pl2FirstControl.y
+        width: kScrollArrowWidth
+        height: kScrollArrowHeight
+
+        sprite: kUpArrowSpriteIndex
+
+        downEntry: pl2ScrollDown
+        leftEntry: pl2Control0
+
+        onSelect: pl2ScrollUpSelected
+    }
+
+    Entry pl2ScrollDown {
+        x: kPl2ScrollArrowX
+        y: pl2LastControl.y
+        width: kScrollArrowWidth
+        height: kScrollArrowHeight
+
+        sprite: kDownArrowSpriteIndex
+
+        upEntry: pl2ScrollUp
+        downEntry: pl2RedefineControls
+        leftEntry: pl2LastControl
+
+        onSelect: pl2ScrollDownSelected
+    }
+
+    defaultColor: @kGreen
+
+    kControlEntriesVerticalDiff = pl2Control1.y - pl2Control0.y
+    kControlEntriesGap =  kControlEntriesVerticalDiff - pl2Control0.height
+    kControlEntriesTotalHeight = kNumControlEntries * kControlEntriesVerticalDiff - kControlEntriesGap
+
+    Entry pl2RedefineControls {
+        y: pl2Control0.y + kControlEntriesTotalHeight + kNextPartGap
+
+        text: kRedefineControls
+
+        upEntry: pl2LastControl
+        downEntry: autoConnectJoypads
+        leftEntry: pl1RedefineControls
+
+        directionRight: @kDown
+
+        skipUp: pl2LastControl
+
+        onSelect: redefinePlayer2Controls
+    }
+
+    defaultX: kColumn1X
+
+    Entry pl1RedefineControls {
+        y: pl2RedefineControls.y
+
+        text: kRedefineControls
+
+        upEntry: pl1LastControl
+        downEntry: exit
+        rightEntry: pl2RedefineControls
+
+        directionLeft: @kDown
+
+        skipUp: pl1LastControl
+
+        onSelect: redefinePlayer1Controls
+    }
+
+    Entry autoConnectJoypadsLabel {
+        y: @prevEndY + kNextPartGap
+        height: kOptionHeight
+        color: kOptionsColumn1Color
+        text: "AUTO-SELECT CONTROLLERS"
+    }
+
+    Entry enableMenuControllersLabel {
+        height: kOptionHeight
+        color: kOptionsColumn1Color
+        text: "ENABLE MENU CONTROLLERS"
+    }
+
+    Entry selectMatchControlsLabel {
+        height: kOptionHeight
+        color: kOptionsColumn1Color
+        text: "SELECT MATCH CONTROLS"
+    }
+
+    Entry autoConnectJoypads {
+        x: kColumn2X
+        y: autoConnectJoypadsLabel.y
+        height: kOptionHeight
+        color: kOptionsColumn2Color
+
+        boolOption: getAutoConnectJoypads, setAutoConnectJoypads, "auto connect joypads"
+
+        upEntry: pl2RedefineControls
+        downEntry: >
+    }
+
+    Entry enableMenuControllers {
+        x: kColumn2X
+        y: enableMenuControllersLabel.y
+        height: kOptionHeight
+        color: kOptionsColumn2Color
+
+        boolOption: getEnableMenuControllers, setEnableMenuControllers, "menu controllers"
+
+        upEntry: <
+        downEntry: >
+    }
+
+    Entry selectMatchControls {
+        x: kColumn2X
+        y: selectMatchControlsLabel.y
+        height: kOptionHeight
+        color: kOptionsColumn2Color
+
+        boolOption: getShowSelectMatchControlsMenu, setShowSelectMatchControlsMenu, "select match controls menu"
+
+        upEntry: <
+        downEntry: exit
+    }
+
+    Entry exit {
+        x: kBaseX
+        y: kExitY
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+
+        text: swos.aExit
+        color: kExitColor
+
+        onSelect: exitControlsMenu
+
+        upEntry: <
+    }
+}

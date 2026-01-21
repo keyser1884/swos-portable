@@ -1,0 +1,980 @@
+#include "updateBench.h"
+#include "bench.h"
+#include "pitchConstants.h"
+#include "gameControlEvents.h"
+#include "gameControls.h"
+#include "gameSprites.h"
+#include "referee.h"
+#include "camera.h"
+#include "comments.h"
+#include "util.h"
+
+constexpr int kEnterBenchDelay = 15;
+constexpr int kPlayerGoingInDelay = 100;
+
+constexpr int kNumTapsForBench = 2;
+constexpr int kTapTimeoutTicks = 15;
+
+constexpr int kLeavingSubsDelay = 55;
+constexpr int kSubstituteFireTicks = 8;
+
+constexpr int kMaxSubstitutes = 5;
+
+struct TapCounterState {
+    int tapCount;
+    int tapTimeoutCounter;
+    GameControlEvents previousDirection;
+    bool blockWhileHoldingDirection;
+
+    void init() {
+        reset();
+        blockWhileHoldingDirection = false;
+    }
+    void reset() {
+        // don't touch block field
+        tapCount = 0;
+        tapTimeoutCounter = 0;
+        previousDirection = kNoGameEvents;
+    }
+    bool gotLastTapDirection() const {
+        return (previousDirection & kGameEventMovementMask) != kNoGameEvents;
+    }
+    bool holdingSameDirectionAsLastTap(GameControlEvents controls) const {
+        return previousDirection == (controls & kGameEventMovementMask);
+    }
+};
+
+static TapCounterState m_pl1TapState, m_pl2TapState;
+static GameControlEvents m_controls;
+
+TeamGeneralInfo *m_team;
+TeamGame *m_teamGame;
+static int m_teamNumber;
+
+static BenchState m_state;
+static int m_goToBenchTimer;
+
+static bool m_bench1Called;
+static bool m_bench2Called;
+
+static bool m_blockDirections;
+static int m_fireTimer;
+static bool m_blockFire;
+
+static GameControlEvents m_lastDirection;
+static int m_movementDelayTimer;
+
+static bool m_trainingTopTeam;
+static bool m_teamsSwapped;
+static int m_alternateTeamsTimer;
+
+static int m_arrowPlayerIndex;
+static int m_selectedMenuPlayerIndex;   // in menu
+static int m_playerToEnterGameIndex;
+
+static int m_playerToBeSubstitutedPos;
+static int m_playerToBeSubstitutedOrd;
+
+static std::array<std::array<byte, kNumPlayersInTeam>, 2> m_shirtNumberTable;
+
+static int m_selectedFormationEntry;
+
+static void handleMenuControls();
+static void initBenchVars(TeamGeneralInfo *team);
+static void handleBenchArrowSelection();
+static void selectPlayerToSubstituteMenuHandler();
+static void handleFormationMenuControls();
+static void markPlayersMenuHandler();
+static void updateSelectedMenuPlayer();
+static void showFormationMenu();
+static void firePressedInSubsMenu();
+static void selectOrSwapPlayers();
+static void updatePlayerToBeSubstitutedPosition();
+static void initiateSubstitution();
+static void substitutePlayer();
+static void changeTactics(int newTactics);
+static bool leavingBenchMotion();
+static void leaveBench();
+static void leaveBenchFromMenu();
+static bool benchBlocked();
+static bool benchUnavailable();
+static TeamGeneralInfo *getNonBenchControlsTeam();
+static bool updateNonBenchControls(const TeamGeneralInfo *team);
+static void updateBenchControls();
+static bool bumpGoToBenchTimer();
+static bool filterControls();
+static bool benchInvoked(const TeamGeneralInfo *team);
+static void findInitialPlayerToBeSubstituted();
+static void markPlayer();
+static void swapPlayerShirtNumbers(int ord1, int ord2);
+static void increasePlayerIndex();
+static void decreasePlayerIndex(bool allowBenchSwitch);
+static void increasePlayerToSubstitute();
+static void decreasePlayerToSubstitute();
+static bool isPlayerOkToSelect();
+static bool isPlayerOkToSubstitute();
+static void trainingSwapBenchTeams();
+
+void initBenchControls()
+{
+    m_teamsSwapped = false;
+    m_trainingTopTeam = false;
+
+    m_alternateTeamsTimer = 0;
+    m_teamNumber = 0;
+
+    m_pl1TapState.init();
+    m_pl2TapState.init();
+
+    m_goToBenchTimer = 0;
+
+    m_blockDirections = false;
+    m_blockFire = false;
+    m_fireTimer = 0;
+
+    m_lastDirection = kNoGameEvents;
+    m_movementDelayTimer = 0;
+
+    m_controls = kNoGameEvents;
+
+    m_state = BenchState::kInitial;
+
+    m_arrowPlayerIndex = 0;
+    m_playerToEnterGameIndex = 0;
+    m_selectedMenuPlayerIndex = 0;
+
+    m_playerToBeSubstitutedPos = 0;
+    m_playerToBeSubstitutedOrd = 0;
+
+    m_selectedFormationEntry = 0;
+
+    m_bench1Called = false;
+    m_bench2Called = false;
+
+    for (int i = 0; i < kNumPlayersInTeam; i++) {
+        m_shirtNumberTable[0][i] = i;
+        m_shirtNumberTable[1][i] = i;
+    }
+
+    if (swos.teamPlayingUp == 1) {
+        m_team = &swos.topTeamData;
+        m_teamGame = &swos.topTeamInGame;
+    } else {
+        m_team = &swos.bottomTeamData;
+        m_teamGame = &swos.bottomTeamInGame;
+    }
+}
+
+// Returns true if bench needs to be invoked, but false if it's already showing.
+bool benchCheckControls()
+{
+    if (inBench()) {
+        updateBenchControls();
+        if (!bumpGoToBenchTimer()) {
+            if (newPlayerAboutToGoIn())
+                substitutePlayer();
+            else if (!filterControls())
+                handleMenuControls();
+        }
+    } else {
+        if (!benchBlocked() && !benchUnavailable()) {
+            auto team = getNonBenchControlsTeam();
+
+            auto benchCalled = m_bench1Called || m_bench2Called;
+            if (benchCalled || updateNonBenchControls(team) && benchInvoked(team)) {
+                initBenchVars(team);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+BenchState getBenchState()
+{
+    return m_state;
+}
+
+bool trainingTopTeam()
+{
+    return m_trainingTopTeam;
+}
+
+void setTrainingTopTeam(bool value)
+{
+    m_trainingTopTeam = value;
+}
+
+void requestBench1()
+{
+    m_bench1Called = true;
+}
+
+void requestBench2()
+{
+    m_bench2Called = true;
+}
+
+int getBenchPlayerIndex()
+{
+    return m_arrowPlayerIndex;
+}
+
+int getBenchPlayerShirtNumber(bool topTeam, int index)
+{
+    assert(index >= 0 && index < sizeof(m_shirtNumberTable[0]));
+    return m_shirtNumberTable[topTeam][index];
+}
+
+int getBenchMenuSelectedPlayer()
+{
+    return m_selectedMenuPlayerIndex;
+}
+
+int getSelectedFormationEntry()
+{
+    return m_selectedFormationEntry;
+}
+
+bool inBenchOrGoingTo()
+{
+    // without m_goToBenchTimer, cutout for replays is too sharp
+    return !m_goToBenchTimer && swos.g_inSubstitutesMenu;
+}
+
+bool goingToBenchDelay()
+{
+    return m_goToBenchTimer != 0;
+}
+
+int playerToEnterGameIndex()
+{
+    return m_playerToEnterGameIndex;
+}
+
+int playerToBeSubstitutedIndex()
+{
+    return m_playerToBeSubstitutedOrd;
+}
+
+int playerToBeSubstitutedPos()
+{
+    return m_playerToBeSubstitutedPos;
+}
+
+bool substituteInProgress()
+{
+    return swos.g_substituteInProgress != 0;
+}
+
+bool newPlayerAboutToGoIn()
+{
+    return swos.g_substituteInProgress < 0;
+}
+
+void setSubstituteInProgress()
+{
+    swos.g_substituteInProgress = 1;
+}
+
+const TeamGeneralInfo *getBenchTeam()
+{
+    if (!swos.g_trainingGame && m_teamNumber != m_team->teamNumber) {
+        m_team = m_teamNumber == 1 ? &swos.bottomTeamData : &swos.topTeamData;
+        m_teamNumber = m_team->teamNumber;
+    }
+
+    return m_team;
+}
+
+const TeamGame *getBenchTeamData()
+{
+    return m_teamGame;
+}
+
+static void handleMenuControls()
+{
+    if (substituteInProgress())
+        return;
+
+    switch (m_state) {
+    case BenchState::kInitial:
+        handleBenchArrowSelection();
+        break;
+    case BenchState::kAboutToSubstitute:
+        selectPlayerToSubstituteMenuHandler();
+        break;
+    case BenchState::kFormationMenu:
+        handleFormationMenuControls();
+        break;
+    case BenchState::kMarkingPlayers:
+        markPlayersMenuHandler();
+        break;
+    }
+}
+
+static void initBenchVars(TeamGeneralInfo *team)
+{
+    m_bench1Called = false;
+    m_bench2Called = false;
+
+    m_team = team;
+    m_teamGame = team->teamNumber == 2 ? swos.bottomTeamPtr : swos.topTeamPtr;
+    m_trainingTopTeam = m_teamGame != &swos.topTeamInGame;
+    m_teamNumber = team->teamNumber;
+
+    m_playerToBeSubstitutedPos = -1;
+    m_arrowPlayerIndex = 0;
+
+    m_state = BenchState::kInitial;
+    m_goToBenchTimer = kEnterBenchDelay;
+
+    m_blockFire = true;
+    m_blockDirections = true;
+}
+
+static void handleBenchArrowSelection()
+{
+    bool benchRecalled = m_team == &swos.topTeamData ? m_bench1Called : m_bench2Called;
+    auto movementFlags = m_controls & kGameEventMovementMask;
+
+    if (benchRecalled || leavingBenchMotion()) {
+        leaveBench();
+    } else if (movementFlags == kGameEventUp || movementFlags == kGameEventDown) {
+        bool increaseIndex = true;
+        bool allowIfKeeperHolds = false;
+
+        if (m_controls == kGameEventUp) {
+            increaseIndex = false;
+            if (swos.g_trainingGame) {
+                if (m_trainingTopTeam)
+                    increaseIndex = true;
+                else
+                    allowIfKeeperHolds = true;
+            }
+        } else if (swos.g_trainingGame) {
+            if (m_trainingTopTeam) {
+                increaseIndex = false;
+                allowIfKeeperHolds = true;
+            }
+        }
+
+        if (!allowIfKeeperHolds && swos.gameState == GameState::kKeeperHoldsTheBall)
+            return;
+
+        m_blockDirections = true;
+
+        increaseIndex ? increasePlayerIndex() : decreasePlayerIndex(allowIfKeeperHolds);
+    } else if (m_controls & kGameEventKick) {
+        firePressedInSubsMenu();
+    }
+}
+
+static void selectPlayerToSubstituteMenuHandler()
+{
+    if (m_controls & kGameEventKick)
+        initiateSubstitution();
+    else
+        updateSelectedMenuPlayer();
+}
+
+static void handleFormationMenuMovement()
+{
+    if (leavingBenchMotion()) {
+        leaveBenchFromMenu();
+    } else if (m_controls == kGameEventUp) {
+        m_blockDirections = true;
+        if (m_selectedFormationEntry > 0)
+            m_selectedFormationEntry--;
+    } else if (m_controls == kGameEventDown) {
+        m_blockDirections = true;
+        if (m_selectedFormationEntry < 0)
+            m_selectedFormationEntry = 0;
+        else if (m_selectedFormationEntry < kNumFormationEntries - 1)
+            m_selectedFormationEntry++;
+    }
+}
+
+static void handleFormationMenuControls()
+{
+    if (m_controls & kGameEventKick) {
+        assert(m_selectedFormationEntry >= 0 && m_selectedFormationEntry < kNumFormationEntries);
+        changeTactics(m_selectedFormationEntry);
+    } else {
+        handleFormationMenuMovement();
+    }
+}
+
+static void markPlayersMenuHandler()
+{
+    const PlayerGame *player{};
+
+    if (m_playerToBeSubstitutedPos >= 0) {
+        assert(m_playerToBeSubstitutedPos <= 10);
+        player = &m_teamGame->players[m_playerToBeSubstitutedPos];
+    }
+
+    if (!player || player->cards >= 2 || m_fireTimer != kSubstituteFireTicks) {
+        if (m_controls & kGameEventKick) {
+            if (m_playerToBeSubstitutedOrd < 0)
+                showFormationMenu();
+            else if (m_playerToBeSubstitutedOrd > 0)
+                selectOrSwapPlayers();
+        } else {
+            updateSelectedMenuPlayer();
+        }
+    } else {
+        markPlayer();
+    }
+}
+
+static void updateSelectedMenuPlayer()
+{
+    if (leavingBenchMotion()) {
+        leaveBenchFromMenu();
+    } else if (m_state == BenchState::kMarkingPlayers || m_playerToEnterGameIndex != 11 || swos.gameMaxSubstitutes <= 5) {
+        if (m_controls == kGameEventUp) {
+            m_blockDirections = true;
+            if (m_state == BenchState::kMarkingPlayers && (m_playerToBeSubstitutedOrd < 0 || m_playerToBeSubstitutedOrd == 1)) {
+                // skip goalkeeper when going up, and jump to formation entry
+                m_playerToBeSubstitutedOrd = -1;
+                m_playerToBeSubstitutedPos = -1;
+            } else if (m_playerToBeSubstitutedOrd) {
+                decreasePlayerToSubstitute();
+            }
+        } else if (m_controls == kGameEventDown) {
+            m_blockDirections = true;
+            if (m_state == BenchState::kMarkingPlayers && m_playerToBeSubstitutedOrd < 0) {
+                // jump from formation entry to first player (skip goalkeeper)
+                m_playerToBeSubstitutedOrd = 1;
+                updatePlayerToBeSubstitutedPosition();
+            } else if (m_playerToBeSubstitutedOrd != 10) {
+                increasePlayerToSubstitute();
+            }
+        }
+    }
+}
+
+static void showFormationMenu()
+{
+    m_state = BenchState::kFormationMenu;
+    m_blockFire = true;
+    m_selectedFormationEntry = m_team->tactics;
+}
+
+static void firePressedInSubsMenu()
+{
+    if (!m_arrowPlayerIndex) {
+        m_state = BenchState::kMarkingPlayers;
+        m_blockFire = true;
+        m_playerToBeSubstitutedOrd = -1;
+        m_playerToBeSubstitutedPos = -1;
+        m_selectedMenuPlayerIndex = -1;
+    } else {
+        const auto& player = m_teamGame->players[m_arrowPlayerIndex + 10];
+        if (!player.wasSubstituted()) {
+            m_state = BenchState::kAboutToSubstitute;
+            m_blockFire = true;
+            m_playerToEnterGameIndex = m_arrowPlayerIndex + 10;
+            if (swos.gameMaxSubstitutes <= kMaxSubstitutes || m_playerToEnterGameIndex != 11)
+                findInitialPlayerToBeSubstituted();
+            else
+                m_playerToBeSubstitutedPos = 0;
+        }
+    }
+}
+
+static void maintainMarkedPlayer()
+{
+    auto& markedPlayer = m_teamGame->markedPlayer;
+
+    if (markedPlayer == m_playerToBeSubstitutedPos)
+        markedPlayer = -1;
+    if (markedPlayer == m_playerToEnterGameIndex) {
+        markedPlayer = -1;
+        if (m_playerToBeSubstitutedPos)
+            markedPlayer = m_playerToBeSubstitutedPos;
+    }
+}
+
+static void swapMarkedPlayer()
+{
+    auto& markedPlayer = m_teamGame->markedPlayer;
+    if (markedPlayer == m_playerToBeSubstitutedPos)
+        markedPlayer = m_selectedMenuPlayerIndex;
+    else if (markedPlayer == m_selectedMenuPlayerIndex)
+        markedPlayer = m_playerToBeSubstitutedPos;
+}
+
+static void selectOrSwapPlayers()
+{
+    if (m_selectedMenuPlayerIndex < 0) {
+        if (m_fireTimer == 1)
+            m_selectedMenuPlayerIndex = m_playerToBeSubstitutedPos;
+    } else {
+        if (m_selectedMenuPlayerIndex == m_playerToBeSubstitutedPos) {
+            if (m_fireTimer == 1)
+                m_selectedMenuPlayerIndex = -1;
+        } else {
+            assert(m_playerToBeSubstitutedPos >= 0 && m_playerToBeSubstitutedPos < 11);
+            assert(m_selectedMenuPlayerIndex >= 0 && m_selectedMenuPlayerIndex < 11);
+
+            swapMarkedPlayer();
+            swapPlayerShirtNumbers(m_playerToBeSubstitutedPos, m_selectedMenuPlayerIndex);
+            std::swap(m_teamGame->players[m_playerToBeSubstitutedPos], m_teamGame->players[m_selectedMenuPlayerIndex]);
+            std::swap(*m_team->players[m_playerToBeSubstitutedPos], *m_team->players[m_selectedMenuPlayerIndex]);
+            std::swap(m_team->players[m_playerToBeSubstitutedPos]->playerOrdinal,
+                m_team->players[m_selectedMenuPlayerIndex]->playerOrdinal);
+
+            initializePlayerSpriteFrameIndices();
+            A4 = m_teamGame;
+            ApplyTeamTactics();
+
+            m_selectedMenuPlayerIndex = -1;
+
+            leaveBenchFromMenu();
+        }
+    }
+}
+
+static void updatePlayerToBeSubstitutedPosition()
+{
+    m_playerToBeSubstitutedPos = getBenchPlayerPosition(m_playerToBeSubstitutedOrd);
+}
+
+static void initiateSubstitution()
+{
+    constexpr int kSubstitutedPlayerX = 39;
+    constexpr int kSubstitutedPlayerY = kPitchCenterY;
+
+    assert(m_playerToBeSubstitutedPos >= 0 && m_playerToBeSubstitutedPos <= 10);
+
+    setSubstituteInProgress();
+    auto& numSubs = m_team->teamNumber == 1 ? swos.team1NumSubs : swos.team2NumSubs;
+    numSubs++;
+    m_blockFire = true;
+    m_state = BenchState::kInitial;
+
+    // must set this sprite since the game waits for him to arrive at the destination before continuing
+    swos.substitutedPlSprite = m_team->players[m_playerToBeSubstitutedPos];
+    swos.teamThatSubstitutes = m_team;
+
+    swos.substitutedPlSprite->cards = 0;
+    swos.substitutedPlDestX = kSubstitutedPlayerX;
+    swos.substitutedPlDestY = kSubstitutedPlayerY;
+    swos.plSubstitutedX = kSubstitutedPlayerX;
+    swos.plSubstitutedY = kSubstitutedPlayerY;
+}
+
+// Old player has left the field, new one is about to go it. Does the actual swap of the player data.
+static void substitutePlayer()
+{
+    swos.substitutedPlSprite->injuryLevel = 0;
+    swos.substitutedPlSprite->sentAway = 0;
+
+    maintainMarkedPlayer();
+    swapPlayerShirtNumbers(m_playerToEnterGameIndex, m_playerToBeSubstitutedPos);
+
+    m_teamGame->players[m_playerToBeSubstitutedPos].position = PlayerPosition::kSubstituted;
+    std::swap(m_teamGame->players[m_playerToEnterGameIndex], m_teamGame->players[m_playerToBeSubstitutedPos]);
+
+    initializePlayerSpriteFrameIndices();
+    A4 = m_teamGame;
+    ApplyTeamTactics();
+
+    swos.g_waitForPlayerToGoInTimer = kPlayerGoingInDelay;
+    m_blockFire = true;
+
+    enqueueSubstituteSample();
+    leaveBench();
+}
+
+static void changeTactics(int newTactics)
+{
+    assert(static_cast<unsigned>(newTactics) < std::size(swos.g_tacticsTable));
+
+    auto& tactics = m_team->teamNumber == 1 ? swos.pl1Tactics : swos.pl2Tactics;
+    tactics = newTactics;
+    m_team->tactics = newTactics;
+
+    A4 = m_teamGame;
+    ApplyTeamTactics();
+
+    enqueueTacticsChangedSample();
+    leaveBenchFromMenu();
+}
+
+static bool leavingBenchMotion()
+{
+    // only consider pure left/right without up/down
+    return m_controls == kGameEventLeft || m_controls == kGameEventRight;
+}
+
+static void leaveBench()
+{
+    setBenchOff();
+    switchCameraToLeavingBenchMode();
+
+    swos.g_cameraLeavingSubsTimer = kLeavingSubsDelay;
+
+    m_bench1Called = false;
+    m_bench2Called = false;
+
+    m_teamsSwapped = false;
+    m_state = BenchState::kInitial;
+    m_playerToBeSubstitutedPos = -1;
+
+    m_pl1TapState.reset();
+    m_pl2TapState.reset();
+}
+
+static void leaveBenchFromMenu()
+{
+    m_state = BenchState::kInitial;
+    m_blockDirections = true;
+    m_blockFire = true;
+}
+
+static bool benchBlocked()
+{
+    if (swos.g_waitForPlayerToGoInTimer) {
+        swos.g_waitForPlayerToGoInTimer--;
+        return true;
+    } else if (swos.g_cameraLeavingSubsTimer) {
+        swos.g_cameraLeavingSubsTimer--;
+        return true;
+    } else {
+        return swos.g_substituteInProgress || refereeActive() || swos.statsTimer;
+    }
+}
+
+static bool benchUnavailable()
+{
+    if (swos.gameStatePl == GameState::kInProgress || cardHandingInProgress() || swos.playingPenalties ||
+        swos.gameState >= GameState::kStartingGame && swos.gameState <= GameState::kGameEnded) {
+        m_pl1TapState.reset();
+        m_pl2TapState.reset();
+        m_bench1Called = false;
+        m_bench2Called = false;
+        return true;
+    }
+
+    return false;
+}
+
+static TeamGeneralInfo *getNonBenchControlsTeam()
+{
+    if (m_bench1Called)
+        return &swos.topTeamData;
+    else if (m_bench2Called)
+        return &swos.bottomTeamData;
+    else
+        return ++m_alternateTeamsTimer & 1 ? &swos.topTeamData : &swos.bottomTeamData;
+}
+
+static bool updateNonBenchControls(const TeamGeneralInfo *team)
+{
+    if (team->playerNumber) {
+        m_controls = directionToEvents(team->direction);
+        if (team->firePressed)
+            m_controls |= kGameEventKick;
+        if (team->secondaryFire)
+            m_controls |= kGameEventBench;
+    } else {
+        switch (team->playerCoachNumber) {
+        case 1:
+            m_controls = getPlayerEvents(kPlayer1);
+            break;
+        case 2:
+            m_controls = getPlayerEvents(kPlayer2);
+            break;
+        default:
+            assert(false);
+            // fall-through
+        case 0:
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static void updateBenchControls()
+{
+    assert(inBench() && m_team);
+
+    auto team = m_teamsSwapped ? m_team->opponentTeam.asPtr() : m_team;
+
+    assert(team->playerNumber == 1 || team->playerNumber == 2 || team->playerCoachNumber == 1 || team->playerCoachNumber == 2);
+    assert(!!team->playerNumber != !!team->playerCoachNumber);
+
+    auto player = team->playerNumber == 1 || team->playerCoachNumber == 1 ? kPlayer1 : kPlayer2;
+    m_controls = getPlayerEvents(player);
+}
+
+static bool bumpGoToBenchTimer()
+{
+    if (m_goToBenchTimer <= 0)
+        return false;
+
+    m_goToBenchTimer--;
+    return true;
+}
+
+// Returns true if the controls were filtered (blocked).
+static bool filterControls()
+{
+    constexpr int kMovementDelay = 4;
+
+    auto currentDirection = m_controls & kGameEventMovementMask;
+    bool sameDirectionHeld = currentDirection && m_blockDirections && m_lastDirection == currentDirection;
+
+    // this part keeps the menu navigation at a reasonable speed; if not present up/down would fly super fast
+    if (sameDirectionHeld &&
+        (getBenchState() == BenchState::kInitial ||
+        m_lastDirection != kGameEventUp && m_lastDirection != kGameEventDown ||
+        ++m_movementDelayTimer != kMovementDelay))
+        return true;
+
+    m_blockDirections = false;
+
+    m_movementDelayTimer = 0;
+    m_lastDirection = currentDirection;
+
+    bool firing = (m_controls & kGameEventKick) != 0;
+
+    if (firing)
+        m_fireTimer++;
+    else
+        m_fireTimer = 0;
+
+    if (m_blockFire && firing)
+        return true;
+    else
+        m_blockFire = false;
+
+    return false;
+}
+
+// Game is stopped and bench call is possible, check if it's actually invoked.
+// Secondary fire needs to be pressed, or any one direction tapped three times quickly.
+static bool benchInvoked(const TeamGeneralInfo *team)
+{
+    assert(team);
+
+    if (m_controls & kGameEventBench)
+        return true;
+
+    auto& state = team == &swos.topTeamData ? m_pl1TapState : m_pl2TapState;
+
+    if ((m_controls & kGameEventMovementMask) == kNoGameEvents) {
+        state.blockWhileHoldingDirection = false;
+        if (++state.tapTimeoutCounter == kTapTimeoutTicks)
+            state.reset();
+    } else if (!state.blockWhileHoldingDirection) {
+        if (state.gotLastTapDirection()) {
+            state.tapTimeoutCounter = 0;
+            if (state.holdingSameDirectionAsLastTap(m_controls)) {
+                if (++state.tapCount >= kNumTapsForBench)
+                    return true;
+                else
+                    state.blockWhileHoldingDirection = true;
+            } else {
+                state.previousDirection = kNoGameEvents;
+                state.tapCount = 0;
+            }
+        } else {
+            state.previousDirection = m_controls & kGameEventMovementMask;
+            state.blockWhileHoldingDirection = true;
+        }
+    }
+
+    return false;
+}
+
+static void findInitialPlayerToBeSubstituted()
+{
+    assert(m_playerToEnterGameIndex >= 0);
+
+    auto position = m_teamGame->players[m_playerToEnterGameIndex].position;
+
+    int exactMatch = -1;
+    int approximateMatch = -1;
+    int firstAvailablePlayer = -1;
+
+    for (int i = 0; i < 11; i++) {
+        const auto& player = getBenchPlayer(i);
+        if (!player.sentOff()) {
+            if (firstAvailablePlayer < 0)
+                firstAvailablePlayer = i;
+            if (approximateMatch < 0) {
+                static const auto kDefencePositions = {
+                    PlayerPosition::kDefender, PlayerPosition::kRightBack, PlayerPosition::kLeftBack
+                };
+                static const auto kMidfieldPositions = {
+                    PlayerPosition::kMidfielder, PlayerPosition::kRightWing, PlayerPosition::kLeftWing
+                };
+                auto isPositionIn = [](PlayerPosition position, const auto& positions) {
+                    return std::find(positions.begin(), positions.end(), position);
+                };
+                if (isPositionIn(position, kDefencePositions) && isPositionIn(player.position, kDefencePositions) ||
+                    isPositionIn(position, kMidfieldPositions) && isPositionIn(player.position, kMidfieldPositions))
+                    approximateMatch = i;
+            }
+            if (exactMatch < 0 && position == player.position)
+                exactMatch = i;
+        }
+    }
+
+    if (exactMatch >= 0)
+        m_playerToBeSubstitutedOrd = exactMatch;
+    else if (approximateMatch >= 0)
+        m_playerToBeSubstitutedOrd = approximateMatch;
+    else
+        m_playerToBeSubstitutedOrd = firstAvailablePlayer;
+
+    m_playerToBeSubstitutedPos = getBenchPlayerPosition(m_playerToBeSubstitutedOrd);
+}
+
+static void markPlayer()
+{
+    bool playerAlreadyMarked = m_teamGame->markedPlayer == m_playerToBeSubstitutedPos;
+    m_teamGame->markedPlayer = playerAlreadyMarked ? -1 : m_playerToBeSubstitutedPos;
+    m_selectedMenuPlayerIndex = -1;
+}
+
+static void swapPlayerShirtNumbers(int ord1, int ord2)
+{
+    bool topTeam = getBenchTeamData() == &swos.topTeamInGame;
+    std::swap(m_shirtNumberTable[topTeam][ord1], m_shirtNumberTable[topTeam][ord2]);
+}
+
+static void increasePlayerIndex()
+{
+    while (++m_arrowPlayerIndex <= kMaxSubstitutes && !isPlayerOkToSelect())
+        ;
+
+    if (m_arrowPlayerIndex > kMaxSubstitutes)
+        decreasePlayerIndex(false);
+}
+
+static void decreasePlayerIndex(bool allowBenchSwitch)
+{
+    if (m_arrowPlayerIndex) {
+        while (--m_arrowPlayerIndex > 0 && !isPlayerOkToSelect())
+            ;
+    } else if (allowBenchSwitch) {
+        trainingSwapBenchTeams();
+    }
+}
+
+static void increasePlayerToSubstitute()
+{
+    do {
+        if (++m_playerToBeSubstitutedOrd >= 11)
+            decreasePlayerToSubstitute();
+        updatePlayerToBeSubstitutedPosition();
+    } while (!isPlayerOkToSubstitute());
+}
+
+static void decreasePlayerToSubstitute()
+{
+    do {
+        if (--m_playerToBeSubstitutedOrd < 0)
+            increasePlayerToSubstitute();
+        updatePlayerToBeSubstitutedPosition();
+    } while (!isPlayerOkToSubstitute());
+}
+
+static bool isPlayerOkToSelect()
+{
+    assert(m_team);
+
+    auto numSubs = m_team->teamNumber == 1 ? swos.team1NumSubs : swos.team2NumSubs;
+
+    if (swos.gameMinSubstitutes == numSubs) {
+        return false;
+    } else {
+        const auto& player = m_teamGame->players[m_arrowPlayerIndex + 10];
+        if (!player.canBeSubstituted())
+            return false;
+    }
+
+    return true;
+}
+
+static bool isPlayerOkToSubstitute()
+{
+    if (m_state == BenchState::kMarkingPlayers)
+        return m_playerToBeSubstitutedOrd != 0;
+    else
+        return m_teamGame->players[m_playerToBeSubstitutedPos].cards < 2;
+}
+
+static void trainingSwapBenchTeams()
+{
+    m_teamsSwapped = !m_teamsSwapped;
+    m_trainingTopTeam = !m_trainingTopTeam;
+    swapBenchWithOpponent();
+    m_team = m_team->opponentTeam;
+    m_teamGame = m_team->teamNumber == 2 ? swos.bottomTeamPtr : swos.topTeamPtr;
+}
+
+#ifdef SWOS_TEST
+#include "RecordedDataTest.h"
+
+static int8_t gameEventsToSwosDirection(GameControlEvents events)
+{
+    switch (events & kGameEventMovementMask) {
+    case kGameEventUp: return 0;
+    case kGameEventUp | kGameEventRight: return 1;
+    case kGameEventRight: return 2;
+    case kGameEventRight | kGameEventDown: return 3;
+    case kGameEventDown: return 4;
+    case kGameEventLeft | kGameEventDown: return 5;
+    case kGameEventLeft: return 6;
+    case kGameEventLeft | kGameEventUp: return 7;
+    default: assert(false);
+    case kNoGameEvents: return -1;
+    }
+}
+
+void fillBenchData(BenchData& data)
+{
+    data.pl1TapCount = m_pl1TapState.tapCount;
+    data.pl2TapCount = m_pl2TapState.tapCount;
+    data.pl1TapTimeoutCounter = m_pl1TapState.tapTimeoutCounter;
+    data.pl2TapTimeoutCounter = m_pl2TapState.tapTimeoutCounter;
+    data.pl1PreviousDirection = gameEventsToSwosDirection(m_pl1TapState.previousDirection);
+    data.pl2PreviousDirection = gameEventsToSwosDirection(m_pl2TapState.previousDirection);
+    data.pl1BlockWhileHoldingDirection = m_pl1TapState.blockWhileHoldingDirection;
+    data.pl2BlockWhileHoldingDirection = m_pl2TapState.blockWhileHoldingDirection;
+    data.controls = gameEventsToSwosDirection(m_controls);
+    data.teamData = m_team ? m_team == &swos.topTeamData ? 0 : 1 : -1;
+    data.teamGame = m_teamGame ? m_teamGame == &swos.topTeamInGame ? 0 : 1 : -1;
+    data.state = static_cast<byte>(m_state);
+    if (m_state == BenchState::kOpponentsBench)
+        data.state = -1;
+    else if (m_state == BenchState::kMarkingPlayers)
+        data.state = 4;
+    data.goToBenchTimer = m_goToBenchTimer;
+    data.bench1Called = m_bench1Called;
+    data.bench2Called = m_bench2Called;
+    data.blockDirections = m_blockDirections;
+    data.fireTimer = m_fireTimer;
+    data.blockFire = m_blockFire;
+    data.lastDirection = gameEventsToSwosDirection(m_lastDirection);
+    data.movementDelayTimer = m_movementDelayTimer;
+    data.trainingTopTeam = m_trainingTopTeam;
+    data.teamsSwapped = m_teamsSwapped;
+    data.alternateTeamsTimer = m_alternateTeamsTimer;
+    data.arrowPlayerIndex = m_arrowPlayerIndex;
+    data.selectedMenuPlayerIndex = m_selectedMenuPlayerIndex;
+    data.playerToEnterGameIndex = m_playerToEnterGameIndex;
+    data.playerToBeSubstitutedPos = m_playerToBeSubstitutedPos;
+    data.playerToBeSubstitutedOrd = m_playerToBeSubstitutedOrd;
+    data.selectedFormationEntry = m_selectedFormationEntry;
+    memcpy(data.shirtNumberTable, m_shirtNumberTable.data(), sizeof(data.shirtNumberTable));
+}
+#endif

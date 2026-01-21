@@ -1,0 +1,348 @@
+//
+// Joypad configuration menu
+//
+
+#include "common.mh"
+
+Menu joypadConfigMenu
+{
+    kInfoLabelsColumnX = 30
+    kLabelWidth = 64
+    kLabelHeight = 10
+
+    kInfoValuesColumnX = kInfoLabelsColumnX + kLabelWidth
+
+    export kInfoFieldWidth = 260
+    kInfoFieldHeight = 10
+
+    export kResetTextY = 20
+    kStartY = 30
+    kBottomButtonsY = kExitY - 3 * (kBigButtonHeight + 2)
+
+    kElementsDescriptionWidth = 66
+
+    // joypad elements
+    kElementLineHeight = 10
+
+    kPlusMinusBoxSize = 10
+    kCurrentElementWidth = 30
+    kOfLabelWidth = 18
+    kNumElementsWidth = #textWidth("999") + 2
+    kConfigureWidth = #textWidth("CONFIGURE") + 6
+
+    kElementsStartY = 84
+
+    kTotalElementsWidth = kElementsDescriptionWidth + 2 + 2 * kPlusMinusBoxSize + kCurrentElementWidth + 4 +
+        kOfLabelWidth + 1 + kNumElementsWidth + 2 + kConfigureWidth
+    kElementsDescriptionX = (@kScreenWidth - kTotalElementsWidth) / 2 - kMenuOffset
+
+    kMinusX = kElementsDescriptionX + kElementsDescriptionWidth + 2
+    kCurrentElementIndexX = kMinusX + kPlusMinusBoxSize + 1
+    kPlusX = kCurrentElementIndexX + kCurrentElementWidth + 1
+    kOfLabelX = kPlusX + kPlusMinusBoxSize + 2
+    kNumElementsX = kOfLabelX + kOfLabelWidth + 1
+    kConfigureX = kNumElementsX + kNumElementsWidth + 2
+
+    onInit: joypadConfigMenuOnInit
+    onReturn: joypadConfigMenuOnReturn
+    onDraw: joypadConfigMenuOnDraw
+
+    initialEntry: configureHats
+
+    Entry header {
+        x: kBaseX
+        y: 0
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+
+        text: "CONTROLLER SETUP"
+        color: kHeaderColor
+    }
+
+    defaultX: kInfoLabelsColumnX
+    defaultWidth: kLabelWidth
+    defaultHeight: kLabelHeight
+    defaultTextFlags: @kLeftAligned
+
+    //
+    // info labels
+    //
+
+    Entry {
+        y: kStartY
+        text: "NAME:"
+    }
+
+    defaultY: @prevY + kInfoFieldHeight
+
+    Entry { text: "GUID:" }
+    Entry { text: "ID:" }
+    Entry { text: "POWER:" }
+    Entry { text: "CONFIG:" }
+
+    //
+    // display values
+    //
+
+    defaultX: kInfoValuesColumnX
+    defaultWidth: kInfoFieldWidth
+
+    TemplateEntry {
+        textFlags: @kYellowText | @kLeftAligned
+        text: @kAlloc
+    }
+
+    Entry name {
+        y: kStartY
+    }
+
+    Entry guid {}
+
+    Entry id {
+        textFlags: @kYellowText | @kLeftAligned
+    }
+
+    Entry powerLevel {}
+    Entry configuration {}
+
+    entryAlias lastInfoEntry = configuration
+
+    ResetTemplate
+
+    //
+    // joypad elements
+    //
+
+    defaultX: kElementsDescriptionX
+    defaultY: @prevEndY + 2
+    defaultHeight: kElementLineHeight
+
+    Entry hatsLabel {
+        y: kElementsStartY
+        text: "HATS:"
+    }
+    Entry buttonsLabel { text: "BUTTONS:" }
+    Entry axesLabel    { text: "AXES:" }
+    Entry ballsLabel   { text: "TRACKBALLS:" }
+
+    // "-" box
+    defaultX: kMinusX
+    defaultWidth: kPlusMinusBoxSize
+
+    TemplateEntry {
+        color: @kLightBlue
+        text: swos.aMinus
+        onSelect: decreaseElementIndex
+    }
+
+    Entry decreaseHats {
+        rightEntry: currentHat
+        bottomEntry: decreaseButtons
+        y: kElementsStartY
+    }
+    Entry decreaseButtons {
+        rightEntry: currentButton
+        topEntry: decreaseHats
+        bottomEntry: decreaseAxes
+    }
+    Entry decreaseAxes {
+        rightEntry: currentAxis
+        topEntry: decreaseButtons
+        bottomEntry: decreaseBalls
+    }
+    Entry decreaseBalls {
+        rightEntry: currentBall
+        topEntry: decreaseAxes
+        bottomEntry: quickConfig
+    }
+
+    ResetTemplate
+
+    // current element value box
+    defaultX: kCurrentElementIndexX
+    defaultWidth: kCurrentElementWidth
+
+    TemplateEntry {
+        color: @kLightBlue
+        number: 0
+        onSelect: inputCurrentElementIndex
+    }
+
+    Entry currentHat {
+        y: kElementsStartY
+
+        leftEntry: decreaseHats
+        rightEntry: increaseHats
+        bottomEntry: >
+    }
+    Entry currentButton {
+        leftEntry: decreaseButtons
+        rightEntry: increaseButtons
+        topEntry: <
+        bottomEntry: >
+    }
+    Entry currentAxis {
+        leftEntry: decreaseAxes
+        rightEntry: increaseAxes
+        topEntry: <
+        bottomEntry: >
+    }
+    Entry currentBall {
+        leftEntry: decreaseBalls
+        rightEntry: increaseBalls
+        topEntry: <
+        bottomEntry: quickConfig
+    }
+
+    // "+" box
+    defaultX: kPlusX
+    defaultWidth: kPlusMinusBoxSize
+
+    TemplateEntry {
+        color: @kLightBlue
+        text: swos.aPlus
+        onSelect: increaseElementIndex
+    }
+
+    Entry increaseHats {
+        y: kElementsStartY
+
+        leftEntry: currentHat
+        rightEntry: configureHats
+        bottomEntry: >
+    }
+    Entry increaseButtons {
+        leftEntry: currentButton
+        rightEntry: configureButtons
+        topEntry: <
+        bottomEntry: >
+    }
+    Entry increaseAxes {
+        leftEntry: currentAxis
+        rightEntry: configureAxes
+        topEntry: <
+        bottomEntry: >
+    }
+    Entry increaseBalls {
+        leftEntry: currentBall
+        rightEntry: configureBalls
+        topEntry: <
+        bottomEntry: quickConfig
+    }
+
+    // "OF"
+    defaultX: kOfLabelX
+    defaultWidth: kOfLabelWidth
+
+    ResetTemplate
+
+    TemplateEntry {
+        text: "OF"
+    }
+
+    Entry {
+        y: kElementsStartY
+    }
+    Entry {}
+    Entry {}
+    Entry {}
+
+    // actual number of elements
+    defaultX: kNumElementsX
+    defaultWidth: kNumElementsWidth
+
+    TemplateEntry {
+        color: @kNoBackground
+        number: 0
+    }
+
+    Entry numHats {
+        y: kElementsStartY
+    }
+    Entry numButtons {}
+    Entry numAxes {}
+    Entry numBalls {}
+
+    // "configure" buttons
+    defaultX: kConfigureX
+    defaultWidth: kConfigureWidth
+
+    TemplateEntry {
+        color: @kDarkBlue
+        text: "CONFIGURE"
+        onSelect: configureSelected
+    }
+
+    Entry configureHats {
+        y: kElementsStartY
+        leftEntry: increaseHats
+        downEntry: >
+    }
+    Entry configureButtons {
+        leftEntry: increaseButtons
+        upEntry: <
+        downEntry: >
+    }
+    Entry configureAxes {
+        leftEntry: increaseAxes
+        upEntry: <
+        downEntry: >
+    }
+    Entry configureBalls {
+        leftEntry: increaseBalls
+        upEntry: <
+        downEntry: >
+    }
+
+    entryAlias lastElementEntry = configureBalls
+
+    ResetTemplate
+
+    //
+    // bottom buttons
+    //
+
+    defaultX: kBaseX
+    defaultWidth: kBigButtonWidth
+    defaultHeight: kBigButtonHeight
+    defaultColor: @kDarkBlue
+    defaultTextFlags: @kCenterAligned
+
+    Entry quickConfig {
+        y: kBottomButtonsY
+        text: "QUICK CONFIG"
+        upEntry: currentBall
+        downEntry: >
+
+        onSelect: joypadQuickConfig
+    }
+
+    Entry reset {
+        text: "RESET TO DEFAULT"
+        upEntry: <
+        downEntry: >
+
+        onSelect: resetConfigToDefault
+    }
+
+    Entry test {
+        text: "TEST"
+        upEntry: <
+        downEntry: >
+
+        onSelect: testJoypad
+    }
+
+    Entry exit {
+        y: kExitY
+
+        text: swos.aExit
+        color: kExitColor
+
+        upEntry: <
+
+        onSelect: ~SetExitMenuFlag
+    }
+
+    entryAlias topmostButton = quickConfig
+}

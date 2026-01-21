@@ -1,0 +1,229 @@
+//
+// Menu that enables users to change controls, pops up after final "PLAY MATCH" is selected
+//
+
+#include "common.mh"
+
+Menu selectMatchControlsMenu
+{
+    export kNumControlEntries = 8
+
+    export kDisabledColor = @kGray
+    export kEnabledColor = kExitColor
+    kTeamTextColor = @kSoftBlueText
+
+    kControlButtonWidth = 100
+    kControlButtonHeight = 12
+    export kGapWidth = 5
+    kGapHeight = 4
+
+    kColumn1X = kGapWidth - kMenuOffset
+    kColumn2X = kColumn1X + kGapWidth + kControlButtonWidth
+    kColumn3X = kColumn2X + kGapWidth + kControlButtonWidth
+
+    #assert 4 * kGapWidth + 3 * kControlButtonWidth == @kScreenWidth
+
+    kStartY = 20
+
+    kControlColor = @kGreen
+
+    defaultY: @prevEndY + kGapHeight
+    defaultWidth: kControlButtonWidth
+    defaultHeight: kControlButtonHeight
+
+    onInit: selectMatchControlsMenuOnInit
+    onRestore: selectMatchControlsMenuOnRestore
+    onDraw: selectMatchControlsMenuOnDraw
+
+    initialEntry: play
+
+    Entry header {
+        x: kBaseX
+        y: 0
+        width: kBigButtonWidth + 6
+        height: kBigButtonHeight
+
+        color: kHeaderColor
+        text: "SELECT MATCH CONTROLS"
+    }
+
+    defaultX: @prevX
+
+    Entry team1 {
+        x: kColumn1X
+        y: kStartY
+        textFlags: kTeamTextColor
+        text: @kAlloc
+    }
+
+    Entry player1Controls {
+        rightEntry: firstControl
+        downEntry: configure1
+
+        color: kControlColor
+        text: @kAlloc
+
+        controlMask: @kControlLeft | @kControlRight | @kControlFire | @kControlShortFire
+        onSelect: player1ControlsSelected
+    }
+
+    Entry player1Warning {
+        textFlags: @kBlinkText | @kYellowText
+        text: "INCOMPLETE CONFIG"
+    }
+
+    Entry team2 {
+        x: kColumn3X
+        y: kStartY
+        textFlags: kTeamTextColor
+        text: @kAlloc
+    }
+
+    Entry player2Controls {
+        leftEntry: firstControl
+        downEntry: configure2
+
+        color: kControlColor
+        text: @kAlloc
+
+        controlMask: @kControlLeft | @kControlRight | @kControlFire | @kControlShortFire
+        onSelect: player2ControlsSelected
+    }
+
+    Entry player2Warning {
+        textFlags: @kBlinkText | @kYellowText
+        text: "INCOMPLETE CONFIG"
+    }
+
+    Entry controlsLabel {
+        x: kColumn2X
+        y: kStartY
+        textFlags: @kYellowText
+        text: "CONTROLS"
+    }
+
+    TemplateEntry {
+        color: @kLightBlue
+        text: @kAlloc
+        controlMask: @kControlLeft | @kControlRight | @kControlFire
+        onSelect: selectControl
+    }
+
+#repeat kNumControlEntries
+    Entry #join(control, #{i}:02) {
+        leftEntry: player1Controls
+        rightEntry: player2Controls
+        upEntry: @prevOrd
+        downEntry: @nextOrd
+    }
+#endRepeat
+
+    entryAlias firstControl = control00
+    entryAlias secondLastControl = #join(control, #{kNumControlEntries - 2}:02)
+    entryAlias lastControl = #join(control, #{kNumControlEntries - 1}:02)
+
+    firstControl.upEntry = @kNoEntry
+    lastControl.downEntry = play
+    lastControl.rightEntry = scrollDown
+    secondLastControl.rightEntry = scrollUp
+
+    ResetTemplate
+
+    Entry legend {
+        x: -kMenuOffset
+        width: @kScreenWidth
+        text: @kAlloc
+    }
+
+    Entry scrollUp {
+        x: secondLastControl.endX + 1
+        y: secondLastControl.y
+        width: kScrollArrowWidth
+
+        leftEntry: secondLastControl
+        downEntry: scrollDown
+        upEntry: player2Controls
+
+        sprite: kUpArrowSpriteIndex
+
+        onSelect: scrollUpSelected
+    }
+
+    Entry scrollDown {
+        x: lastControl.endX + 1
+        y: lastControl.y
+        width: kScrollArrowWidth
+
+        leftEntry: lastControl
+        upEntry: scrollUp
+        downEntry: back
+
+        sprite: kDownArrowSpriteIndex
+
+        onSelect: scrollDownSelected
+    }
+
+    export kBottomButtonsColumnGap = 2
+    kBottomButtonsWidth = (kControlButtonWidth - kBottomButtonsColumnGap) / 2
+
+    defaultY: @prevY
+
+    TemplateEntry {
+        color: kEnabledColor
+    }
+
+    Entry play {
+        x: kColumn2X
+        y: legend.endY + kGapHeight
+        width: kBottomButtonsWidth
+
+        leftEntry: configure1
+        rightEntry: back
+        upEntry: lastControl
+
+        skipDown: back
+
+        color: @kRed
+        text: @kAlloc
+
+        onSelect: confirmSelection
+    }
+
+    Entry back {
+        x: @prevEndX + 2
+        width: kBottomButtonsWidth
+
+        leftEntry: play
+        rightEntry: configure2
+        upEntry: lastControl
+
+        text: "BACK"
+
+        onSelect: cancelSelection
+    }
+
+    Entry configure1 {
+        x: kColumn1X
+
+        upEntry: player1Controls
+        rightEntry: play
+
+        text: "CONFIGURE"
+
+        onSelect: configurePl1Controls
+    }
+
+    Entry configure2 {
+        x: kColumn3X
+
+        upEntry: player2Controls
+        leftEntry: back
+
+        directionDown: @kUp
+        skipDown: scrollUp
+
+        text: "CONFIGURE"
+
+        onSelect: configurePl2Controls
+    }
+}
