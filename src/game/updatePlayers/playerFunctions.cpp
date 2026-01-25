@@ -1,10 +1,14 @@
 #include "playerFunctions.h"
 #include "../../stdinc.h"
+#include "../../util/log.h"
 
 using namespace SwosVM;
 
-// Memory access macros
-#define MEM_WORD(offset) (*(int16_t*)(kMemStart + (offset)))
+// Memory access macros for playerFunctions.cpp
+// All constants in this file (kDefaultDestinations, kGameState, kBallDefensiveX, etc.)
+// are ABSOLUTE addresses into g_memByte, NOT offsets from kMemStart.
+// Therefore we access g_memByte directly, not via kMemStart (which adds 256).
+#define MEM_WORD(offset) (*(int16_t*)(&g_memByte[(offset)]))
 
 // Memory offsets for sprites and variables
 constexpr uint32_t kBallSpriteOffset = 328988;
@@ -239,10 +243,13 @@ void SetPlayerDowntimeAfterTackle() {
 
     // Select table based on whether player is human or computer controlled
     uint32_t tableOffset;
+    const char* controlType;
     if (tacklingTimer == -1) {
         tableOffset = kComputerTacklingDownTime;
+        controlType = "CPU";
     } else {
         tableOffset = kPlayerTacklingDownTime;
+        controlType = "HUMAN";
     }
 
     // Get tackling skill from player game header (offset 72 in PlayerGameHeader)
@@ -250,8 +257,19 @@ void SetPlayerDowntimeAfterTackle() {
     int16_t tableIndex = tackling * 2;
 
     // Look up downtime and set on sprite (offset 13 = playerDownTimer)
+    // NOTE: kPlayerTacklingDownTime and kComputerTacklingDownTime are ABSOLUTE addresses
+    // into g_memByte, so we use readMemory() which reads from g_memByte[addr] directly,
+    // rather than MEM_WORD which uses kMemStart (g_memByte + 256).
     int32_t tableAddress = static_cast<int32_t>(tableOffset) + tableIndex;
-    int16_t downtime = MEM_WORD(tableAddress);
+    int16_t downtime = (int16_t)readMemory(tableAddress, 2);
+
+    int16_t playerOrdinal = (int16_t)readMemory(A1 + 2, 2);
+    int16_t playerX = (int16_t)readMemory(A1 + kSpriteX + 2, 2);
+    int16_t playerY = (int16_t)readMemory(A1 + kSpriteY + 2, 2);
+
+    logInfo("[TACKLE_DOWN] Player %d at (%d,%d): tacklingTimer=%d (%s) tackleSkill=%d tableOffset=%u tableIdx=%d tableAddr=%d downtime=%d",
+            playerOrdinal, playerX, playerY, tacklingTimer, controlType, tackling, tableOffset, tableIndex, tableAddress, downtime);
+
     writeMemory(A1 + 13, 1, downtime & 0xFF);
 }
 
@@ -458,8 +476,9 @@ void AttemptStaticHeader() {
     int16_t tableIndex = direction << 2;
 
     // Get destination offsets from kDefaultDestinations table
-    int16_t destOffsetX = MEM_WORD(kDefaultDestinations + tableIndex);
-    int16_t destOffsetY = MEM_WORD(kDefaultDestinations + tableIndex + 2);
+    // NOTE: kDefaultDestinations is an absolute address, use readMemory()
+    int16_t destOffsetX = (int16_t)readMemory(kDefaultDestinations + tableIndex, 2);
+    int16_t destOffsetY = (int16_t)readMemory(kDefaultDestinations + tableIndex + 2, 2);
 
     // Get current player position (whole part)
     int16_t playerX = (int16_t)readMemory(A1 + kSpriteX + 2, 2);
@@ -656,22 +675,26 @@ player_not_injured:
 void GoalkeeperJumping() {
     // Check ball distance and set speed accordingly
     uint32_t ballDistance = readMemory(A1 + kSpriteBallDistance, 4);
+    int16_t gkSpeed = 0;
 
     if (ballDistance <= 128) {
         // Ball is close - use near jump speed
         int16_t nearSpeed = (int16_t)readMemory(kGoalkeeperNearJumpSpeed, 2);
         D1 = nearSpeed;
         writeMemory(A1 + kSpriteSpeed, 2, nearSpeed);
+        gkSpeed = nearSpeed;
     } else {
         // Ball is far away
         int16_t farSpeed = (int16_t)readMemory(kGoalkeeperFarJumpSpeed, 2);
         writeMemory(A1 + kSpriteSpeed, 2, farSpeed);
+        gkSpeed = farSpeed;
 
         int16_t d1Val = (int16_t)(D1 & 0xFFFF);
         if (d1Val != 0) {
             // Use slower speed
             int16_t slowerSpeed = (int16_t)readMemory(kGoalkeeperFarJumpSlowerSpeed, 2);
             writeMemory(A1 + kSpriteSpeed, 2, slowerSpeed);
+            gkSpeed = slowerSpeed;
 
             if (d1Val != 1) {
                 // Add randomness based on game tick
@@ -680,6 +703,7 @@ void GoalkeeperJumping() {
                 int16_t nearJumpSpeed = (int16_t)readMemory(kGoalkeeperNearJumpSpeed, 2);
                 int16_t finalSpeed = randomComponent + nearJumpSpeed;
                 writeMemory(A1 + kSpriteSpeed, 2, finalSpeed);
+                gkSpeed = finalSpeed;
             }
         }
     }
@@ -696,10 +720,12 @@ void GoalkeeperJumping() {
 
     // Check ball height to determine diving high or low
     int16_t ballNotHighZ = (int16_t)readMemory(kBallNotHighZ, 2);
+    const char* diveType = nullptr;
 
     if (ballNotHighZ <= 5) {
         // Diving low
         writeMemory(A1 + 12, 1, PL_GOALIE_DIVING_LOW);
+        diveType = "LOW";
 
         if (A6 == kBottomTeamData) {
             A0 = kRightGoalieJumpingLowAnimTable;
@@ -709,6 +735,7 @@ void GoalkeeperJumping() {
     } else {
         // Diving high
         writeMemory(A1 + 12, 1, PL_GOALIE_DIVING_HIGH);
+        diveType = "HIGH";
 
         if (A6 == kBottomTeamData) {
             A0 = kRightGoalieJumpingHighAnimTable;
@@ -740,6 +767,10 @@ void GoalkeeperJumping() {
     int16_t destOffsetY = (int16_t)readMemory(kDefaultDestinations + tableIndex + 2, 2);
     int16_t newDestY = destOffsetY + keeperY;
     writeMemory(A1 + kSpriteDestY, 2, newDestY);
+
+    logInfo("[GK_JUMP] DIVING %s! ballDist=%d gkSpeed=%d ballZ=%d dir=%d destDir=%d gkPos=(%d,%d) dest=(%d,%d)",
+            diveType, ballDistance, gkSpeed, ballNotHighZ, direction, destDirection,
+            keeperX, keeperY, newDestX, newDestY);
 }
 
 // PlayerBeginTackling - initiates a sliding tackle
@@ -1039,9 +1070,9 @@ void PlayerAttemptingJumpHeader() {
     // Calculate destination using kDefaultDestinations table
     uint16_t tableIndex = direction << 2;
 
-    // Get destination offsets
-    int16_t destOffsetX = MEM_WORD(kDefaultDestinations + tableIndex);
-    int16_t destOffsetY = MEM_WORD(kDefaultDestinations + tableIndex + 2);
+    // Get destination offsets (kDefaultDestinations is absolute address)
+    int16_t destOffsetX = (int16_t)readMemory(kDefaultDestinations + tableIndex, 2);
+    int16_t destOffsetY = (int16_t)readMemory(kDefaultDestinations + tableIndex + 2, 2);
 
     // Get current player position (whole part)
     int16_t playerX = (int16_t)readMemory(A1 + kSpriteX + 2, 2);
@@ -1515,7 +1546,7 @@ constexpr int16_t ST_KEEPER_HOLDS_BALL = 3;
 
 // Header action constants
 constexpr int16_t kStaticHeaderBallSpeed = 1792;
-constexpr int kPlayerGameHeading = 29;   // PlayerGame.heading offset
+constexpr int kPlayerGameHeading = 71;   // PlayerGameHeader.heading offset (was incorrectly 29)
 constexpr int kSpriteHeading = 98;       // Sprite.heading offset
 
 // Player header speed increase table (indexed by heading skill 0-12)
@@ -1652,15 +1683,21 @@ void ApplyBallAfterTouch() {
 
             // Apply X spin
             int16_t spinX = kKickSpinFactor[tableIndex];
-            spinX = (spinX * multiplier);
+            int16_t spinXFinal = (spinX * multiplier);
             int16_t destX = (int16_t)readMemory(A1 + kSpriteDestX, 2);
-            writeMemory(A1 + kSpriteDestX, 2, destX + spinX);
+            writeMemory(A1 + kSpriteDestX, 2, destX + spinXFinal);
 
             // Apply Y spin
             int16_t spinY = kKickSpinFactor[tableIndex + 1];
-            spinY = (spinY * multiplier);
+            int16_t spinYFinal = (spinY * multiplier);
             int16_t destY = (int16_t)readMemory(A1 + kSpriteDestY, 2);
-            writeMemory(A1 + kSpriteDestY, 2, destY + spinY);
+            writeMemory(A1 + kSpriteDestY, 2, destY + spinYFinal);
+
+            int16_t ballSpeed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
+            logInfo("[SPIN_KICK] spinDir=%s timer=%d mult=%d plDir=%d tableIdx=%d spinFactor=(%d,%d) spinApplied=(%d,%d) dest:(%d,%d)->(%d,%d) ballSpeed=%d",
+                    spinDirection == 0 ? "LEFT" : "RIGHT", spinTimer, multiplier, controlledPlDir, tableIndex,
+                    spinX, spinY, spinXFinal, spinYFinal,
+                    destX, destY, destX + spinXFinal, destY + spinYFinal, ballSpeed);
         }
 
         // Check for high kick when spin timer == 4
@@ -1694,6 +1731,7 @@ void ApplyBallAfterTouch() {
 
             if (doHighKick) {
                 // High kick (diff 3, 4, 5 = back-left, back, back-right)
+                int16_t origSpeed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
                 writeMemory(A1 + kSpriteDeltaZ, 4, kHighKickDeltaZ);
                 writeMemory(A1 + kSpriteSpeed, 2, kHighKickBallSpeed);
 
@@ -1707,15 +1745,20 @@ void ApplyBallAfterTouch() {
                         int16_t addition = speed >> 3;
                         speed = speed - reduction + addition;
                         writeMemory(A1 + kSpriteSpeed, 2, speed);
+                        logInfo("[KICK_HIGH] High kick (diagonal): plDir=%d origSpeed=%d -> baseSpeed=%d -> finalSpeed=%d deltaZ=0x%08X",
+                                controlledPlDir, origSpeed, kHighKickBallSpeed, speed, kHighKickDeltaZ);
                     }
                 } else {
                     // Cardinal direction - reduce to 75%
                     int16_t speed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
                     speed = speed - (speed >> 2);
                     writeMemory(A1 + kSpriteSpeed, 2, speed);
+                    logInfo("[KICK_HIGH] High kick (cardinal): plDir=%d origSpeed=%d -> baseSpeed=%d -> finalSpeed=%d deltaZ=0x%08X",
+                            controlledPlDir, origSpeed, kHighKickBallSpeed, speed, kHighKickDeltaZ);
                 }
             } else if (doNormalKick) {
                 // Normal kick
+                int16_t origSpeed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
                 writeMemory(A1 + kSpriteDeltaZ, 4, kNormalKickDeltaZ);
                 writeMemory(A1 + kSpriteSpeed, 2, kNormalKickBallSpeed);
 
@@ -1728,11 +1771,15 @@ void ApplyBallAfterTouch() {
                         int16_t addition = speed >> 3;
                         speed = speed - reduction + addition;
                         writeMemory(A1 + kSpriteSpeed, 2, speed);
+                        logInfo("[KICK_NORMAL] Normal kick (diagonal): plDir=%d origSpeed=%d -> baseSpeed=%d -> finalSpeed=%d deltaZ=0x%08X",
+                                controlledPlDir, origSpeed, kNormalKickBallSpeed, speed, kNormalKickDeltaZ);
                     }
                 } else {
                     int16_t speed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
                     speed = speed - (speed >> 2);
                     writeMemory(A1 + kSpriteSpeed, 2, speed);
+                    logInfo("[KICK_NORMAL] Normal kick (cardinal): plDir=%d origSpeed=%d -> baseSpeed=%d -> finalSpeed=%d deltaZ=0x%08X",
+                            controlledPlDir, origSpeed, kNormalKickBallSpeed, speed, kNormalKickDeltaZ);
                 }
             }
         }
@@ -1822,15 +1869,21 @@ void ApplyBallAfterTouch() {
 
         // Apply X spin
         int16_t spinX = kPassingSpinFactor[tableIndex];
-        spinX = (spinX * multiplier);
+        int16_t spinXFinal = (spinX * multiplier);
         int16_t destX = (int16_t)readMemory(A1 + kSpriteDestX, 2);
-        writeMemory(A1 + kSpriteDestX, 2, destX + spinX);
+        writeMemory(A1 + kSpriteDestX, 2, destX + spinXFinal);
 
         // Apply Y spin
         int16_t spinY = kPassingSpinFactor[tableIndex + 1];
-        spinY = (spinY * multiplier);
+        int16_t spinYFinal = (spinY * multiplier);
         int16_t destY = (int16_t)readMemory(A1 + kSpriteDestY, 2);
-        writeMemory(A1 + kSpriteDestY, 2, destY + spinY);
+        writeMemory(A1 + kSpriteDestY, 2, destY + spinYFinal);
+
+        int16_t ballSpeed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
+        logInfo("[SPIN_PASS] spinDir=%s timer=%d mult=%d ballDir=%d tableIdx=%d spinFactor=(%d,%d) spinApplied=(%d,%d) dest:(%d,%d)->(%d,%d) ballSpeed=%d",
+                spinDirection == 0 ? "LEFT" : "RIGHT", spinTimer, multiplier, ballDirection, tableIndex,
+                spinX, spinY, spinXFinal, spinYFinal,
+                destX, destY, destX + spinXFinal, destY + spinYFinal, ballSpeed);
     }
 
     // Check for long pass mechanics
@@ -1847,15 +1900,19 @@ void ApplyBallAfterTouch() {
                 if (diff == 2 || diff == 6) {
                     // Long pass - increase speed by 12.5%
                     writeMemory(A6 + kTeamLongPass, 2, 1);
-                    int16_t speed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
-                    speed += (speed >> 3);
+                    int16_t oldSpeed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
+                    int16_t speed = oldSpeed + (oldSpeed >> 3);
                     writeMemory(A1 + kSpriteSpeed, 2, speed);
+                    logInfo("[PASS_LONG] Long pass: plDir=%d allowedDir=%d diff=%d speed %d -> %d (+12.5%%)",
+                            controlledPlDir, currentAllowedDir, diff, oldSpeed, speed);
                 } else if (diff >= 3 && diff <= 5) {
                     // Long spin pass - increase speed by 12.5%
                     writeMemory(A6 + kTeamLongSpinPass, 2, 1);
-                    int16_t speed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
-                    speed += (speed >> 3);
+                    int16_t oldSpeed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
+                    int16_t speed = oldSpeed + (oldSpeed >> 3);
                     writeMemory(A1 + kSpriteSpeed, 2, speed);
+                    logInfo("[PASS_LONGSPIN] Long spin pass: plDir=%d allowedDir=%d diff=%d speed %d -> %d (+12.5%%)",
+                            controlledPlDir, currentAllowedDir, diff, oldSpeed, speed);
                 }
             }
         }
@@ -1945,9 +2002,9 @@ void PlayerHittingStaticHeader() {
     int16_t ballX = (int16_t)readMemory(A2 + kSpriteX + 2, 2);
     int16_t ballY = (int16_t)readMemory(A2 + kSpriteY + 2, 2);
 
-    // Get destination offsets from table
-    int16_t destOffsetX = MEM_WORD(kDefaultDestinations + tableIndex);
-    int16_t destOffsetY = MEM_WORD(kDefaultDestinations + tableIndex + 2);
+    // Get destination offsets from table (kDefaultDestinations is absolute address)
+    int16_t destOffsetX = (int16_t)readMemory(kDefaultDestinations + tableIndex, 2);
+    int16_t destOffsetY = (int16_t)readMemory(kDefaultDestinations + tableIndex + 2, 2);
 
     // Set ball destination
     writeMemory(A2 + kSpriteDestX, 2, ballX + destOffsetX);
@@ -1988,6 +2045,9 @@ static void SetPlayerJumpHeaderHitAnimationTable() {
 
 // Helper: DoFlyingHeader - low header trajectory
 static void DoFlyingHeader() {
+    int16_t oldSpeed = (int16_t)readMemory(A2 + kSpriteSpeed, 2);
+    int32_t oldDeltaZ = (int32_t)readMemory(A2 + kSpriteDeltaZ, 4);
+
     // Set ball deltaZ to low jump height
     writeMemory(A2 + kSpriteDeltaZ, 4, kHeaderLowJumpHeight);
 
@@ -1996,11 +2056,17 @@ static void DoFlyingHeader() {
     int16_t reduction = speed >> 2;
     writeMemory(A2 + kSpriteSpeed, 2, speed - reduction);
 
+    logInfo("[HEADER_FLYING] DoFlyingHeader: oldDeltaZ=0x%08X -> newDeltaZ=0x%08X (kHeaderLowJumpHeight), oldSpeed=%d -> newSpeed=%d",
+            oldDeltaZ, kHeaderLowJumpHeight, oldSpeed, speed - reduction);
+
     SetPlayerJumpHeaderHitAnimationTable();
 }
 
 // Helper: DoLobHeader - high header trajectory
 static void DoLobHeader() {
+    int16_t oldSpeed = (int16_t)readMemory(A2 + kSpriteSpeed, 2);
+    int32_t oldDeltaZ = (int32_t)readMemory(A2 + kSpriteDeltaZ, 4);
+
     // Set ball deltaZ to high jump height
     writeMemory(A2 + kSpriteDeltaZ, 4, kHeaderHighJumpHeight);
 
@@ -2008,6 +2074,9 @@ static void DoLobHeader() {
     int16_t speed = (int16_t)readMemory(A2 + kSpriteSpeed, 2);
     int16_t reduction = speed >> 4;
     writeMemory(A2 + kSpriteSpeed, 2, speed - reduction);
+
+    logInfo("[HEADER_LOB] DoLobHeader: oldDeltaZ=0x%08X -> newDeltaZ=0x%08X (kHeaderHighJumpHeight), oldSpeed=%d -> newSpeed=%d",
+            oldDeltaZ, kHeaderHighJumpHeight, oldSpeed, speed - reduction);
 
     SetPlayerJumpHeaderHitAnimationTable();
 }
@@ -2021,12 +2090,18 @@ void PlayerHittingJumpHeader() {
 
     // Get direction - use currentAllowedDirection if valid, else use player's direction
     int16_t direction = (int16_t)readMemory(A6 + kTeamCurrentAllowedDirection, 2);
+    int16_t origAllowedDir = direction;
     if (direction < 0) {
         direction = (int16_t)readMemory(A1 + kSpriteDirection, 2);
     }
 
     // Setup ball sprite reference
     A2 = kBallSpriteOffset;
+
+    // Get initial ball state for logging
+    int32_t origBallDeltaZ = (int32_t)readMemory(A2 + kSpriteDeltaZ, 4);
+    int16_t origBallSpeed = (int16_t)readMemory(A2 + kSpriteSpeed, 2);
+    int16_t ballZ = (int16_t)readMemory(A2 + kSpriteZ + 2, 2);
 
     // Set initial ball deltaZ
     writeMemory(A2 + kSpriteDeltaZ, 4, kBallJumpHeaderDeltaZ);
@@ -2039,51 +2114,62 @@ void PlayerHittingJumpHeader() {
     // Calculate direction difference: player direction - controls direction
     int16_t playerDir = (int16_t)readMemory(A1 + kSpriteDirection, 2);
     int16_t diff = playerDir - direction;
+    int16_t origDiff = diff;
 
     // Get current allowed direction again
     int16_t currentAllowedDir = (int16_t)readMemory(A6 + kTeamCurrentAllowedDirection, 2);
 
     int16_t finalDirection;
+    const char* headerType = "UNKNOWN";
     if (currentAllowedDir < 0) {
         // No direction pressed - do flying header with player's direction
+        headerType = "FLYING (no dir)";
         DoFlyingHeader();
         finalDirection = (int16_t)readMemory(A1 + kSpriteDirection, 2);  // Note: reads from wrong offset in asm but matches behavior
     } else {
         diff &= 7;
         if (diff == 0) {
             // Same direction - use allowed direction
+            headerType = "SAME_DIR";
             finalDirection = (int16_t)readMemory(A1 + kSpriteDirection, 2);  // Note: matches assembly (reads Sprite offset)
         } else if (diff == 4) {
             // Opposite direction - lob header
+            headerType = "LOB (opposite)";
             DoLobHeader();
             finalDirection = (int16_t)readMemory(A1 + kSpriteDirection, 2);
         } else if (diff == 1) {
             // Aim left
+            headerType = "FLYING aim left (diff=1)";
             DoFlyingHeader();
             playerDir = (int16_t)readMemory(A1 + kSpriteDirection, 2);
             finalDirection = playerDir - 1;
         } else if (diff == 7) {
             // Aim right
+            headerType = "FLYING aim right (diff=7)";
             DoFlyingHeader();
             playerDir = (int16_t)readMemory(A1 + kSpriteDirection, 2);
             finalDirection = playerDir + 1;
         } else if (diff == 2) {
             // Left held - flying header aim left
+            headerType = "FLYING aim left (diff=2)";
             DoFlyingHeader();
             playerDir = (int16_t)readMemory(A1 + kSpriteDirection, 2);
             finalDirection = playerDir - 1;
         } else if (diff == 6) {
             // Right held - flying header aim right
+            headerType = "FLYING aim right (diff=6)";
             DoFlyingHeader();
             playerDir = (int16_t)readMemory(A1 + kSpriteDirection, 2);
             finalDirection = playerDir + 1;
         } else if (diff == 3) {
             // Down-left held - lob header aim left
+            headerType = "LOB aim left (diff=3)";
             DoLobHeader();
             playerDir = (int16_t)readMemory(A1 + kSpriteDirection, 2);
             finalDirection = playerDir - 1;
         } else {
             // diff == 5, down-right - lob header aim right
+            headerType = "LOB aim right (diff=5)";
             DoLobHeader();
             playerDir = (int16_t)readMemory(A1 + kSpriteDirection, 2);
             finalDirection = playerDir + 1;
@@ -2103,9 +2189,9 @@ void PlayerHittingJumpHeader() {
     int16_t ballX = (int16_t)readMemory(A2 + kSpriteX + 2, 2);
     int16_t ballY = (int16_t)readMemory(A2 + kSpriteY + 2, 2);
 
-    // Get destination offsets from table
-    int16_t destOffsetX = MEM_WORD(kDefaultDestinations + tableIndex);
-    int16_t destOffsetY = MEM_WORD(kDefaultDestinations + tableIndex + 2);
+    // Get destination offsets from table (kDefaultDestinations is absolute address)
+    int16_t destOffsetX = (int16_t)readMemory(kDefaultDestinations + tableIndex, 2);
+    int16_t destOffsetY = (int16_t)readMemory(kDefaultDestinations + tableIndex + 2, 2);
 
     // Set ball destination
     writeMemory(A2 + kSpriteDestX, 2, ballX + destOffsetX);
@@ -2124,6 +2210,21 @@ void PlayerHittingJumpHeader() {
 
     // Set player heading flag
     writeMemory(A1 + kSpriteHeading, 2, 1);
+
+    // Get final ball state for logging
+    int32_t finalBallDeltaZ = (int32_t)readMemory(A2 + kSpriteDeltaZ, 4);
+    int16_t finalBallSpeed = (int16_t)readMemory(A2 + kSpriteSpeed, 2);
+
+    int16_t playerX = (int16_t)readMemory(A1 + kSpriteX + 2, 2);
+    int16_t playerY = (int16_t)readMemory(A1 + kSpriteY + 2, 2);
+    int16_t playerOrdinal = (int16_t)readMemory(A1 + 2, 2);
+
+    logInfo("[HEADER_JUMP] Player %d at (%d,%d): type=%s playerDir=%d allowedDir=%d diff=%d finalDir=%d",
+            playerOrdinal, playerX, playerY, headerType, playerDir, origAllowedDir, origDiff, finalDirection);
+    logInfo("[HEADER_JUMP]   ballPos=(%d,%d,z=%d) destOffset=(%d,%d) ballDest=(%d,%d)",
+            ballX, ballY, ballZ, destOffsetX, destOffsetY, ballX + destOffsetX, ballY + destOffsetY);
+    logInfo("[HEADER_JUMP]   deltaZ: 0x%08X -> 0x%08X, speed: %d -> %d (skill=%d bonus=%d)",
+            origBallDeltaZ, finalBallDeltaZ, origBallSpeed, finalBallSpeed, headingSkill, speedBonus);
 
     // Play kick sample and reset spin timers
     SWOS::PlayKickSample();
@@ -2179,9 +2280,9 @@ void PlayerTackledTheBallWeak() {
     int16_t ballX = (int16_t)readMemory(A2 + kSpriteX + 2, 2);
     int16_t ballY = (int16_t)readMemory(A2 + kSpriteY + 2, 2);
 
-    // Get destination offsets from table
-    int16_t destOffsetX = MEM_WORD(kDefaultDestinations + tableIndex);
-    int16_t destOffsetY = MEM_WORD(kDefaultDestinations + tableIndex + 2);
+    // Get destination offsets from table (kDefaultDestinations is absolute address)
+    int16_t destOffsetX = (int16_t)readMemory(kDefaultDestinations + tableIndex, 2);
+    int16_t destOffsetY = (int16_t)readMemory(kDefaultDestinations + tableIndex + 2, 2);
 
     // Set ball destination
     writeMemory(A2 + kSpriteDestX, 2, ballX + destOffsetX);
@@ -2378,8 +2479,8 @@ void PlayerKickingBall() {
 constexpr int16_t kKeeperPenaltySaveDistanceFar = 16;    // Used 25% of time
 constexpr int16_t kKeeperPenaltySaveDistanceNear = 48;   // Used 75% of time
 constexpr int16_t kKeeperSaveDistance = 96;              // Normal shot threshold
-constexpr uint32_t kGoalkeeperDiveDeltas = 524780;       // Table of dive speeds by skill
-constexpr uint32_t kGoalkeeperDiveDeadVar = 524072;      // Dead var incremented during dive calc
+constexpr uint32_t kGoalkeeperDiveDeltas = 324072;       // Table of dive speeds by skill (was incorrectly 524780)
+constexpr uint32_t kGoalkeeperDiveDeadVar = 337190;      // Dead var incremented during dive calc (was incorrectly 524072)
 constexpr uint32_t kPlayingPenalties = 455942;
 constexpr uint32_t kPenalty = 455924;
 constexpr uint32_t kTeamShotChanceTable = 90;            // TeamGeneralInfo.shotChanceTable offset
@@ -2430,6 +2531,14 @@ void ShouldGoalkeeperDive() {
     int16_t goalkeeperY = (int16_t)readMemory(A1 + kSpriteY + 2, 2);
     int16_t yDiff = ballY - goalkeeperY;
 
+    int16_t ballX = (int16_t)readMemory(A2 + kSpriteX + 2, 2);
+    int16_t goalkeeperX = (int16_t)readMemory(A1 + kSpriteX + 2, 2);
+    int16_t ballSpeed = (int16_t)readMemory(A2 + kSpriteSpeed, 2);
+
+    logInfo("[GK_DIVE] Called: ballPos=(%d,%d) gkPos=(%d,%d) yDiff=%d ballSpeed=%d team=%s",
+            ballX, ballY, goalkeeperX, goalkeeperY, yDiff, ballSpeed,
+            A6 == kTopTeamDataOffset ? "top" : "bottom");
+
     // Flip sign for bottom team
     if (A6 != kTopTeamDataOffset) {
         yDiff = -yDiff;
@@ -2439,10 +2548,12 @@ void ShouldGoalkeeperDive() {
     if (yDiff < 0) {
         if (yDiff < -10) {
             // Ball too far behind - won't dive
+            logInfo("[GK_DIVE] REJECT: Ball too far behind (yDiff=%d < -10)", yDiff);
             D0 = 0;
             return;
         }
         // Ball slightly behind - try saving anyway
+        logInfo("[GK_DIVE] ACCEPT: Ball slightly behind, attempting save (yDiff=%d)", yDiff);
         D0 = 1;
         return;
     }
@@ -2471,11 +2582,13 @@ void ShouldGoalkeeperDive() {
 
         if (yDiff > threshold) {
             // Ball too far - won't dive
+            logInfo("[GK_DIVE] REJECT penalty: yDiff=%d > threshold=%d", yDiff, threshold);
             D0 = 0;
             return;
         }
 
         // At penalty goalkeeper always dives
+        logInfo("[GK_DIVE] ACCEPT penalty: yDiff=%d <= threshold=%d", yDiff, threshold);
         D0 = 1;
         return;
     }
@@ -2483,6 +2596,7 @@ void ShouldGoalkeeperDive() {
     // Normal shot
     if (yDiff > kKeeperSaveDistance) {
         // Ball too far - won't dive
+        logInfo("[GK_DIVE] REJECT: Ball too far (yDiff=%d > kKeeperSaveDistance=%d)", yDiff, kKeeperSaveDistance);
         D0 = 0;
         return;
     }
@@ -2500,13 +2614,13 @@ void ShouldGoalkeeperDive() {
     int16_t framesY = GetFramesNeededToCoverDistance(ballDeltaY, absYDiff);
     if (framesY == 0) {
         // Ball not moving in Y - won't dive
+        logInfo("[GK_DIVE] REJECT: Ball not moving in Y (ballDeltaY=0x%08X, absYDiff=%d, framesY=0)", ballDeltaY, absYDiff);
         D0 = 0;
         return;
     }
 
     // Calculate abs(ball x - goalkeeper x) using ballDefensiveX
     int16_t ballDefX = MEM_WORD(kBallDefensiveX);
-    int16_t goalkeeperX = (int16_t)readMemory(A1 + kSpriteX + 2, 2);
     int16_t absXDiff = ballDefX - goalkeeperX;
     if (absXDiff < 0) {
         absXDiff = -absXDiff;
@@ -2519,15 +2633,20 @@ void ShouldGoalkeeperDive() {
     int16_t framesX = GetFramesNeededToCoverDistance(goalkeeperDeltaX, absXDiff);
     if (framesX == 0) {
         // Already at ball X - won't dive
+        logInfo("[GK_DIVE] REJECT: Already at ball X (gkDeltaX=0x%08X, absXDiff=%d, framesX=0)", goalkeeperDeltaX, absXDiff);
         D0 = 0;
         return;
     }
 
     // If goalkeeper can reach ball X before ball reaches goalkeeper Y, no need to dive
     if (framesX <= framesY) {
+        logInfo("[GK_DIVE] REJECT: GK can reach ball without diving (framesX=%d <= framesY=%d)", framesX, framesY);
         D0 = 0;
         return;
     }
+
+    logInfo("[GK_DIVE] Checking dive timing: framesX=%d > framesY=%d, absXDiff=%d, ballDefX=%d, gkX=%d",
+            framesX, framesY, absXDiff, ballDefX, goalkeeperX);
 
     // At this point goalkeeper can't reach ball by X but it's in range by Y
     // Recalculate absXDiff
@@ -2556,19 +2675,25 @@ void ShouldGoalkeeperDive() {
 
     // Calculate frames to dive to ball position
     int16_t framesDive = GetFramesNeededToCoverDistance(diveDelta, absXDiff);
+    logInfo("[GK_DIVE] Dive calc: skillIndex=%d, diveDelta=0x%08X, absXDiff=%d, framesDive=%d, framesY=%d",
+            skillIndex, diveDelta, absXDiff, framesDive, framesY);
+
     if (framesDive == 0) {
         // Can't dive - won't dive
+        logInfo("[GK_DIVE] REJECT: framesDive=0 (diveDelta=0x%08X, absXDiff=%d)", diveDelta, absXDiff);
         D0 = 0;
         return;
     }
 
     // If dive frames >= frames until ball reaches goalkeeper Y, we can save
     if (framesDive >= framesY) {
+        logInfo("[GK_DIVE] ACCEPT: framesDive=%d >= framesY=%d - WILL DIVE!", framesDive, framesY);
         D0 = 1;
         return;
     }
 
     // Can't reach in time - won't dive
+    logInfo("[GK_DIVE] REJECT: Can't reach in time (framesDive=%d < framesY=%d)", framesDive, framesY);
     D0 = 0;
 }
 
@@ -2877,26 +3002,26 @@ check_card_last_man:
 }
 
 // DoPass constants
-constexpr uint32_t kGoodPassSampleCommand = 524070;
+constexpr uint32_t kGoodPassSampleCommand = 523670;      // Was incorrectly 524070
 constexpr uint32_t kPassToPlayerPtr = 36;                // TeamGeneralInfo.passToPlayerPtr offset
 constexpr uint32_t kPassingBall = 88;                    // TeamGeneralInfo.passingBall offset
 constexpr uint32_t kPassingToPlayer = 90;                // TeamGeneralInfo.passingToPlayer offset
 constexpr uint32_t kTeamPlayerNumber = 4;                // TeamGeneralInfo.playerNumber offset
-constexpr uint32_t kAIFailedPassChance = 524076;         // Table of AI pass failure chances by skill
-constexpr uint32_t kBallSpeedPassingIncrease = 524092;   // Table of speed increase by passing skill
+constexpr uint32_t kAIFailedPassChance = 523884;         // Table of AI pass failure chances by skill (was incorrectly 524076)
+constexpr uint32_t kBallSpeedPassingIncrease = 523818;   // Table of speed increase by passing skill (was incorrectly 524092)
 constexpr uint32_t kPassInProgress = 128;                // TeamGeneralInfo.passInProgress offset (same as kTeamPassInProgress)
-constexpr int kPlayerGamePassing = 30;                   // PlayerGameHeader.passing offset
+constexpr int kPlayerGamePassing = 69;                   // PlayerGameHeader.passing offset (was incorrectly 30)
 
-// Passing speed constants by distance
-constexpr int16_t kPassingSpeedCloserThan2500 = 1280;
-constexpr int16_t kPassingSpeed_2500_10000 = 1408;
-constexpr int16_t kPassingSpeed_10000_22500 = 1536;
-constexpr int16_t kPassingSpeed_22500_40000 = 1664;
-constexpr int16_t kPassingSpeed_40000_62500 = 1792;
-constexpr int16_t kPassingSpeed_62500_90000 = 1920;
-constexpr int16_t kPassingSpeed_90000_122500 = 2048;
-constexpr int16_t kPassingSpeedFurtherThan122500 = 2176;
-constexpr int16_t kFreePassReleasingBallSpeed = 1536;
+// Passing speed constants by distance (values from memory at 523834+)
+constexpr int16_t kPassingSpeedCloserThan2500 = 1536;      // Was incorrectly 1280
+constexpr int16_t kPassingSpeed_2500_10000 = 1664;         // Was incorrectly 1408
+constexpr int16_t kPassingSpeed_10000_22500 = 1792;        // Was incorrectly 1536
+constexpr int16_t kPassingSpeed_22500_40000 = 1877;        // Was incorrectly 1664
+constexpr int16_t kPassingSpeed_40000_62500 = 1962;        // Was incorrectly 1792
+constexpr int16_t kPassingSpeed_62500_90000 = 2048;        // Was incorrectly 1920
+constexpr int16_t kPassingSpeed_90000_122500 = 2133;       // Was incorrectly 2048
+constexpr int16_t kPassingSpeedFurtherThan122500 = 2218;   // Was incorrectly 2176
+constexpr int16_t kFreePassReleasingBallSpeed = 1792;      // Was incorrectly 1536
 
 // DoPass - performs a pass to a teammate
 // Assembly at 108290-108573
@@ -3086,8 +3211,12 @@ determine_ball_speed:
         int8_t passSkill = (int8_t)readMemory(A4 + kPlayerGamePassing, 1);
         int16_t skillIdx = ((int16_t)passSkill) << 1;
         int16_t speedBonus = (int16_t)readMemory(kBallSpeedPassingIncrease + skillIdx, 2);
+        int16_t finalSpeed = baseSpeed + speedBonus;
 
-        writeMemory(A1 + kSpriteSpeed, 2, baseSpeed + speedBonus);
+        logInfo("[PASS_SPEED] dist=%u baseSpeed=%d passSkill=%d speedBonus=%d finalSpeed=%d",
+                ballDistance, baseSpeed, passSkill, speedBonus, finalSpeed);
+
+        writeMemory(A1 + kSpriteSpeed, 2, finalSpeed);
         MEM_WORD(kGoodPassSampleCommand) = (int16_t)-1;
     }
     }  // End scope for variables that gotos may cross
@@ -3129,9 +3258,10 @@ play_samples:
 }
 
 // CalculateIfPlayerWinsBall constants
-constexpr uint32_t kPlAvgTacklingBallControlDiffChance = 524838;
-constexpr uint32_t kBallSpeedDeltaWhenControlled = 524854;
-constexpr uint32_t kDseg17E276 = 524870;  // Ball control turn timer table
+// NOTE: These are ABSOLUTE addresses into g_memByte
+constexpr uint32_t kPlAvgTacklingBallControlDiffChance = 523932;  // Was incorrectly 524838
+constexpr uint32_t kBallSpeedDeltaWhenControlled = 523916;        // Was incorrectly 524854
+constexpr uint32_t kDseg17E276 = 523868;  // Ball control turn timer table (was incorrectly 524870)
 constexpr uint32_t kCurrentTick = 323902;
 constexpr int kTeamPlayerHasBall = 40;  // playerHasBall in TeamGeneralInfo struct
 constexpr int kTeamWonTheBallTimer = 138;  // ofs138 in struct, wonTheBallTimer in assembly
