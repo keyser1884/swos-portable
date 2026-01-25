@@ -490,7 +490,7 @@ GameControlEvents VirtualJoypad::joypadActionToEvents(JoypadAction action)
 // lines:
 //          (0) \/ (1)
 // (3) left-top >< (2) right-top
-//              /\
+//              /\ (line continuation avoided)
 //
 static bool leftOfLine(int line, int x, int y)
 {

@@ -450,8 +450,8 @@ struct SwosVariables
     word lastTeamScoredNumber;
     word nobodysBallTimer;
     byte filler__0127[4];
-    SwosDataPointer<SpriteGraphics> spritesIndex[1];
-    byte filler__0128[8408];
+    SwosDataPointer<SpriteGraphics> spritesIndex[1335];  // 5340 bytes (was [1] + filler)
+    byte filler__0128[3072];  // Reduced: 8412 - 5340 = 3072
     word g_trainingGame;
     word g_allowShorterMenuItemsWithFrames;
     byte filler__0129[13];

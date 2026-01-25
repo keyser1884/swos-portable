@@ -568,7 +568,7 @@ setStrengthDone:
 }
 
 // Handle penalties
-bool handlePenalties() {
+[[maybe_unused]] static bool handlePenalties() {
     // Random direction selection for penalties
     int16_t randDir = AI_rand & 7;
     int16_t dirMask = 1 << randDir;

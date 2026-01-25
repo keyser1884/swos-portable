@@ -34,7 +34,7 @@ void setAmigaModeEnabled(bool enable)
             swos.kBallAirConstant = 10;
             swos.kGravityConstant = 4608;
 
-            memcpy(swos.kGoalkeeperDiveDeltas, kGoalkeeperDiveDeltasAmiga, sizeof(kGoalkeeperDiveDeltasAmiga));
+            std::copy(std::begin(kGoalkeeperDiveDeltasAmiga), std::end(kGoalkeeperDiveDeltasAmiga), swos.kGoalkeeperDiveDeltas);
 
             setTargetFps(kTargetFpsAmiga);
         } else {
@@ -52,7 +52,7 @@ void setAmigaModeEnabled(bool enable)
             swos.kBallAirConstant = 4;
             swos.kGravityConstant = 3291;
 
-            memcpy(swos.kGoalkeeperDiveDeltas, kGoalkeeperDiveDeltasPC, sizeof(kGoalkeeperDiveDeltasPC));
+            std::copy(std::begin(kGoalkeeperDiveDeltasPC), std::end(kGoalkeeperDiveDeltasPC), swos.kGoalkeeperDiveDeltas);
 
             setTargetFps(kTargetFpsPC);
         }

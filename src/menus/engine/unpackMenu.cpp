@@ -60,7 +60,10 @@ void unpackMenu(const void *src, char *dst /* = swos.g_currentMenu */)
 
     clearMenuLocalSprites();
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
     memset(m_entryExtensions.data(), -1, sizeof(m_entryExtensions));
+#pragma GCC diagnostic pop
 
     if (headerMark == kMenuHeaderV2Mark) {
         auto header = reinterpret_cast<const MenuHeaderV2 *>(src);
@@ -444,7 +447,10 @@ std::pair<SwosMenu::EntryBoolOption::GetFn, SwosMenu::EntryBoolOption::SetFn> ge
 
 static void initMenuEntry(MenuEntry& entry)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
     memset(&entry, 0, sizeof(entry));
+#pragma GCC diagnostic pop
 
     entry.leftEntry = -1;
     entry.rightEntry = -1;

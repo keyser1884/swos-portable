@@ -246,6 +246,8 @@ void checkGlobalKeyboardShortcuts(SDL_Scancode scancode, bool pressed)
             updateCursor(isMatchRunning());
         }
         break;
+    default:
+        break;
     }
 
     lastScancode = pressed ? scancode : SDL_SCANCODE_UNKNOWN;
@@ -324,6 +326,8 @@ bool checkGameKeys()
             break;
         case SDL_SCANCODE_ESCAPE:
             cancelGame();
+            break;
+        default:
             break;
         }
     }
@@ -481,7 +485,7 @@ static void processPostGameData(TeamFile *team1, TeamFile *team2, int paramD7)
             if (paramD7 < 0) {
                 return;
             } else {
-                for (const auto teamData : { std::make_pair(team1, &swos.topTeamInGame), std::make_pair(team2, &swos.bottomTeamInGame) }) {
+                for (const auto& teamData : { std::make_pair(team1, &swos.topTeamInGame), std::make_pair(team2, &swos.bottomTeamInGame) }) {
                     auto teamFile = teamData.first;
                     auto teamGame = teamData.second;
 

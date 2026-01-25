@@ -37,11 +37,11 @@ void JoypadConfigRegister::loadConfig(const CSimpleIni& ini)
             assert(strlen(guidPart) >= 32);
 
             char guidStr[64];
-            int i = 0;
+            size_t i = 0;
             for (; i < sizeof(guidStr) && isxdigit(guidPart[i]); i++)
                 guidStr[i] = guidPart[i];
 
-            guidStr[std::min<int>(i, sizeof(guidStr) - 1)] = '\0';
+            guidStr[std::min(i, sizeof(guidStr) - 1)] = '\0';
 
             auto guid = SDL_JoystickGetGUIDFromString(guidStr);
             auto it = std::find_if(m_config.begin(), m_config.end(), [&guid](const auto& config) {

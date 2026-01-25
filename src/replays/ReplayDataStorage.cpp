@@ -535,7 +535,7 @@ bool ReplayDataStorage::highlightsNeedFixup() const
     int previousEnd = 0;
 
     for (const auto& sceneOffset : m_sceneOffsets) {
-        if (sceneOffset.front() != previousEnd)
+        if (static_cast<int>(sceneOffset.front()) != previousEnd)
             return true;
         previousEnd += sceneSize(sceneOffset);
     }

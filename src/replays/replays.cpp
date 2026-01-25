@@ -414,6 +414,8 @@ static Status checkReplayControlKeys(bool inGame, bool userRequested)
             if (!m_instantReplay && (m_fastReplay = !m_fastReplay))
                 m_slowMotion = false;
             break;
+        default:
+            break;
         }
     }
 
@@ -602,6 +604,8 @@ static bool shouldAbortCurrentScene(Status status)
     case Status::kPrevious:
         if (m_replayData.currentScene() > 0)
             return true;
+        break;
+    default:
         break;
     }
 

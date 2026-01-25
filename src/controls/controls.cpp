@@ -82,6 +82,8 @@ bool setControls(PlayerNumber player, Controls controls, int joypadIndex)
             case kKeyboard2:
                 setControls(otherPlayer, kKeyboard1);
                 break;
+            default:
+                break;
             }
         }
 
@@ -236,6 +238,8 @@ static void processEvent(const SDL_Event& event)
         fingerUp(event.tfinger.fingerId);
         break;
 #endif
+    default:
+        break;
     }
 }
 

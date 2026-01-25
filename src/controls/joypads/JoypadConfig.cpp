@@ -31,6 +31,7 @@ void JoypadConfig::initWithMapping(const char *mapping)
                 case SdlMappingParser::OutputType::kDpadDown: event = kGameEventDown; break;
                 case SdlMappingParser::OutputType::kDpadLeft: event = kGameEventLeft; break;
                 case SdlMappingParser::OutputType::kDpadRight: event = kGameEventRight; break;
+                default: break;
                 }
 
                 switch (input) {
@@ -39,6 +40,8 @@ void JoypadConfig::initWithMapping(const char *mapping)
                     break;
                 case SdlMappingParser::InputType::kHat:
                     findOrCreateHat(index).bindings.emplace_back(hatMask, event, inverted);
+                    break;
+                default:
                     break;
                 case SdlMappingParser::InputType::kAxis:
                     {
@@ -100,6 +103,8 @@ void JoypadConfig::initWithMapping(const char *mapping)
                     maxEvent = kGameEventZoomOut;
                     minEvent = kGameEventZoomIn;
                     break;
+                default:
+                    break;
                 }
 
                 switch (input) {
@@ -120,8 +125,13 @@ void JoypadConfig::initWithMapping(const char *mapping)
                 case SdlMappingParser::InputType::kAxis:
                     mapAxis(minEvent, maxEvent, index, range, inverted);
                     break;
+                default:
+                    break;
                 }
             }
+            break;
+        default:
+            break;
         }
     });
 }
@@ -177,6 +187,8 @@ void JoypadConfig::assign(const DefaultJoypadElementList& elements)
                 auto& hat = findOrCreateHat(element.index);
                 hat.bindings.emplace_back(element.hatMask, event);
             }
+            break;
+        default:
             break;
         case JoypadElement::kAxis:
             {

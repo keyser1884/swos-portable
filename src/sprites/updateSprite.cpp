@@ -255,9 +255,9 @@ static DeltasAndAngle calculateDeltaXAndY(int speed, int x, int y, int destX, in
     // What we get is a value representing the angle in the 1st quadrant. Abscissa (x coordinate) goes to
     // the right, and ordinate (y coordinate) to bottom. Values start from 0 and increase clockwise.
     //     +----------> x 0
-    //     |\
-    //     |   \
-    //     |      \
+    //     |\ (line continuation avoided)
+    //     |   \ (line continuation avoided)
+    //     |      \ (line continuation avoided)
     //     |        32
     //     v
     //     y 64
@@ -270,11 +270,11 @@ static DeltasAndAngle calculateDeltaXAndY(int speed, int x, int y, int destX, in
         // This is to match the way sine/cosine table was built.
         //               128
         //         160    |     96
-        //            \   |   /
-        //              \ | /
+        //            \   |   / (line continuation avoided)
+        //              \ | / (line continuation avoided)
         //      192 ------+------ 64
-        //              / | \
-        //            /   |   \
+        //              / | \ (line continuation avoided)
+        //            /   |   \ (line continuation avoided)
         //          224   |     32
         //                0
         if (xNegative) {
@@ -293,11 +293,11 @@ static DeltasAndAngle calculateDeltaXAndY(int speed, int x, int y, int destX, in
         // Finally bring the angle to the range used in the game, [0..255], 0 = top, increases clockwise:
         //                0
         //         224    |     32
-        //            \   |   /
-        //              \ | /
+        //            \   |   / (line continuation avoided)
+        //              \ | / (line continuation avoided)
         //      192 ------+------ 64
-        //              / | \
-        //            /   |   \
+        //              / | \ (line continuation avoided)
+        //            /   |   \ (line continuation avoided)
         //          160   |     96
         //               128
         //

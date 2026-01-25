@@ -20,6 +20,7 @@ static void doScrollUp();
 static void portedFunctionsMenuOnInit();
 static void drawCompareToggle();
 static void portedFunctionsMenuOnReturn();
+static void doShowAboutMenu();
 
 #pragma pack(push, 1)
 struct SwosMenu_portedFunctionsMenu : public BaseMenu
@@ -183,34 +184,19 @@ struct SwosMenu_portedFunctionsMenu : public BaseMenu
          EntryBeforeDrawFunctionNative ebdf31{ drawCompareToggle };
     EntryEnd ee31{};
 
-    Entry eb32{ 115, 189, 175, 12 };
+    Entry eb32{ 115, 189, 100, 12 };
          EntryText et32{ 0, -1 };
          EntryColor ec32{ 7 };
-         EntryNextPositions ep32{ 31, 255, 30, 255 };
+         EntryNextPositions ep32{ 31, 33, 30, 255 };
          EntryBeforeDrawFunctionNative ebdf32{ drawCompareStatus };
     EntryEnd ee32{};
 
-
-    // Credits
-    Entry eb33{ 5, 205, 310, 8 };
-         EntryTextNative et33{ 0, "C++ PORT BY RICH VICKERS" };
-         EntryColor ec33{ 7 };
+    Entry eb33{ 220, 189, 70, 12 };
+         EntryTextNative et33{ 0, "ABOUT" };
+         EntryColor ec33{ 11 };
+         EntryNextPositions ep33{ 255, 255, 30, 32 };
+         EntryOnSelectFunctionNative eosf33{ doShowAboutMenu };
     EntryEnd ee33{};
-
-    Entry eb34{ 5, 213, 310, 8 };
-         EntryTextNative et34{ 0, "GITHUB.COM/KEYSER1884/SWOS-PORTABLE" };
-         EntryColor ec34{ 7 };
-    EntryEnd ee34{};
-
-    Entry eb35{ 5, 223, 310, 8 };
-         EntryTextNative et35{ 0, "BASED ON ZLATKOK'S ORIGINAL PORT" };
-         EntryColor ec35{ 7 };
-    EntryEnd ee35{};
-
-    Entry eb36{ 5, 231, 310, 8 };
-         EntryTextNative et36{ 0, "GITHUB.COM/ZLATKOK/SWOS-PORT" };
-         EntryColor ec36{ 7 };
-    EntryEnd ee36{};
 
     MenuEnd menuEnd{};
 }
@@ -253,12 +239,64 @@ namespace PortedFunctionsMenu {
         exit = 30,
         compareToggle = 31,
         compareStatus = 32,
-        credit1 = 33,
-        credit2 = 34,
-        credit3 = 35,
-        credit4 = 36,
+        about = 33,
     };
-    constexpr int kFirstLabelEntry = 2;
-    constexpr int kFirstToggleEntry = 14;
+
+    // entry references
+    static auto& headerEntry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 0 * sizeof(MenuEntry));
+    static auto& scrollInfoEntry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 1 * sizeof(MenuEntry));
+    static auto& label_00Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 2 * sizeof(MenuEntry));
+    static auto& label_01Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 3 * sizeof(MenuEntry));
+    static auto& label_02Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 4 * sizeof(MenuEntry));
+    static auto& label_03Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 5 * sizeof(MenuEntry));
+    static auto& label_04Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 6 * sizeof(MenuEntry));
+    static auto& label_05Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 7 * sizeof(MenuEntry));
+    static auto& label_06Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 8 * sizeof(MenuEntry));
+    static auto& label_07Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 9 * sizeof(MenuEntry));
+    static auto& label_08Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 10 * sizeof(MenuEntry));
+    static auto& label_09Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 11 * sizeof(MenuEntry));
+    static auto& label_10Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 12 * sizeof(MenuEntry));
+    static auto& label_11Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 13 * sizeof(MenuEntry));
+    static auto& toggle_00Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 14 * sizeof(MenuEntry));
+    static auto& toggle_01Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 15 * sizeof(MenuEntry));
+    static auto& toggle_02Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 16 * sizeof(MenuEntry));
+    static auto& toggle_03Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 17 * sizeof(MenuEntry));
+    static auto& toggle_04Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 18 * sizeof(MenuEntry));
+    static auto& toggle_05Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 19 * sizeof(MenuEntry));
+    static auto& toggle_06Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 20 * sizeof(MenuEntry));
+    static auto& toggle_07Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 21 * sizeof(MenuEntry));
+    static auto& toggle_08Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 22 * sizeof(MenuEntry));
+    static auto& toggle_09Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 23 * sizeof(MenuEntry));
+    static auto& toggle_10Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 24 * sizeof(MenuEntry));
+    static auto& toggle_11Entry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 25 * sizeof(MenuEntry));
+    static auto& scrollUpEntry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 26 * sizeof(MenuEntry));
+    static auto& scrollDownEntry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 27 * sizeof(MenuEntry));
+    static auto& enableAllCppEntry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 28 * sizeof(MenuEntry));
+    static auto& enableAllAsmEntry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 29 * sizeof(MenuEntry));
+    static auto& exitEntry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 30 * sizeof(MenuEntry));
+    static auto& compareToggleEntry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 31 * sizeof(MenuEntry));
+    static auto& compareStatusEntry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 32 * sizeof(MenuEntry));
+    static auto& aboutEntry = *reinterpret_cast<MenuEntry *>(swos.g_currentMenu + sizeof(Menu) + 33 * sizeof(MenuEntry));
+
+    constexpr int kFirstLabelEntry = 1 +1;
+    constexpr int kFirstToggleEntry = (13) +1;
 }
 #pragma pack(pop)
+
+#ifdef SWOS_STUB_MENU_DATA
+static void doSaveAndExit() {}
+static void toggleCompareMode() {}
+static void updateScrollInfo() {}
+static void doScrollDown() {}
+static void drawToggleValue() {}
+static void drawCompareStatus() {}
+static void doEnableAllAsm() {}
+static void doEnableAllCpp() {}
+static void drawToggleLabel() {}
+static void selectToggle() {}
+static void doScrollUp() {}
+static void portedFunctionsMenuOnInit() {}
+static void drawCompareToggle() {}
+static void portedFunctionsMenuOnReturn() {}
+static void doShowAboutMenu() {}
+#endif

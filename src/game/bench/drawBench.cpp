@@ -99,6 +99,8 @@ void drawBench(float xOffset, float yOffset)
     case BenchState::kFormationMenu:
         drawFormationMenu();
         break;
+    default:
+        break;
     }
 }
 
@@ -485,6 +487,9 @@ static int getCoachSpriteIndex(BenchState state, const TeamGeneralInfo& team)
     case BenchState::kFormationMenu:
     case BenchState::kMarkingPlayers:
         coachBaseFrame = kCoach1StandingStartSprite;
+        break;
+    default:
+        break;
     }
 
     static const std::array<byte, 16> kOurCoachFrames = { 2, 1, 0, 2, 0, 1, 0, 1, 2, 2, 1, 1, 0, 2, 1, 0 };

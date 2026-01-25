@@ -311,6 +311,8 @@ static void handleMenuControls()
     case BenchState::kMarkingPlayers:
         markPlayersMenuHandler();
         break;
+    default:
+        break;
     }
 }
 

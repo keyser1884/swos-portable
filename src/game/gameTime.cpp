@@ -132,7 +132,7 @@ static void initTimeDelta()
 
 static bool isGameAtMinute(dword minute)
 {
-    return minute == m_gameTimeInMinutes;
+    return static_cast<int>(minute) == m_gameTimeInMinutes;
 }
 
 static void endFirstHalf()

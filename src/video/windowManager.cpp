@@ -52,15 +52,23 @@ static void setWindowMode(WindowMode newMode);
 SDL_Window *createWindow()
 {
     int flags = SDL_WINDOW_SHOWN;
-    if (m_windowResizable)
-        flags |= SDL_WINDOW_RESIZABLE;
+    int width = m_windowWidth;
+    int height = m_windowHeight;
 
-    logInfo("Creating %dx%d window, flags: %d", m_windowWidth, m_windowHeight, flags);
-    m_window = SDL_CreateWindow("SWOS", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, m_windowWidth, m_windowHeight, flags);
+    if (m_windowMode == kModeFullScreen) {
+        flags |= SDL_WINDOW_FULLSCREEN;
+        width = m_displayWidth;
+        height = m_displayHeight;
+    } else if (m_windowMode == kModeBorderlessMaximized) {
+        flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    } else if (m_windowResizable) {
+        flags |= SDL_WINDOW_RESIZABLE;
+    }
+
+    logInfo("Creating %dx%d window, flags: %d", width, height, flags);
+    m_window = SDL_CreateWindow("SWOS", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags);
     if (!m_window)
         sdlErrorExit("Could not create window");
-
-    setWindowMode(m_windowMode);
 
     SDL_AddEventWatch(handleSizeChanged, nullptr);
 
@@ -107,6 +115,8 @@ static int handleSizeChanged(void *, SDL_Event *event)
             m_maximized = false;
             m_nonMaximizedWidth = m_windowWidth;
             m_nonMaximizedHeight = m_windowHeight;
+            break;
+        default:
             break;
         }
     }
@@ -428,10 +438,10 @@ void loadWindowOptions(const CSimpleIni& ini)
 #ifdef __ANDROID__
     m_windowMode = kModeFullScreen;
 #else
-    m_windowMode = static_cast<WindowMode>(ini.GetLongValue(kWindowSection, kWindowModeKey, kModeWindow));
+    m_windowMode = static_cast<WindowMode>(ini.GetLongValue(kWindowSection, kWindowModeKey, kModeFullScreen));
 
     if (m_windowMode >= kNumWindowModes)
-        m_windowMode = kModeWindow;
+        m_windowMode = kModeFullScreen;
 
     m_maximized = ini.GetBoolValue(kWindowSection, kWindowMaximizedKey);
     m_windowResizable = ini.GetBoolValue(kWindowSection, kWindowResizableKey, true);

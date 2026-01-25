@@ -394,6 +394,8 @@ static void updateScorersText(const Sprite& scorer, const TeamGame& team, int te
             strcpy(&goalMinuteBuf[minuteBufLen], "(OG)");
             minuteBufLen += 4;
             break;
+        default:
+            break;
         }
 
         if (i != scorerInfo.numGoals - 1)

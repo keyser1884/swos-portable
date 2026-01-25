@@ -137,6 +137,7 @@ set(SOURCES_MENUS_ENGINE
 )
 
 set(SOURCES_OPTIONS
+    ${CMAKE_CURRENT_SOURCE_DIR}/options/aboutMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/options/options.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/options/optionsMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/options/portedFunctions.cpp

@@ -1,0 +1,93 @@
+//
+// About/Credits menu
+//
+
+#include "common.mh"
+
+Menu aboutMenu
+{
+    initialEntry: exit
+
+    Entry header {
+        x: kBaseX
+        y: 10
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+        text: "ABOUT"
+        color: kHeaderColor
+    }
+
+    // Credits
+    Entry credit1 {
+        x: 30
+        y: 45
+        width: 260
+        height: 12
+        text: "SWOS C++ PORT"
+        color: @kGreen
+    }
+
+    Entry credit2 {
+        x: 30
+        y: 65
+        width: 260
+        height: 10
+        text: "BY RICH VICKERS"
+        color: @kLightBlue
+    }
+
+    Entry credit3 {
+        x: 30
+        y: 80
+        width: 260
+        height: 10
+        text: "GITHUB.COM/KEYSER1884/SWOS-PORTABLE"
+        color: @kGray
+    }
+
+    Entry credit4 {
+        x: 30
+        y: 105
+        width: 260
+        height: 10
+        text: "BASED ON THE ORIGINAL PORT BY ZLATKOK"
+        color: @kLightBlue
+    }
+
+    Entry credit5 {
+        x: 30
+        y: 120
+        width: 260
+        height: 10
+        text: "GITHUB.COM/ZLATKOK/SWOS-PORT"
+        color: @kGray
+    }
+
+    Entry credit6 {
+        x: 30
+        y: 145
+        width: 260
+        height: 10
+        text: "SENSIBLE WORLD OF SOCCER"
+        color: @kLightBlue
+    }
+
+    Entry credit7 {
+        x: 30
+        y: 160
+        width: 260
+        height: 10
+        text: "ORIGINAL GAME BY SENSIBLE SOFTWARE"
+        color: @kGray
+    }
+
+    Entry exit {
+        x: kBaseX
+        y: kExitY
+        width: kBigButtonWidth
+        height: kBigButtonHeight
+        text: "EXIT"
+        color: kExitColor
+        onSelect: SetExitMenuFlag
+    }
+}

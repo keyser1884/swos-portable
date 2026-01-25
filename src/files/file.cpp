@@ -2,7 +2,10 @@
 #include "embeddedAssets.h"
 #include "log.h"
 #include "util.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
 #include "dirent.h"
+#pragma GCC diagnostic pop
 
 #ifdef _WIN32
 # include <direct.h>
@@ -176,7 +179,7 @@ bool saveFile(const char *path, void *buffer, int size)
     logInfo("Writing `%s' [%s bytes]", path, formatNumberWithCommas(size).c_str());
 
     auto f = openFile(path, "wb");
-    bool ok = f && SDL_RWwrite(f, buffer, 1, size) == size;
+    bool ok = f && SDL_RWwrite(f, buffer, 1, size) == static_cast<size_t>(size);
 
     if (f)
         SDL_RWclose(f);

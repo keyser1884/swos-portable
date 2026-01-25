@@ -115,6 +115,8 @@ QuickConfigStatus getNextControl(QuickConfigContext& context)
         case QuickConfigStatus::kDone:
         case QuickConfigStatus::kContinue:
             return result.first;
+        default:
+            break;
         }
 
         if (result.first != QuickConfigStatus::kNoInput) {
@@ -254,6 +256,8 @@ static FinalPromptResult waitForConfirmation()
             return FinalPromptResult::kAbort;
         case SDL_SCANCODE_R:
             return FinalPromptResult::kRestart;
+        default:
+            break;
         }
 
         if (clicked)

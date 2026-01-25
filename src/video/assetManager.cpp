@@ -55,9 +55,8 @@ const char *getAssetDir()
     case AssetResolution::k4k: return "assets" DIR_SEPARATOR "4k";
     case AssetResolution::kHD: return "assets" DIR_SEPARATOR "hd";
     case AssetResolution::kLowRes: return "assets" DIR_SEPARATOR "low-res";
+    default: return nullptr;
     }
-
-    return nullptr;
 }
 
 std::string getPathInAssetDir(const char *path)

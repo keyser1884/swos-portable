@@ -41,7 +41,7 @@ REM Clean and configure
 if exist "%SCRIPT_DIR%build" rmdir /s /q "%SCRIPT_DIR%build"
 
 echo Configuring...
-"%CMAKE_EXE%" -B "%SCRIPT_DIR%build" -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER="%MINGW_DIR_FWD%/bin/gcc.exe" -DCMAKE_CXX_COMPILER="%MINGW_DIR_FWD%/bin/g++.exe" -DCMAKE_MAKE_PROGRAM="%MINGW_DIR_FWD%/bin/mingw32-make.exe"
+"%CMAKE_EXE%" -B "%SCRIPT_DIR%build" -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DSWOS_EMBED_ASSETS=ON -DCMAKE_CXX_COMPILER="%MINGW_DIR_FWD%/bin/g++.exe" -DCMAKE_MAKE_PROGRAM="%MINGW_DIR_FWD%/bin/mingw32-make.exe"
 
 if errorlevel 1 (
     echo.

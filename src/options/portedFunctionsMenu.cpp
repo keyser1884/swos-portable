@@ -2,6 +2,7 @@
 #include "portedFunctions.h"
 #include "menus.h"
 #include "drawMenu.h"
+#include "aboutMenu.h"
 
 static constexpr int kVisibleToggles = 12;
 static int m_scrollOffset = 0;
@@ -169,4 +170,9 @@ static void drawCompareStatus()
         sprintf(buf, "(disabled)");
     }
     entry->copyString(buf);
+}
+
+static void doShowAboutMenu()
+{
+    showAboutMenu();
 }

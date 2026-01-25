@@ -2,7 +2,10 @@
 #include "file.h"
 #include "hash.h"
 #include "util.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
 #include <dirent.h>
+#pragma GCC diagnostic pop
 
 SampleTable::SampleTable(const char *dir, int dirLen, uint32_t dirHash)
     : m_dir(dir), m_dirLen(dirLen), m_dirHash(dirHash)
@@ -53,7 +56,7 @@ Mix_Chunk *SampleTable::getRandomSample(const Mix_Chunk *lastPlayedSample, size_
         m_totalSampleChance -= m_samples[sampleIndex].chanceModifier();
         m_samples.erase(m_samples.begin() + sampleIndex);
         m_lastPlayedIndex -= m_lastPlayedIndex >= static_cast<int>(sampleIndex);
-        sampleIndex -= sampleIndex == m_samples.size();
+        sampleIndex -= sampleIndex == static_cast<int>(m_samples.size());
     }
 
     return nullptr;

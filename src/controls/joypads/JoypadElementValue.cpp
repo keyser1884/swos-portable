@@ -33,6 +33,8 @@ const char *JoypadElementValue::toString(char *buf, size_t bufSize, bool include
     case JoypadElement::kHat:
         extraDesc = hatMaskToString(hatMask, " ");
         break;
+    default:
+        break;
     }
 
     snprintf(buf, bufSize, "%s %d%s%s%s", elementToString(type), index + 1, extraDesc, valueBuf, sign);

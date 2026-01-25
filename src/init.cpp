@@ -14,11 +14,14 @@
 #include "mainMenu.h"
 
 #ifndef SWOS_TEST
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
 static_assert(offsetof(SwosVM::SwosVariables, g_selectedTeams) -
     offsetof(SwosVM::SwosVariables, competitionFileBuffer) == 5'191, "Load competition buffer broken");
 static_assert(offsetof(SwosVM::SwosVariables, g_selectedTeams) -
     offsetof(SwosVM::SwosVariables, careerFileBuffer) == 95'153 &&
     sizeof(swos.g_selectedTeams) == 68'400, "Load career buffer broken");
+#pragma GCC diagnostic pop
 #endif
 
 #ifdef NDEBUG

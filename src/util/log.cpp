@@ -81,7 +81,7 @@ void logv(LogCategory category, const char *format, va_list args)
 
     len += vsnprintf(buf + len, sizeof(buf) - len - 1, format, args);
 
-    if (len >= 1 && buf[len - 1] != '\n' && len <= sizeof(buf) - 2) {
+    if (len >= 1 && buf[len - 1] != '\n' && static_cast<size_t>(len) <= sizeof(buf) - 2) {
         buf[len++] = '\n';
         buf[len] = '\0';
     }
