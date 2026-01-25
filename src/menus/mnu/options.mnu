@@ -52,7 +52,7 @@ Menu optionsMenu
     }
 
     Entry portedFunctions {
-        text: "PORTED FUNCTIONS"
+        text: "PORT MENU"
         upEntry: <
         downEntry: >
         onSelect: doShowPortedFunctionsMenu

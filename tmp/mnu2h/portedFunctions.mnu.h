@@ -27,7 +27,7 @@ struct SwosMenu_portedFunctionsMenu : public BaseMenu
     MenuHeaderV2 header{ kMenuHeaderV2Mark, portedFunctionsMenuOnInit, portedFunctionsMenuOnReturn, 0, 0, 14, { true, true, false, false, }};
 
     Entry eb00{ (((320) -(125)) / 2 -8) -(10), 0, 145, 15 };
-         EntryTextNative et00{ 0, "PORTED FUNCTIONS" };
+         EntryTextNative et00{ 0, "PORT MENU" };
          EntryColor ec00{ (7 | (16)) };
     EntryEnd ee00{};
 
@@ -189,6 +189,27 @@ struct SwosMenu_portedFunctionsMenu : public BaseMenu
          EntryNextPositions ep32{ 31, 255, 30, 255 };
          EntryBeforeDrawFunctionNative ebdf32{ drawCompareStatus };
     EntryEnd ee32{};
+
+    // Credits
+    Entry eb33{ 5, 205, 310, 8 };
+         EntryTextNative et33{ 0, "C++ PORT BY RICH VICKERS" };
+         EntryColor ec33{ 7 };
+    EntryEnd ee33{};
+
+    Entry eb34{ 5, 213, 310, 8 };
+         EntryTextNative et34{ 0, "GITHUB.COM/KEYSER1884/SWOS-PORTABLE" };
+         EntryColor ec34{ 7 };
+    EntryEnd ee34{};
+
+    Entry eb35{ 5, 223, 310, 8 };
+         EntryTextNative et35{ 0, "BASED ON ZLATKOK'S ORIGINAL PORT" };
+         EntryColor ec35{ 7 };
+    EntryEnd ee35{};
+
+    Entry eb36{ 5, 231, 310, 8 };
+         EntryTextNative et36{ 0, "GITHUB.COM/ZLATKOK/SWOS-PORT" };
+         EntryColor ec36{ 7 };
+    EntryEnd ee36{};
 
     MenuEnd menuEnd{};
 }

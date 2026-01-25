@@ -1,5 +1,5 @@
 //
-// Ported Functions Toggle Menu - switch between C++ and assembly implementations
+// Port Menu - switch between C++ and assembly implementations
 //
 
 #include "common.mh"
@@ -24,7 +24,7 @@ Menu portedFunctionsMenu
         y: 0
         width: 145
         height: kBigButtonHeight
-        text: "PORTED FUNCTIONS"
+        text: "PORT MENU"
         color: kHeaderColor
     }
 
@@ -178,5 +178,42 @@ Menu portedFunctionsMenu
         upEntry: exit
         leftEntry: compareToggle
         beforeDraw: drawCompareStatus
+    }
+
+    // Credits
+    Entry credit1 {
+        x: 5
+        y: 205
+        width: 310
+        height: 8
+        text: "C++ PORT BY RICH VICKERS"
+        color: @kGray
+    }
+
+    Entry credit2 {
+        x: 5
+        y: 213
+        width: 310
+        height: 8
+        text: "GITHUB.COM/KEYSER1884/SWOS-PORTABLE"
+        color: @kGray
+    }
+
+    Entry credit3 {
+        x: 5
+        y: 223
+        width: 310
+        height: 8
+        text: "BASED ON ZLATKOK'S ORIGINAL PORT"
+        color: @kGray
+    }
+
+    Entry credit4 {
+        x: 5
+        y: 231
+        width: 310
+        height: 8
+        text: "GITHUB.COM/ZLATKOK/SWOS-PORT"
+        color: @kGray
     }
 }

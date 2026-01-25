@@ -124,7 +124,7 @@ struct SwosMenu_optionsMenu : public BaseMenu
     EntryEnd ee04{};
 
     Entry eb05{ (((320) -(125)) / 2 -8), ((((((((((((((((48 + 15)))) +(12) + 15)))) +(12) + 15)))) +(12) + 15)))) +(12), 125, 15 };
-         EntryTextNative et05{ 0, "PORTED FUNCTIONS" };
+         EntryTextNative et05{ 0, "PORT MENU" };
          EntryColor ec05{ 14 };
          EntryNextPositions ep05{ 255, 255, 4, 6 };
          EntryOnSelectFunctionNative eosf05{ doShowPortedFunctionsMenu };
