@@ -835,6 +835,324 @@ void CompareCalculateBallNextGroundXYPositions(bool useCpp)
     }
 }
 
+// ============== Goalkeeper Comparison Implementation ==============
+
+// External ASM functions
+extern void ShouldGoalkeeperDive();
+extern void GoalkeeperJumping();
+
+// C++ ported functions
+namespace PlayerFunctions {
+    extern void ShouldGoalkeeperDive();
+    extern void GoalkeeperJumping();
+}
+
+// Sprite offsets needed for goalkeeper state (must match playerFunctions.cpp)
+constexpr int kSpriteSpeed = 44;       // speed (2 bytes)
+constexpr int kSpriteDestX = 58;       // destX (2 bytes)
+constexpr int kSpriteDestY = 60;       // destY (2 bytes)
+constexpr int kSpritePlayerState = 12;
+constexpr int kSpritePlayerDownTimer = 13;
+constexpr int kSpriteX = 30;           // FixedPoint x (4 bytes)
+constexpr int kSpriteY = 34;           // FixedPoint y (4 bytes)
+constexpr int kSpriteDeltaY = 50;      // FixedPoint deltaY (4 bytes)
+constexpr int kSpriteBallDistance = 74;
+constexpr int kTeamControlledPlDirection = 56;
+constexpr int kTeamGoalkeeperDivingRight = 80;
+constexpr uint32_t kBallNotHighZ = 524756;
+constexpr uint32_t kBallDefensiveX = 524746;
+constexpr uint32_t kPlayingPenalties_GK = 455942;
+constexpr uint32_t kPenalty_GK = 455924;
+
+static GoalkeeperDiveCompareState captureGoalkeeperDiveState()
+{
+    GoalkeeperDiveCompareState state;
+    state.shouldDive = static_cast<int16_t>(D0 & 0xFFFF);
+    return state;
+}
+
+static GoalkeeperJumpCompareState captureGoalkeeperJumpState(uint32_t goalkeeperSprite, uint32_t teamPtr)
+{
+    using namespace SwosVM;
+    GoalkeeperJumpCompareState state;
+
+    auto readMem16 = [](uint32_t addr) -> int16_t {
+        return *reinterpret_cast<int16_t*>(g_memByte + addr);
+    };
+    auto readMem8 = [](uint32_t addr) -> uint8_t {
+        return g_memByte[addr];
+    };
+
+    state.speed = readMem16(goalkeeperSprite + kSpriteSpeed);
+    state.destX = readMem16(goalkeeperSprite + kSpriteDestX);
+    state.destY = readMem16(goalkeeperSprite + kSpriteDestY);
+    state.playerState = readMem8(goalkeeperSprite + kSpritePlayerState);
+    state.playerDownTimer = readMem8(goalkeeperSprite + kSpritePlayerDownTimer);
+    state.controlledPlDirection = readMem16(teamPtr + kTeamControlledPlDirection);
+    state.goalkeeperDivingRight = readMem16(teamPtr + kTeamGoalkeeperDivingRight);
+
+    return state;
+}
+
+void logGoalkeeperDiveMismatch(uint32_t frame,
+                                const GoalkeeperDiveCompareState& asmState,
+                                const GoalkeeperDiveCompareState& cppState,
+                                const GoalkeeperDiveInputState* inputState)
+{
+    static int s_gkDiveMismatchCount = 0;
+    s_gkDiveMismatchCount++;
+    g_comparisonMismatchCount++;
+
+    if (s_comparisonLogFile) {
+        fprintf(s_comparisonLogFile, "GOALKEEPER DIVE MISMATCH #%d at frame %u:\n",
+                s_gkDiveMismatchCount, frame);
+
+        if (inputState) {
+            fprintf(s_comparisonLogFile, "  INPUT: ballPos=(%d,%d) gkPos=(%d,%d) yDiff=%d\n",
+                    inputState->ballX, inputState->ballY,
+                    inputState->goalkeeperX, inputState->goalkeeperY,
+                    inputState->yDiff);
+            fprintf(s_comparisonLogFile, "  INPUT: ballSpeed=%d ballDeltaY=0x%08X ballDefX=%d\n",
+                    inputState->ballSpeed, inputState->ballDeltaY, inputState->ballDefensiveX);
+            fprintf(s_comparisonLogFile, "  INPUT: team=%s isPenalty=%d\n",
+                    inputState->isTopTeam ? "TOP" : "BOTTOM",
+                    inputState->isPenalty ? 1 : 0);
+        }
+
+        fprintf(s_comparisonLogFile, "  shouldDive: ASM=%d (%s), C++=%d (%s)\n",
+                asmState.shouldDive, asmState.shouldDive ? "DIVE" : "NO DIVE",
+                cppState.shouldDive, cppState.shouldDive ? "DIVE" : "NO DIVE");
+        fprintf(s_comparisonLogFile, "\n");
+        fflush(s_comparisonLogFile);
+    }
+
+    if (s_gkDiveMismatchCount <= 20) {
+        logWarn("GK DIVE MISMATCH #%d at frame %u: ASM=%d C++=%d (see ai_comparison.log)",
+                s_gkDiveMismatchCount, frame, asmState.shouldDive, cppState.shouldDive);
+    }
+}
+
+void logGoalkeeperJumpMismatch(uint32_t frame,
+                                const GoalkeeperJumpCompareState& asmState,
+                                const GoalkeeperJumpCompareState& cppState,
+                                const GoalkeeperJumpInputState* inputState)
+{
+    static int s_gkJumpMismatchCount = 0;
+    s_gkJumpMismatchCount++;
+    g_comparisonMismatchCount++;
+
+    if (s_comparisonLogFile) {
+        fprintf(s_comparisonLogFile, "GOALKEEPER JUMP MISMATCH #%d at frame %u:\n",
+                s_gkJumpMismatchCount, frame);
+
+        if (inputState) {
+            fprintf(s_comparisonLogFile, "  INPUT: ballPos=(%d,%d) gkPos=(%d,%d)\n",
+                    inputState->ballX, inputState->ballY,
+                    inputState->goalkeeperX, inputState->goalkeeperY);
+            fprintf(s_comparisonLogFile, "  INPUT: ballDist=%u ballNotHighZ=%d d1=%d d3Dir=%d team=%s\n",
+                    inputState->ballDistance, inputState->ballNotHighZ,
+                    inputState->d1Value, inputState->d3Direction,
+                    inputState->isTopTeam ? "TOP" : "BOTTOM");
+        }
+
+        if (asmState.speed != cppState.speed) {
+            fprintf(s_comparisonLogFile, "  speed: ASM=%d, C++=%d\n", asmState.speed, cppState.speed);
+        }
+        if (asmState.destX != cppState.destX || asmState.destY != cppState.destY) {
+            fprintf(s_comparisonLogFile, "  dest: ASM=(%d,%d), C++=(%d,%d)\n",
+                    asmState.destX, asmState.destY, cppState.destX, cppState.destY);
+        }
+        if (asmState.playerState != cppState.playerState) {
+            fprintf(s_comparisonLogFile, "  playerState: ASM=%d, C++=%d\n",
+                    asmState.playerState, cppState.playerState);
+        }
+        if (asmState.playerDownTimer != cppState.playerDownTimer) {
+            fprintf(s_comparisonLogFile, "  playerDownTimer: ASM=%d, C++=%d\n",
+                    asmState.playerDownTimer, cppState.playerDownTimer);
+        }
+        if (asmState.controlledPlDirection != cppState.controlledPlDirection) {
+            fprintf(s_comparisonLogFile, "  controlledPlDirection: ASM=%d, C++=%d\n",
+                    asmState.controlledPlDirection, cppState.controlledPlDirection);
+        }
+        if (asmState.goalkeeperDivingRight != cppState.goalkeeperDivingRight) {
+            fprintf(s_comparisonLogFile, "  goalkeeperDivingRight: ASM=%d, C++=%d\n",
+                    asmState.goalkeeperDivingRight, cppState.goalkeeperDivingRight);
+        }
+        fprintf(s_comparisonLogFile, "\n");
+        fflush(s_comparisonLogFile);
+    }
+
+    if (s_gkJumpMismatchCount <= 20) {
+        logWarn("GK JUMP MISMATCH #%d at frame %u (see ai_comparison.log)", s_gkJumpMismatchCount, frame);
+    }
+}
+
+void CompareShouldGoalkeeperDive(bool useCpp)
+{
+    using namespace SwosVM;
+
+    if (!g_comparePortedFunctions) {
+        if (useCpp) PlayerFunctions::ShouldGoalkeeperDive();
+        else ::ShouldGoalkeeperDive();
+        return;
+    }
+
+    // Capture input state for diagnostics
+    auto readMem16 = [](uint32_t addr) -> int16_t {
+        return *reinterpret_cast<int16_t*>(g_memByte + addr);
+    };
+    auto readMem32 = [](uint32_t addr) -> int32_t {
+        return *reinterpret_cast<int32_t*>(g_memByte + addr);
+    };
+
+    GoalkeeperDiveInputState inputState = {};
+    inputState.ballX = readMem16(A2 + kSpriteX + 2);
+    inputState.ballY = readMem16(A2 + kSpriteY + 2);
+    inputState.goalkeeperX = readMem16(A1 + kSpriteX + 2);
+    inputState.goalkeeperY = readMem16(A1 + kSpriteY + 2);
+    inputState.ballSpeed = readMem16(A2 + kSpriteSpeed);
+    inputState.ballDeltaY = readMem32(A2 + kSpriteDeltaY);
+    inputState.ballDefensiveX = readMem16(kBallDefensiveX);
+    inputState.yDiff = inputState.ballY - inputState.goalkeeperY;
+    inputState.isTopTeam = (A6 == ptrToOffset(&swos.topTeamData));
+    inputState.isPenalty = (readMem16(kPlayingPenalties_GK) != 0 || readMem16(kPenalty_GK) != 0);
+
+    // Save registers
+    Register savedD0 = D0, savedD1 = D1, savedD2 = D2, savedD3 = D3;
+    Register savedD4 = D4, savedD5 = D5, savedD6 = D6, savedD7 = D7;
+    Register savedA0 = A0, savedA1 = A1, savedA2 = A2, savedA3 = A3;
+    Register savedA4 = A4, savedA5 = A5, savedA6 = A6;
+    auto rngStateOriginal = SWOS::saveRngState();
+
+    // Run C++ version
+    PlayerFunctions::ShouldGoalkeeperDive();
+    GoalkeeperDiveCompareState cppOutput = captureGoalkeeperDiveState();
+
+    // Save C++ state
+    Register cppD0 = D0;
+    auto rngStateCpp = SWOS::saveRngState();
+
+    // Restore original state
+    D0 = savedD0; D1 = savedD1; D2 = savedD2; D3 = savedD3;
+    D4 = savedD4; D5 = savedD5; D6 = savedD6; D7 = savedD7;
+    A0 = savedA0; A1 = savedA1; A2 = savedA2; A3 = savedA3;
+    A4 = savedA4; A5 = savedA5; A6 = savedA6;
+    SWOS::restoreRngState(rngStateOriginal);
+
+    // Run ASM version
+    ::ShouldGoalkeeperDive();
+    GoalkeeperDiveCompareState asmOutput = captureGoalkeeperDiveState();
+
+    // Restore to selected version's state
+    if (useCpp) {
+        D0 = cppD0;
+        SWOS::restoreRngState(rngStateCpp);
+    }
+
+    if (asmOutput != cppOutput) {
+        logGoalkeeperDiveMismatch(swos.frameCount, asmOutput, cppOutput, &inputState);
+    }
+}
+
+void CompareGoalkeeperJumping(bool useCpp)
+{
+    using namespace SwosVM;
+
+    if (!g_comparePortedFunctions) {
+        if (useCpp) PlayerFunctions::GoalkeeperJumping();
+        else ::GoalkeeperJumping();
+        return;
+    }
+
+    // Capture input state for diagnostics
+    auto readMem16 = [](uint32_t addr) -> int16_t {
+        return *reinterpret_cast<int16_t*>(g_memByte + addr);
+    };
+    auto readMem32 = [](uint32_t addr) -> uint32_t {
+        return *reinterpret_cast<uint32_t*>(g_memByte + addr);
+    };
+
+    uint32_t goalkeeperSprite = A1;
+    uint32_t teamPtr = A6;
+
+    GoalkeeperJumpInputState inputState = {};
+    inputState.ballX = readMem16(A2 + kSpriteX + 2);
+    inputState.ballY = readMem16(A2 + kSpriteY + 2);
+    inputState.goalkeeperX = readMem16(A1 + kSpriteX + 2);
+    inputState.goalkeeperY = readMem16(A1 + kSpriteY + 2);
+    inputState.ballDistance = readMem32(A1 + kSpriteBallDistance);
+    inputState.ballNotHighZ = readMem16(kBallNotHighZ);
+    inputState.d1Value = static_cast<int16_t>(D1 & 0xFFFF);
+    inputState.d3Direction = static_cast<int16_t>(D3 & 0xFFFF);
+    inputState.isTopTeam = (A6 == ptrToOffset(&swos.topTeamData));
+
+    // Save full sprite and team state for goalkeeper
+    auto saveGkSpriteState = [&]() {
+        return captureGoalkeeperJumpState(goalkeeperSprite, teamPtr);
+    };
+
+    // Save initial state
+    GoalkeeperJumpCompareState initialState = saveGkSpriteState();
+
+    // Save registers
+    Register savedD0 = D0, savedD1 = D1, savedD2 = D2, savedD3 = D3;
+    Register savedD4 = D4, savedD5 = D5, savedD6 = D6, savedD7 = D7;
+    Register savedA0 = A0, savedA1 = A1, savedA2 = A2, savedA3 = A3;
+    Register savedA4 = A4, savedA5 = A5, savedA6 = A6;
+    auto rngStateOriginal = SWOS::saveRngState();
+
+    // Function to restore goalkeeper sprite to initial state
+    auto restoreGkSpriteState = [&](const GoalkeeperJumpCompareState& state) {
+        auto writeMem16 = [](uint32_t addr, int16_t val) {
+            *reinterpret_cast<int16_t*>(g_memByte + addr) = val;
+        };
+        auto writeMem8 = [](uint32_t addr, uint8_t val) {
+            g_memByte[addr] = val;
+        };
+
+        writeMem16(goalkeeperSprite + kSpriteSpeed, state.speed);
+        writeMem16(goalkeeperSprite + kSpriteDestX, state.destX);
+        writeMem16(goalkeeperSprite + kSpriteDestY, state.destY);
+        writeMem8(goalkeeperSprite + kSpritePlayerState, state.playerState);
+        writeMem8(goalkeeperSprite + kSpritePlayerDownTimer, state.playerDownTimer);
+        writeMem16(teamPtr + kTeamControlledPlDirection, state.controlledPlDirection);
+        writeMem16(teamPtr + kTeamGoalkeeperDivingRight, state.goalkeeperDivingRight);
+    };
+
+    // Run C++ version
+    PlayerFunctions::GoalkeeperJumping();
+    GoalkeeperJumpCompareState cppOutput = saveGkSpriteState();
+
+    // Save C++ registers
+    Register cppD0 = D0, cppD1 = D1, cppD2 = D2, cppD3 = D3;
+    Register cppA0 = A0;
+    auto rngStateCpp = SWOS::saveRngState();
+
+    // Restore to initial state
+    restoreGkSpriteState(initialState);
+    D0 = savedD0; D1 = savedD1; D2 = savedD2; D3 = savedD3;
+    D4 = savedD4; D5 = savedD5; D6 = savedD6; D7 = savedD7;
+    A0 = savedA0; A1 = savedA1; A2 = savedA2; A3 = savedA3;
+    A4 = savedA4; A5 = savedA5; A6 = savedA6;
+    SWOS::restoreRngState(rngStateOriginal);
+
+    // Run ASM version
+    ::GoalkeeperJumping();
+    GoalkeeperJumpCompareState asmOutput = saveGkSpriteState();
+
+    // Restore to selected version's state
+    if (useCpp) {
+        restoreGkSpriteState(cppOutput);
+        D0 = cppD0; D1 = cppD1; D2 = cppD2; D3 = cppD3;
+        A0 = cppA0;
+        SWOS::restoreRngState(rngStateCpp);
+    }
+
+    if (asmOutput != cppOutput) {
+        logGoalkeeperJumpMismatch(swos.frameCount, asmOutput, cppOutput, &inputState);
+    }
+}
+
 // Quick Match Mode Implementation
 bool g_quickMatchMode = false;
 
@@ -871,9 +1189,7 @@ static void createTestTeam(TeamFile* team, const char* name, int teamNum)
         p->nationality = 0;  // English
         p->shirtNumber = static_cast<byte>(i + 1);
 
-        char playerName[24];
-        snprintf(playerName, sizeof(playerName), "PLAYER %d", i + 1);
-        strncpy(p->playerName, playerName, 23);
+        snprintf(p->playerName, sizeof(p->playerName), "PLAYER %d", i + 1);
 
         // Position: GK for player 1, then defenders, midfielders, attackers
         if (i == 0) {

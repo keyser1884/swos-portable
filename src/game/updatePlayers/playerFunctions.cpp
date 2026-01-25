@@ -1891,7 +1891,14 @@ void ApplyBallAfterTouch() {
     if (longPassFlags == 0) {
         // Check for starting long pass
         int16_t currentAllowedDir = (int16_t)readMemory(A6 + kTeamCurrentAllowedDirection, 2);
-        if (currentAllowedDir >= 0) {
+        if (currentAllowedDir < 0) {
+            // No direction pressed - ASM jumps to @@holding_left_or_right and applies long pass boost
+            writeMemory(A6 + kTeamLongPass, 2, 1);
+            int16_t oldSpeed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
+            int16_t speed = oldSpeed + (oldSpeed >> 3);
+            writeMemory(A1 + kSpriteSpeed, 2, speed);
+            logInfo("[PASS_LONG] Long pass (no direction): speed %d -> %d (+12.5%%)", oldSpeed, speed);
+        } else {
             int16_t controlledPlDir = (int16_t)readMemory(A6 + kTeamControlledPlDirection, 2);
             int16_t diff = controlledPlDir - currentAllowedDir;
             if (diff != 0) {
@@ -2476,13 +2483,13 @@ void PlayerKickingBall() {
 }
 
 // Goalkeeper dive constants
-constexpr int16_t kKeeperPenaltySaveDistanceFar = 16;    // Used 25% of time
-constexpr int16_t kKeeperPenaltySaveDistanceNear = 48;   // Used 75% of time
-constexpr int16_t kKeeperSaveDistance = 96;              // Normal shot threshold
+constexpr int16_t kKeeperSaveDistance = 16;              // Normal shot threshold (was incorrectly 96)
+constexpr int16_t kKeeperPenaltySaveDistanceFar = 20;    // Used 25% of time (was incorrectly 16)
+constexpr int16_t kKeeperPenaltySaveDistanceNear = 12;   // Used 75% of time (was incorrectly 48)
 constexpr uint32_t kGoalkeeperDiveDeltas = 324072;       // Table of dive speeds by skill (was incorrectly 524780)
 constexpr uint32_t kGoalkeeperDiveDeadVar = 337190;      // Dead var incremented during dive calc (was incorrectly 524072)
-constexpr uint32_t kPlayingPenalties = 455942;
-constexpr uint32_t kPenalty = 455924;
+constexpr uint32_t kPlayingPenalties = 523160;
+constexpr uint32_t kPenalty = 523112;
 constexpr uint32_t kTeamShotChanceTable = 90;            // TeamGeneralInfo.shotChanceTable offset
 
 // GetFramesNeededToCoverDistance - calculates frames needed to cover a distance

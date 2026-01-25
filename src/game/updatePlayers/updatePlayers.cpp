@@ -2,6 +2,9 @@
 #include "playerFunctions.h"
 #include "../ai/ai.h"
 #include "../../options/portedFunctions.h"
+#include "../../util/log.h"
+
+#pragma GCC diagnostic ignored "-Wunused-label"
 
 // Assembly function externs for toggle system
 extern void AI_SetControlsDirection();
@@ -2413,7 +2416,7 @@ g_memWord[164516] = 1536;               // mov ballSprite.speed, 1536
 
 cseg_7FA8E:;
 push(A1);                               // push A1
-if (g_portedToggles.useCpp_GoalkeeperJumping) PlayerFunctions::GoalkeeperJumping(); else GoalkeeperJumping(); // call GoalkeeperJumping
+CompareGoalkeeperJumping(g_portedToggles.useCpp_GoalkeeperJumping); // call GoalkeeperJumping
 pop(A1);                                // pop A1
 ax = g_memWord[164516];                 // mov ax, ballSprite.speed
 g_memWord[168590] = ax;                 // mov dseg_114EA6, ax
@@ -2423,7 +2426,7 @@ writeMemory(esi + 104, 4, 0);           // mov [esi+TeamGeneralInfo.passingKicki
 goto l_clamp_ball_y_inside_pitch;       // jmp @@clamp_ball_y_inside_pitch
 
 l_goalkeeper_saved:;
-if (g_portedToggles.useCpp_ShouldGoalkeeperDive) PlayerFunctions::ShouldGoalkeeperDive(); else ShouldGoalkeeperDive(); // call ShouldGoalkeeperDive
+CompareShouldGoalkeeperDive(g_portedToggles.useCpp_ShouldGoalkeeperDive); // call ShouldGoalkeeperDive
 ax = D0;                                // mov ax, word ptr D0
 flags.carry = false;
 flags.overflow = false;
@@ -2531,7 +2534,7 @@ ax = D0;                                // mov ax, word ptr D0
 esi = A1;                               // mov esi, A1
 writeMemory(esi + 42, 2, ax);           // mov [esi+Sprite.direction], ax
 push(A1);                               // push A1
-if (g_portedToggles.useCpp_GoalkeeperJumping) PlayerFunctions::GoalkeeperJumping(); else GoalkeeperJumping(); // call GoalkeeperJumping
+CompareGoalkeeperJumping(g_portedToggles.useCpp_GoalkeeperJumping); // call GoalkeeperJumping
 pop(A1);                                // pop A1
 esi = A6;                               // mov esi, A6
 writeMemory(esi + 102, 2, 0);           // mov [esi+TeamGeneralInfo.passKickTimer], 0
@@ -6423,6 +6426,10 @@ esi = A1;                               // mov esi, A1
 if (!flags.zero)
 goto l_player_down_tackling;        // jnz short @@player_down_tackling
 
+{
+    int16_t playerOrdinal = (int16_t)readMemory(esi + 2, 2);
+    logInfo("[TACKLING_STATE] Player %d: PL_TACKLING downTimer=0 -> PL_NORMAL (getting up from tackle)", playerOrdinal);
+}
 writeMemory(esi + 12, 1, 0);            // mov [esi+Sprite.playerState], PL_NORMAL
 A0 = 453234;                            // mov A0, offset playerNormalStandingAnimTable
 SetPlayerAnimationTable();              // call SetPlayerAnimationTable
@@ -6503,6 +6510,10 @@ ax = g_memWord[162816];                 // mov ax, kPlayerGroundConstant
 if (!flags.zero && flags.sign == flags.overflow)
 goto l_player_still_tackling_and_moving; // jg short @@player_still_tackling_and_moving
 
+{
+    int16_t playerOrdinal = (int16_t)readMemory(esi + 2, 2);
+    logInfo("[TACKLING_STATE] Player %d: tackle slide ended (speed=0), calling SetPlayerDowntimeAfterTackle", playerOrdinal);
+}
 writeMemory(esi + 44, 2, 0);            // mov [esi+Sprite.speed], 0
 if (g_portedToggles.useCpp_SetPlayerDowntimeAfterTackle) PlayerFunctions::SetPlayerDowntimeAfterTackle(); else SetPlayerDowntimeAfterTackle(); // call SetPlayerDowntimeAfterTackle
 goto l_update_player_speed_and_deltas;  // jmp @@update_player_speed_and_deltas
@@ -7482,6 +7493,14 @@ l_player_tackled:;
 esi = A1;                               // mov esi, A1
 {
     byte src = (byte)readMemory(esi + 13, 1);
+    // Log every 10 frames to avoid spam
+    if (src % 10 == 0 || src <= 5) {
+        int16_t playerOrdinal = (int16_t)readMemory(esi + 2, 2);
+        int16_t playerX = (int16_t)readMemory(esi + 32, 2);
+        int16_t playerY = (int16_t)readMemory(esi + 36, 2);
+        logInfo("[TACKLED_STATE] Player %d at (%d,%d): PL_TACKLED state, downTimer=%d (%.1fs remaining)",
+                playerOrdinal, playerX, playerY, src, src / 70.0f);
+    }
     int8_t dstSigned = src;
     int8_t srcSigned = 1;
     byte res = dstSigned - srcSigned;
@@ -7504,6 +7523,10 @@ flags.zero = ax == 0;                   // or ax, ax
 if (flags.zero)
 goto l_get_up_normally;             // jz short @@get_up_normally
 
+{
+    int16_t playerOrdinal = (int16_t)readMemory(esi + 2, 2);
+    logInfo("[TACKLED_STATE] Player %d: downTimer=0, injuryLevel=%d -> PL_ROLLING_INJURED", playerOrdinal, ax);
+}
 writeMemory(esi + 44, 2, 0);            // mov [esi+Sprite.speed], 0
 writeMemory(esi + 12, 1, 13);           // mov [esi+Sprite.playerState], PL_ROLLING_INJURED
 writeMemory(esi + 13, 1, al);           // mov [esi+Sprite.playerDownTimer], al
@@ -7512,6 +7535,10 @@ SetPlayerAnimationTable();              // call SetPlayerAnimationTable
 goto l_update_player_speed_and_deltas;  // jmp @@update_player_speed_and_deltas
 
 l_get_up_normally:;
+{
+    int16_t playerOrdinal = (int16_t)readMemory(esi + 2, 2);
+    logInfo("[TACKLED_STATE] Player %d: downTimer=0, no injury -> PL_NORMAL (getting up)", playerOrdinal);
+}
 esi = A1;                               // mov esi, A1
 writeMemory(esi + 12, 1, 0);            // mov [esi+Sprite.playerState], PL_NORMAL
 A0 = 453234;                            // mov A0, offset playerNormalStandingAnimTable

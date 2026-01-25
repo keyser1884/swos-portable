@@ -177,3 +177,71 @@ void CompareCalculateBallNextGroundXYPositions(bool useCpp);
 // Quick match mode for automated testing
 extern bool g_quickMatchMode;
 void startQuickMatch();
+
+// ============== Goalkeeper Comparison ==============
+
+// Goalkeeper dive decision state
+struct GoalkeeperDiveCompareState {
+    int16_t shouldDive;     // D0 output: 1 = dive, 0 = don't dive
+
+    bool operator==(const GoalkeeperDiveCompareState& other) const {
+        return shouldDive == other.shouldDive;
+    }
+    bool operator!=(const GoalkeeperDiveCompareState& other) const { return !(*this == other); }
+};
+
+// Goalkeeper jumping state (after GoalkeeperJumping is called)
+struct GoalkeeperJumpCompareState {
+    int16_t speed;          // Goalkeeper speed
+    int16_t destX;          // Destination X
+    int16_t destY;          // Destination Y
+    uint8_t playerState;    // PL_GOALIE_DIVING_LOW or PL_GOALIE_DIVING_HIGH
+    uint8_t playerDownTimer;// Down timer
+    int16_t controlledPlDirection; // Team's controlled player direction
+    int16_t goalkeeperDivingRight; // Team field for diving direction
+
+    bool operator==(const GoalkeeperJumpCompareState& other) const {
+        return speed == other.speed && destX == other.destX && destY == other.destY &&
+               playerState == other.playerState && playerDownTimer == other.playerDownTimer &&
+               controlledPlDirection == other.controlledPlDirection &&
+               goalkeeperDivingRight == other.goalkeeperDivingRight;
+    }
+    bool operator!=(const GoalkeeperJumpCompareState& other) const { return !(*this == other); }
+};
+
+// Input state for goalkeeper dive diagnosis
+struct GoalkeeperDiveInputState {
+    int16_t ballX, ballY;
+    int16_t goalkeeperX, goalkeeperY;
+    int16_t ballSpeed;
+    int32_t ballDeltaY;
+    int16_t ballDefensiveX;
+    int16_t yDiff;
+    bool isTopTeam;
+    bool isPenalty;
+};
+
+// Input state for goalkeeper jump diagnosis
+struct GoalkeeperJumpInputState {
+    int16_t ballX, ballY;
+    int16_t goalkeeperX, goalkeeperY;
+    uint32_t ballDistance;
+    int16_t ballNotHighZ;
+    int16_t d1Value;
+    int16_t d3Direction;
+    bool isTopTeam;
+};
+
+// Comparison wrappers for goalkeeper functions
+void CompareShouldGoalkeeperDive(bool useCpp);
+void CompareGoalkeeperJumping(bool useCpp);
+
+// Log goalkeeper mismatches
+void logGoalkeeperDiveMismatch(uint32_t frame,
+                                const GoalkeeperDiveCompareState& asmState,
+                                const GoalkeeperDiveCompareState& cppState,
+                                const GoalkeeperDiveInputState* inputState = nullptr);
+void logGoalkeeperJumpMismatch(uint32_t frame,
+                                const GoalkeeperJumpCompareState& asmState,
+                                const GoalkeeperJumpCompareState& cppState,
+                                const GoalkeeperJumpInputState* inputState = nullptr);
