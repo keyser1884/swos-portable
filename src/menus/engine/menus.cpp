@@ -1,4 +1,5 @@
 #include "menus.h"
+#include "MenuEntry.h"
 #include "unpackMenu.h"
 #include "menuProc.h"
 #include "menuAlloc.h"
@@ -78,8 +79,11 @@ static const char *discoverMenuTitle()
     auto entryText = [](const MenuEntry *entry) -> const char * {
         if (entry->type == kEntryString)
             return entry->string();
-        else if (entry->type == kEntryMultilineText)
-            return entry->fg.multilineText.asCharPtr() + 1;
+        else if (entry->type == kEntryMultilineText) {
+            // Use safe accessor to handle potentially corrupted pointers from VM partial writes
+            auto text = safeGetMultilineText(entry->fg.multilineText);
+            return text ? text + 1 : nullptr;
+        }
         else
             return nullptr;
     };
@@ -119,11 +123,19 @@ static const char *discoverMenuTitle()
     }
 
     if (colorMatch) {
-        return colorMatch->string();
-    } else if (dimensionsMatch) {
-        return dimensionsMatch->string();
-    } else if (firstText) {
-        return entryText(firstText);
+        const char *str = colorMatch->string();
+        if (str && str != kSentinel)
+            return str;
+    }
+    if (dimensionsMatch) {
+        const char *str = dimensionsMatch->string();
+        if (str && str != kSentinel)
+            return str;
+    }
+    if (firstText) {
+        const char *str = entryText(firstText);
+        if (str)
+            return str;
     } else if (firstSprite || firstNumeric) {
         memcpy(buf, firstSprite ? "SPRITE " : "NUMBER ", 7);
         auto entry = firstSprite ? firstSprite : firstNumeric;

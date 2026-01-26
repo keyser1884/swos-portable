@@ -5,36 +5,110 @@ namespace {
 
 // Helper to safely get string pointer, handling both VM offsets and native pointers
 // that may have been stored directly by assembly code (like CareerGameListCommon)
-const char* safeGetStringPtr(const SwosDataPointer<char>& ptr)
+char* safeGetStringPtr(SwosDataPointer<char>& ptr)
 {
     auto raw = ptr.getRaw();
 
-    // Check if it looks like an unregistered native pointer:
-    // - Not null (0)
-    // - Not sentinel (-1 / 0xFFFFFFFF)
-    // - Doesn't have kExternalPointerMask (0x80000000) set
-    // - Is above the valid VM offset range (~600KB)
-    constexpr uint32_t kExternalPointerMask = 1u << 31;
-    constexpr uint32_t kMaxValidVmOffset = 700000;
+    // Handle null and sentinel values first
+    if (raw == 0)
+        return nullptr;
 
-    if (raw != 0 &&
-        raw != static_cast<uint32_t>(-1) &&
-        !(raw & kExternalPointerMask) &&
-        raw > kMaxValidVmOffset) {
-        // This is a native pointer stored directly by assembly code
-        logWarn("MenuEntry::string: Detected unregistered native pointer 0x%x", raw);
-        return reinterpret_cast<const char*>(static_cast<uintptr_t>(raw));
+    if (raw == static_cast<uint32_t>(-1))
+        return const_cast<char*>(kSentinel);
+
+    // Check if it's a registered external pointer (has kExternalPointerMask set)
+    constexpr uint32_t kExternalPointerMask = 1u << 31;
+    if (raw & kExternalPointerMask) {
+        // Use the normal path which handles external pointers via the pointer pool
+        return ptr.asAlignedCharPtr();
     }
 
-    // For all other cases, use the normal path
-    return ptr.asAlignedConstCharPtr();
+    // Check if it's a valid VM offset (should be < ~600KB for normal SWOS data)
+    constexpr uint32_t kMaxValidVmOffset = 700000;
+    if (raw <= kMaxValidVmOffset) {
+        // Valid VM offset, use normal path
+        return ptr.asAlignedCharPtr();
+    }
+
+    // Value is > kMaxValidVmOffset and doesn't have kExternalPointerMask
+    // This is likely garbage data from partial 2-byte writes. Return empty string
+    // instead of nullptr to avoid crashes in rendering code.
+    return const_cast<char*>("");
 }
 
-char* safeGetStringPtr(SwosDataPointer<char>& ptr)
+const char* safeGetStringPtrConst(const SwosDataPointer<char>& ptr)
 {
-    return const_cast<char*>(safeGetStringPtr(const_cast<const SwosDataPointer<char>&>(ptr)));
+    auto raw = ptr.getRaw();
+
+    // Handle null and sentinel values first
+    if (raw == 0)
+        return nullptr;
+
+    if (raw == static_cast<uint32_t>(-1))
+        return kSentinel;
+
+    // Check if it's a registered external pointer (has kExternalPointerMask set)
+    constexpr uint32_t kExternalPointerMask = 1u << 31;
+    if (raw & kExternalPointerMask) {
+        return ptr.asAlignedConstCharPtr();
+    }
+
+    // Check if it's a valid VM offset
+    constexpr uint32_t kMaxValidVmOffset = 700000;
+    if (raw <= kMaxValidVmOffset) {
+        return ptr.asAlignedConstCharPtr();
+    }
+
+    // Value is > kMaxValidVmOffset - return empty string to avoid crashes
+    return "";
 }
 
+}
+
+// Common validation for SwosDataPointer raw values - returns true if pointer is likely valid
+static bool isValidVmPointerRaw(uint32_t raw)
+{
+    // Null is valid (indicates no data)
+    if (raw == 0)
+        return true;
+
+    // External pointers have kExternalPointerMask set
+    constexpr uint32_t kExternalPointerMask = 1u << 31;
+    if (raw & kExternalPointerMask)
+        return true;
+
+    // Valid VM offsets should be < ~700KB for normal SWOS data
+    constexpr uint32_t kMaxValidVmOffset = 700000;
+    return raw <= kMaxValidVmOffset;
+}
+
+// Helper to safely get multiline text pointer, handling corrupted values from partial writes
+const char* safeGetMultilineText(const SwosDataPointer<MultilineText>& ptr)
+{
+    auto raw = ptr.getRaw();
+
+    if (!isValidVmPointerRaw(raw))
+        return nullptr;
+
+    if (raw == 0)
+        return nullptr;
+
+    return ptr.asConstCharPtr();
+}
+
+// Helper to safely validate stringTable pointer, handling corrupted values from partial writes
+bool isValidStringTablePtr(const SwosDataPointer<StringTable>& ptr)
+{
+    return isValidVmPointerRaw(ptr.getRaw());
+}
+
+// Validate sprite index to prevent crashes from corrupted values
+bool isValidSpriteIndex(word spriteIndex)
+{
+    // Sprite index 0 means no sprite, valid indices are typically small positive numbers
+    // Upper bound is a reasonable sanity check - no menu should have thousands of sprites
+    constexpr word kMaxReasonableSpriteIndex = 1000;
+    return spriteIndex <= kMaxReasonableSpriteIndex;
 }
 
 int MenuEntry::centerX() const
@@ -121,7 +195,7 @@ char *MenuEntry::string()
 const char *MenuEntry::string() const
 {
     assert(type == kEntryString);
-    return safeGetStringPtr(fg.string);
+    return safeGetStringPtrConst(fg.string);
 }
 
 void MenuEntry::setString(char *str)
@@ -141,10 +215,15 @@ void MenuEntry::copyString(const char *str)
 {
     assert(type == kEntryString && str);
 
+    auto start = string();
+    if (!start || start == kSentinel) {
+        logWarn("MenuEntry::copyString: Invalid string pointer, cannot copy");
+        return;
+    }
+
     while (*str == ' ')
         str++;
 
-    auto start = string();
     auto end = start + kStdMenuTextSize;
     auto p = start;
 
@@ -154,7 +233,7 @@ void MenuEntry::copyString(const char *str)
     if (p < end)
         *p = '\0';
     else
-        *--p = '\0';
+        *(end - 1) = '\0';
 
     while (--p >= start && *p == ' ')
         *p = '\0';

@@ -41,6 +41,11 @@ void unpackMenu(const void *src, char *dst /* = swos.g_currentMenu */)
 
     assert(dst >= swos.g_currentMenu && dst < swos.g_currentMenu + sizeof(swos.g_currentMenu));
 
+    // Zero the entire menu buffer to prevent stale data from previous menus causing issues.
+    // This is important because VM code may do partial writes (e.g., 2-byte writes to 4-byte fields)
+    // that would leave garbage in the upper bytes if the buffer contained non-zero data.
+    memset(dst, 0, sizeof(swos.g_currentMenu));
+
     resetMenuAllocator();
 
     m_currentMenu = src;
@@ -184,6 +189,10 @@ void unpackMenu(const void *src, char *dst /* = swos.g_currentMenu */)
                 {
                     dstEntry->type = kEntryString;
                     dstEntry->stringFlags = *data++;
+                    // First zero the entire fg union to ensure all 4 bytes are cleared.
+                    // This is important because VM code may do partial 2-byte writes that
+                    // only set the low word, leaving the high word as garbage if not zeroed.
+                    dstEntry->fg.contentFunction.clearAligned();
                     dstEntry->fg.string.loadFrom(data);
                     auto ptrValue = dstEntry->fg.string.asAligned<uintptr_t>();
                     if (ptrValue && ptrValue < 256)

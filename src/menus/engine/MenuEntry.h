@@ -148,3 +148,8 @@ struct MenuEntry
 #pragma pack(pop)
 
 static_assert(sizeof(MenuEntry) == 56, "Destination Unknown");
+
+// Safety helpers to handle potentially corrupted pointer values from VM partial writes
+const char* safeGetMultilineText(const SwosDataPointer<MultilineText>& ptr);
+bool isValidStringTablePtr(const SwosDataPointer<StringTable>& ptr);
+bool isValidSpriteIndex(word spriteIndex);

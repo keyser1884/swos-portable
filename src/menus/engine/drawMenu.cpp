@@ -47,13 +47,20 @@ void drawMenu(bool updateScreen /* = true */)
     // must save A5 for InputText(), old DrawMenu accidentally sets it to the selected entry (which happened to be the original value)
     auto savedA5 = A5;
 
+    logInfo("drawMenu: step 1 - background");
     drawMenuBackground();
+    logInfo("drawMenu: step 2 - clear flags");
     clearAllItemsDrawnFlag();
+    logInfo("drawMenu: step 3 - onDraw (numEntries=%d)", getCurrentMenu()->numEntries);
     executeMenuOnDrawFunction();
+    logInfo("drawMenu: step 4 - items (numEntries=%d)", getCurrentMenu()->numEntries);
     drawMenuItems();
+    logInfo("drawMenu: step 5 - selected frame");
     drawSelectedFrame();
+    logInfo("drawMenu: step 6 - flip");
     if (updateScreen)
         flipInMenu();
+    logInfo("drawMenu: done");
 
     A5 = savedA5;
 }
@@ -85,13 +92,22 @@ void drawMenuItem(MenuEntry *entry)
 {
     assert(entry);
 
+    logInfo("drawMenuItem: entry %d, invisible=%d, type=%d", entry->ordinal, entry->invisible, entry->type);
+
     if (entry->invisible)
         return;
 
     A5 = entry;
 
     entry->drawn = 1;
-    entry->beforeDraw();
+
+    // Validate beforeDraw callback before calling - corrupted indices can crash
+    logInfo("drawMenuItem: entry %d beforeDraw index=%d, empty=%d", entry->ordinal, entry->beforeDraw.index(), entry->beforeDraw.empty());
+    if (!entry->beforeDraw.empty()) {
+        logInfo("drawMenuItem: calling beforeDraw for entry %d", entry->ordinal);
+        entry->beforeDraw();
+        logInfo("drawMenuItem: beforeDraw complete for entry %d", entry->ordinal);
+    }
 
     // check the invisible flag again, beforeDraw() routine might decide not to draw the item
     if (entry->invisible)
@@ -100,7 +116,10 @@ void drawMenuItem(MenuEntry *entry)
     drawMenuItemBackground(entry);
     drawMenuItemContent(entry);
 
-    entry->afterDraw();
+    // Validate afterDraw callback before calling
+    if (!entry->afterDraw.empty()) {
+        entry->afterDraw();
+    }
 }
 
 void flipInMenu()
@@ -178,8 +197,30 @@ static bool shouldBlink()
 
 static void drawMenuItems()
 {
+    logInfo("drawMenuItems: entering");
     auto menu = getCurrentMenu();
-    for (auto entry = menu->entries(); entry < menu->sentinelEntry(); entry++) {
+    // Cache numEntries at the start to protect against corruption during rendering
+    int numEntries = menu->numEntries;
+    logInfo("drawMenuItems: numEntries=%d", numEntries);
+
+    // Sanity check - if numEntries is corrupted to an unreasonable value, use a safe maximum
+    constexpr int kMaxMenuEntries = 115;  // SWOS limit
+    if (numEntries <= 0 || numEntries > kMaxMenuEntries) {
+        logWarn("drawMenuItems: invalid numEntries=%d, clamping to max", numEntries);
+        numEntries = kMaxMenuEntries;
+    }
+
+    auto entries = menu->entries();
+    for (int i = 0; i < numEntries; i++) {
+        auto entry = &entries[i];
+        logInfo("drawMenuItems: processing entry %d", i);
+
+        // Validate entry ordinal matches expected index - mismatch indicates memory corruption
+        if (entry->ordinal != i) {
+            logWarn("drawMenuItems: entry ordinal mismatch at index %d (ordinal=%d), stopping", i, entry->ordinal);
+            break;
+        }
+
         bool textBlinking = entry->type != kEntryNoForeground && entry->stringFlags & kBlinkText;
         bool skipText = textBlinking && shouldBlink();
 
@@ -187,10 +228,11 @@ static void drawMenuItems()
             assert(entry->type == kEntryString || entry->type == kEntrySprite2);
 
             if (entry->bg.entryColor) {
-                auto savedText = entry->fg.string;
-                entry->fg.string = nullptr;
+                // Save and restore raw value to avoid pointer interpretation of potentially corrupted data
+                auto savedRaw = entry->fg.string.getRaw();
+                entry->fg.string.setRaw(0);
                 drawMenuItem(entry);
-                entry->fg.string = savedText;
+                entry->fg.string.setRaw(savedRaw);
             }
         } else {
             drawMenuItem(entry);
@@ -340,6 +382,10 @@ static void drawStringTableMenuItem(MenuEntry *entry)
 {
     assert(entry);
 
+    // Safety check: validate pointer to handle corrupted values from VM partial writes
+    if (!isValidStringTablePtr(entry->fg.stringTable) || !entry->fg.stringTable)
+        return;
+
     auto startIndex = fetch(&entry->fg.stringTable->startIndex);
     auto stringIndex = entry->fg.stringTable->index.fetch() - startIndex;
     auto string = (*entry->fg.stringTable)[stringIndex];
@@ -350,13 +396,15 @@ static void drawMultilineTextMenuItem(MenuEntry *entry)
 {
     assert(entry);
 
-    if (entry->fg.multilineText) {
+    // Use safe accessor to handle potentially corrupted pointer values from VM partial writes
+    auto text = safeGetMultilineText(entry->fg.multilineText);
+    if (text) {
         int color = entry->solidTextColor();
 
         bool bigFont = entry->bigFont();
         int textHeight = entryTextHeight(*entry);
 
-        auto text = entry->fg.multilineText.asConstCharPtr() + 1;
+        text++;  // Skip the line count byte
         auto numLines = text[-1];
 
         assert(numLines > 0 && entry->height >= numLines * textHeight);
@@ -396,7 +444,8 @@ static void drawSpriteMenuItem(MenuEntry *entry, int spriteIndex)
 {
     assert(entry && (entry->type == kEntrySprite2 || entry->type == kEntryColorConvertedSprite));
 
-    if (spriteIndex) {
+    // Validate sprite index to handle potentially corrupted values from VM partial writes
+    if (spriteIndex && isValidSpriteIndex(spriteIndex)) {
         const auto& sprite = getSprite(spriteIndex);
 
         int x = entry->x + (entry->width - sprite.width) / 2;
@@ -409,6 +458,10 @@ static void drawMenuLocalSprite(MenuEntry *entry, int spriteIndex)
 {
     assert(entry && entry->type == kEntryMenuSpecificSprite);
     assert(static_cast<size_t>(spriteIndex) < m_menuLocalSprites.size());
+
+    // Runtime bounds check to handle potentially corrupted values from VM partial writes
+    if (static_cast<size_t>(spriteIndex) >= m_menuLocalSprites.size())
+        return;
 
     const auto& sprite = m_menuLocalSprites[spriteIndex];
 
