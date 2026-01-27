@@ -9,31 +9,18 @@
 bool traverseZipFile(const char *path, std::function<int(const char *path, int pathLength)> filterEntryFunc,
     std::function<void(const char *path, int pathLength, char *buffer, int bufferLength)> processEntryFunc)
 {
-    logInfo("traverseZipFile: opening %s", path);
-    flushLog();
     auto data = loadFile(path);
-    logInfo("traverseZipFile: loadFile returned, buf=%p, size=%d", data.first, (int)data.second);
-    flushLog();
     auto buf = std::unique_ptr<uint8_t[]>(reinterpret_cast<uint8_t *>(data.first));
     auto bufLen = data.second;
 
-    logInfo("traverseZipFile: checking buf pointer...");
-    flushLog();
     if (!buf) {
-        logInfo("traverseZipFile: buf is NULL, file not found");
-        flushLog();
 #ifdef SWOS_TEST
         // for tests just pretend to succeed even if the file is missing
         return true;
 #endif
         logWarn("Zip file \"%s\" not found", path);
-        flushLog();
-        logInfo("traverseZipFile: returning false");
-        flushLog();
         return false;
     }
-    logInfo("traverseZipFile: buf is valid, proceeding with zip parsing");
-    flushLog();
 
     bool result = true;
     void *zipReader = nullptr;

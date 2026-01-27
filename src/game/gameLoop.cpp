@@ -70,24 +70,15 @@ static void initGoalSprites();
 
 void gameLoop(TeamGame *topTeam, TeamGame *bottomTeam)
 {
-    logInfo("=== gameLoop START ===");
-    logInfo("topTeam=%p, bottomTeam=%p", (void*)topTeam, (void*)bottomTeam);
+    logDebug("=== gameLoop START ===");
     flushLog();
 
     swos.playGame = 1;
 
-    logInfo("Calling showStadiumScreenAndFadeOutMusic...");
-    flushLog();
     showStadiumScreenAndFadeOutMusic(topTeam, bottomTeam, swos.gameMaxSubstitutes);
-    logInfo("showStadiumScreenAndFadeOutMusic completed");
-    flushLog();
 
     do {
-        logInfo("Calling initGameLoop...");
-        flushLog();
         initGameLoop();
-        logInfo("initGameLoop completed");
-        flushLog();
         markFrameStartTime();
 
         // the really real main game loop ;)
@@ -135,33 +126,15 @@ void gameLoop(TeamGame *topTeam, TeamGame *bottomTeam)
 
 void showStadiumScreenAndFadeOutMusic(TeamGame *topTeam, TeamGame *bottomTeam, int maxSubstitutes)
 {
-    logInfo("showStadiumScreenAndFadeOutMusic: showPreMatchMenus=%d", showPreMatchMenus());
-    flushLog();
-
     if (showPreMatchMenus()) {
-        logInfo("Showing stadium menu with initMatch callback...");
-        flushLog();
         showStadiumMenu(topTeam, bottomTeam, maxSubstitutes, [&]() {
-            logInfo("Stadium menu callback - calling initMatch...");
-            flushLog();
             initMatch(topTeam, bottomTeam, true);
-            logInfo("Stadium menu callback - initMatch returned");
-            flushLog();
         });
-        logInfo("showStadiumMenu returned");
-        flushLog();
     } else {
-        logInfo("No pre-match menus, calling initMatch directly...");
-        flushLog();
         initMatch(topTeam, bottomTeam, true);
-        logInfo("initMatch returned (no menus path)");
-        flushLog();
     }
 
-    logInfo("Waiting for music to fade out...");
     waitForMusicToFadeOut();
-    logInfo("Music fade out complete");
-    flushLog();
 }
 
 void requestFadeAndSaveReplay()
@@ -198,34 +171,17 @@ void setGameLoopEndHook(std::function<void()> hook)
 
 static void initGameLoop()
 {
-    logInfo("=== initGameLoop START ===");
-    flushLog();
-
     m_playingMatch = true;
     m_doFadeIn = true;
 
-    logInfo("Calling initGameAudio...");
     initGameAudio();
-    logInfo("initGameAudio completed");
-
-    logInfo("Calling playCrowdNoise...");
     playCrowdNoise();
-    logInfo("playCrowdNoise completed");
 
-    if (swos.playGame) {
-        logInfo("Calling playFansChant4lSample...");
+    if (swos.playGame)
         playFansChant4lSample();
-        logInfo("playFansChant4lSample completed");
-    }
 
     flushKeyBuffer();
-    logInfo("Key buffer flushed");
-
-    logInfo("Calling initBenchBeforeMatch...");
-    flushLog();
     initBenchBeforeMatch();
-    logInfo("initBenchBeforeMatch completed");
-    flushLog();
 
     swos.trainingGameCopy = swos.g_trainingGame;
     swos.gameCanceled = 0;
@@ -301,17 +257,6 @@ static void handleKeys()
 
 static void coreGameUpdate()
 {
-    static int frameCounter = 0;
-    frameCounter++;
-
-    // Log every 60 frames (approximately once per second)
-    bool shouldLog = (frameCounter % 60 == 1);
-
-    if (shouldLog) {
-        logInfo("--- coreGameUpdate frame %d ---", frameCounter);
-        logInfo("gameState=%d gameStatePl=%d", static_cast<int>(swos.gameState), static_cast<int>(swos.gameStatePl));
-    }
-
     moveCamera();
     playEnqueuedSamples();
     updateGameTime();
@@ -320,43 +265,12 @@ static void coreGameUpdate()
 
     if (!updateFireBlocked()) {
         auto team = selectTeamForUpdate();
-        if (shouldLog) {
-            logInfo("Updating team controls and players for team %p", (void*)team);
-        }
         updateTeamControls(team);
         updatePlayers(team);    // main game engine update
         postUpdateTeamControls(team);
     }
 
-    // Log ball state before UpdateBall for debugging teleport issue
-    static int ballDebugCounter = 0;
-    if (ballDebugCounter < 120) {  // Log first 120 frames
-        logInfo("PRE-UpdateBall[%d]: pos=(%d,%d) dest=(%d,%d) speed=%d deltaX=%d deltaY=%d gameState=%d",
-                ballDebugCounter,
-                swos.ballSprite.x.whole(), swos.ballSprite.y.whole(),
-                swos.ballSprite.destX, swos.ballSprite.destY,
-                swos.ballSprite.speed,
-                swos.ballSprite.deltaX.whole(), swos.ballSprite.deltaY.whole(),
-                static_cast<int>(swos.gameState));
-    }
-
     UpdateBall();
-
-    if (ballDebugCounter < 120) {
-        logInfo("POST-UpdateBall[%d]: pos=(%d,%d) dest=(%d,%d) speed=%d deltaX=%d deltaY=%d",
-                ballDebugCounter,
-                swos.ballSprite.x.whole(), swos.ballSprite.y.whole(),
-                swos.ballSprite.destX, swos.ballSprite.destY,
-                swos.ballSprite.speed,
-                swos.ballSprite.deltaX.whole(), swos.ballSprite.deltaY.whole());
-        ballDebugCounter++;
-        flushLog();
-    }
-
-    if (shouldLog) {
-        logInfo("Ball: X=%d Y=%d Z=%d", swos.ballSprite.x.whole(), swos.ballSprite.y.whole(), swos.ballSprite.z.whole());
-        flushLog();
-    }
 
 
 

@@ -47,20 +47,13 @@ void drawMenu(bool updateScreen /* = true */)
     // must save A5 for InputText(), old DrawMenu accidentally sets it to the selected entry (which happened to be the original value)
     auto savedA5 = A5;
 
-    logInfo("drawMenu: step 1 - background");
     drawMenuBackground();
-    logInfo("drawMenu: step 2 - clear flags");
     clearAllItemsDrawnFlag();
-    logInfo("drawMenu: step 3 - onDraw (numEntries=%d)", getCurrentMenu()->numEntries);
     executeMenuOnDrawFunction();
-    logInfo("drawMenu: step 4 - items (numEntries=%d)", getCurrentMenu()->numEntries);
     drawMenuItems();
-    logInfo("drawMenu: step 5 - selected frame");
     drawSelectedFrame();
-    logInfo("drawMenu: step 6 - flip");
     if (updateScreen)
         flipInMenu();
-    logInfo("drawMenu: done");
 
     A5 = savedA5;
 }
@@ -92,8 +85,6 @@ void drawMenuItem(MenuEntry *entry)
 {
     assert(entry);
 
-    logInfo("drawMenuItem: entry %d, invisible=%d, type=%d", entry->ordinal, entry->invisible, entry->type);
-
     if (entry->invisible)
         return;
 
@@ -101,13 +92,8 @@ void drawMenuItem(MenuEntry *entry)
 
     entry->drawn = 1;
 
-    // Validate beforeDraw callback before calling - corrupted indices can crash
-    logInfo("drawMenuItem: entry %d beforeDraw index=%d, empty=%d", entry->ordinal, entry->beforeDraw.index(), entry->beforeDraw.empty());
-    if (!entry->beforeDraw.empty()) {
-        logInfo("drawMenuItem: calling beforeDraw for entry %d", entry->ordinal);
+    if (!entry->beforeDraw.empty())
         entry->beforeDraw();
-        logInfo("drawMenuItem: beforeDraw complete for entry %d", entry->ordinal);
-    }
 
     // check the invisible flag again, beforeDraw() routine might decide not to draw the item
     if (entry->invisible)
@@ -197,27 +183,24 @@ static bool shouldBlink()
 
 static void drawMenuItems()
 {
-    logInfo("drawMenuItems: entering");
     auto menu = getCurrentMenu();
     // Cache numEntries at the start to protect against corruption during rendering
     int numEntries = menu->numEntries;
-    logInfo("drawMenuItems: numEntries=%d", numEntries);
 
     // Sanity check - if numEntries is corrupted to an unreasonable value, use a safe maximum
     constexpr int kMaxMenuEntries = 115;  // SWOS limit
     if (numEntries <= 0 || numEntries > kMaxMenuEntries) {
-        logWarn("drawMenuItems: invalid numEntries=%d, clamping to max", numEntries);
+        logWarn("Invalid numEntries=%d, clamping to max", numEntries);
         numEntries = kMaxMenuEntries;
     }
 
     auto entries = menu->entries();
     for (int i = 0; i < numEntries; i++) {
         auto entry = &entries[i];
-        logInfo("drawMenuItems: processing entry %d", i);
 
         // Validate entry ordinal matches expected index - mismatch indicates memory corruption
         if (entry->ordinal != i) {
-            logWarn("drawMenuItems: entry ordinal mismatch at index %d (ordinal=%d), stopping", i, entry->ordinal);
+            logWarn("Menu entry ordinal mismatch at index %d (ordinal=%d)", i, entry->ordinal);
             break;
         }
 

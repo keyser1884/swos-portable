@@ -187,7 +187,7 @@ void playInstantReplay(bool userRequested)
 {
     assert(!m_replaying);
 
-    logInfo("Starting instant replay (%s)...", userRequested ? "user requested" : "auto");
+    logDebug("Starting instant replay (%s)...", userRequested ? "user requested" : "auto");
 
     m_instantReplay = true;
     m_replaying = true;
@@ -201,7 +201,7 @@ void playInstantReplay(bool userRequested)
 
     markFrameStartTime();
 
-    logInfo("Instant replay done");
+    logDebug("Instant replay done");
 }
 
 void playHighlights(bool inGame)
@@ -277,7 +277,7 @@ static void runReplay(bool inGame, bool isReplay)
     swos.teamsLoaded = 0;
     swos.poolplyrLoaded = 0;
 
-    logInfo("Starting highlights replay...");
+    logDebug("Starting highlights replay...");
 
     m_paused = false;
     m_replaying = true;
@@ -322,7 +322,7 @@ static void runReplay(bool inGame, bool isReplay)
 
     m_replaying = false;
 
-    logInfo("Highlights replay done");
+    logDebug("Highlights replay done");
 }
 
 static Status replayScene(bool inGame, bool isReplay, bool userRequested /* = false */)
@@ -667,7 +667,7 @@ static void autoSaveReplay()
 
         // let's not overwrite the file (append to it) if it somehow already exists
         auto success = saveReplayFile(path.c_str(), false);
-        logInfo("Automatically saved replay %s, result: %s", filename, success ? "success" : "failure!");
+        logDebug("Automatically saved replay %s, result: %s", filename, success ? "success" : "failure!");
     }
 }
 

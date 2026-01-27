@@ -243,7 +243,7 @@ static void handleTwoSameGuidJoypadsSelected(Joypad& joypad, int joypadIndex)
     auto status = siblingJoypadConfig(joypad, joypadIndex);
     if (status == kPrimary && config->primary() || status == kSecondary && !config->primary()) {
         bool switchToSecondary = config->primary();
-        logInfo("Switching joypad config to %s", switchToSecondary ? "secondary" : "primary");
+        logDebug("Switching joypad config to %s", switchToSecondary ? "secondary" : "primary");
         config = m_joypadConfig.config(joypad.guid(), switchToSecondary);
         joypad.setConfig(config);
     }
@@ -269,7 +269,7 @@ static void setPl1JoypadIndex(int index)
     m_pl1Joypad = index;
 
     if (index != kNoJoypad) {
-        logInfo("Player 1 using joypad \"%s\"", joypadName(index));
+        logDebug("Player 1 using joypad \"%s\"", joypadName(index));
         updateJoypadLastSelected(index);
     }
 }
@@ -281,7 +281,7 @@ static void setPl2JoypadIndex(int index)
     m_pl2Joypad = index;
 
     if (index != kNoJoypad) {
-        logInfo("Player 2 using joypad \"%s\"", joypadName(index));
+        logDebug("Player 2 using joypad \"%s\"", joypadName(index));
         updateJoypadLastSelected(index);
     }
 }
@@ -306,11 +306,11 @@ void initJoypads()
     auto indices = findJoypadsByGuids(joy1Guid, joy2Guid);
 
     if (indices.first != kNoJoypad) {
-        logInfo("Found joypad for player 1 with GUID %s", m_joy1GuidStr.c_str());
+        logDebug("Found joypad for player 1 with GUID %s", m_joy1GuidStr.c_str());
         setPl1JoypadIndex(indices.first);
     }
     if (indices.second != kNoJoypad) {
-        logInfo("Found joypad for player 2 with GUID %s", m_joy2GuidStr.c_str());
+        logDebug("Found joypad for player 2 with GUID %s", m_joy2GuidStr.c_str());
         setPl2JoypadIndex(indices.second);
     }
 
@@ -369,7 +369,7 @@ static void unassignJoypad(PlayerNumber player)
 {
     assert((player == kPlayer1 ? getPl1Controls() : getPl2Controls()) == kJoypad);
 
-    logInfo("Trying to remove joypad %d from player %d", player == kPlayer1 ? getPl1JoypadIndex() : getPl2JoypadIndex(), player + 1);
+    logDebug("Trying to remove joypad %d from player %d", player == kPlayer1 ? getPl1JoypadIndex() : getPl2JoypadIndex(), player + 1);
 
     int joypadIndex = findFreeJoypad();
     assert(joypadIndex == kNoJoypad || isValidJoypadIndex(joypadIndex));
@@ -395,9 +395,9 @@ bool setJoypad(PlayerNumber player, int joypadIndex)
 
     int playerNo = player == kPlayer1 ? 1 : 2;
     if (joypadIndex != kNoJoypad)
-        logInfo("Selecting controller %d for player %d", joypadIndex, playerNo);
+        logDebug("Selecting controller %d for player %d", joypadIndex, playerNo);
     else
-        logInfo("Unsetting controller for player %d", playerNo);
+        logDebug("Unsetting controller for player %d", playerNo);
 
     if (player == kPlayer1)
         setPl1JoypadIndex(joypadIndex);
@@ -749,25 +749,25 @@ void removeJoypad(SDL_JoystickID id)
         int index = it - m_joypads.begin();
 
         if (index == m_pl1Joypad) {
-            logInfo("Player 1 joypad disconnected");
+            logDebug("Player 1 joypad disconnected");
             int pl1Joypad = findFreeJoypad();
             if (pl1Joypad == kNoJoypad) {
-                logInfo("Can't find another joypad for player 1, switching to keyboard");
+                logDebug("Can't find another joypad for player 1, switching to keyboard");
                 setPl1Controls(kKeyboard1);
             } else {
                 auto joyName = joypadName(pl1Joypad);
-                logInfo("Player 1 switching to joypad %d (%s)", pl1Joypad, joyName);
+                logDebug("Player 1 switching to joypad %d (%s)", pl1Joypad, joyName);
                 setPl1JoypadIndex(pl1Joypad);
             }
         } else if (index == m_pl2Joypad) {
-            logInfo("Player 2 joypad disconnected");
+            logDebug("Player 2 joypad disconnected");
             int pl2Joypad = findFreeJoypad();
             if (pl2Joypad == kNoJoypad) {
-                logInfo("Can't find another joypad for player 2, switching to keyboard");
+                logDebug("Can't find another joypad for player 2, switching to keyboard");
                 setPl2Controls(kKeyboard2);
             } else {
                 auto joyName = joypadName(pl2Joypad);
-                logInfo("Player 2 switching to joypad %d (%s)", pl2Joypad, joyName);
+                logDebug("Player 2 switching to joypad %d (%s)", pl2Joypad, joyName);
                 setPl2JoypadIndex(pl2Joypad);
             }
         }

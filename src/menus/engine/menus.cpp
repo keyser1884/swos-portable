@@ -71,84 +71,6 @@ void SWOS::WaitRetrace()
     menuDelay();
 }
 
-// Tries to discover menu title (or something characteristic) using some simple heuristics.
-static const char *discoverMenuTitle()
-{
-    static char buf[40];
-
-    auto entryText = [](const MenuEntry *entry) -> const char * {
-        if (entry->type == kEntryString)
-            return entry->string();
-        else if (entry->type == kEntryMultilineText) {
-            // Use safe accessor to handle potentially corrupted pointers from VM partial writes
-            auto text = safeGetMultilineText(entry->fg.multilineText);
-            return text ? text + 1 : nullptr;
-        }
-        else
-            return nullptr;
-    };
-
-    auto hasText = [entryText](const MenuEntry *entry) {
-        const char *str = entryText(entry);
-        return str && *str;
-    };
-
-    if (mainMenuActive())
-        return "MAIN MENU";
-
-    auto currentMenu = getCurrentMenu();
-
-    const MenuEntry *colorMatch = nullptr;
-    const MenuEntry *dimensionsMatch = nullptr;
-    const MenuEntry *firstText = nullptr;
-    const MenuEntry *firstSprite = nullptr;
-    const MenuEntry *firstNumeric = nullptr;
-
-    for (auto entry = currentMenu->entries(); entry < currentMenu->sentinelEntry(); entry++) {
-        if (!colorMatch && entry->bg.entryColor == (kGray | kGrayFrame) && hasText(entry)) // title color
-            colorMatch = entry;
-        else if (!dimensionsMatch && entry->width > 250 && entry->height > 12 && hasText(entry)) // very wide entry
-            dimensionsMatch = entry;
-        else if (!firstText && hasText(entry))
-            firstText = entry;
-        else if (!firstSprite && entry->type == kEntrySprite2)
-            firstSprite = entry;
-        else if (!firstNumeric && entry->type == kEntryNumber)
-            firstNumeric = entry;
-    }
-
-    if (currentMenu->onReturn.index() == static_cast<int>(SwosVM::Procs::PlayMatchMenuReinit)) {
-        sprintf(buf, "PLAY MATCH MENU (%s)", entryText(firstText));
-        return buf;
-    }
-
-    if (colorMatch) {
-        const char *str = colorMatch->string();
-        if (str && str != kSentinel)
-            return str;
-    }
-    if (dimensionsMatch) {
-        const char *str = dimensionsMatch->string();
-        if (str && str != kSentinel)
-            return str;
-    }
-    if (firstText) {
-        const char *str = entryText(firstText);
-        if (str)
-            return str;
-    } else if (firstSprite || firstNumeric) {
-        memcpy(buf, firstSprite ? "SPRITE " : "NUMBER ", 7);
-        auto entry = firstSprite ? firstSprite : firstNumeric;
-        SDL_itoa(entry->fg.number, buf + 7, 10);
-        return buf;
-    }
-
-    sprintf(buf, "%d-[%d,%d,%d]-%d", currentMenu->numEntries, currentMenu->onInit.index(), currentMenu->onReturn.index(),
-        currentMenu->onDraw.index(), currentMenu->selectedEntry ? currentMenu->selectedEntry->ordinal : -1);
-
-    return buf;
-}
-
 // These are macros instead of functions because we need to save the variables for each level of nesting;
 // being functions they can't create local variables on callers stack, and then we'd need explicit stacks.
 #define saveCurrentMenu() \
@@ -166,14 +88,11 @@ void showMenu(const BaseMenu& menu)
     menuMouseOnAboutToShowNewMenu();
 
     saveCurrentMenu();
-    logInfo("About to activate menu %#x", &menu);
 
     auto memoryMark = SwosVM::markAllMemory();
 
     swos.g_exitMenu = 0;
     activateMenu(&menu);
-
-    logInfo("Showing menu: \"%s\", previous menu is %#x", discoverMenuTitle(), savedMenu);
 
     while (!swos.g_exitMenu) {
         menuProcCycle();
@@ -191,14 +110,11 @@ void showMenu(const BaseMenu& menu)
     restorePreviousMenu();
 
     menuMouseOnOldMenuRestored();
-
-    logInfo("Menu %#x finished, restoring menu %#x", &menu, savedMenu);
 }
 
 void saveCurrentMenuAndStartGameLoop()
 {
-    logInfo("Starting the game...");
-    logInfo("Top team: %s, bottom team: %s", swos.topTeamInGame.teamName, swos.bottomTeamInGame.teamName);
+    logInfo("Starting game: %s vs %s", swos.topTeamInGame.teamName, swos.bottomTeamInGame.teamName);
 
     saveCurrentMenu();
     startMainGameLoop();

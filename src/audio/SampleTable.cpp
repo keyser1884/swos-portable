@@ -47,7 +47,7 @@ Mix_Chunk *SampleTable::getRandomSample(const Mix_Chunk *lastPlayedSample, size_
         fixIndexToSkipLastPlayedComment(sampleIndex, lastPlayedSample, lastPlayedHash);
 
         if (auto chunk = m_samples[sampleIndex].chunk()) {
-            logInfo("Sample %d/%d (%s) selected for playback", sampleIndex + 1, m_samples.size(), m_dir);
+            logDebug("Sample %d/%d (%s) selected for playback", sampleIndex + 1, m_samples.size(), m_dir);
             m_lastPlayedIndex = sampleIndex;
             return chunk;
         }
@@ -118,10 +118,10 @@ void SampleTable::addSample(const SoundSample& sample, const char *path)
             m_samples.push_back(sample);
             m_totalSampleChance += sample.chanceModifier();
 #ifndef DEBUG
-            logInfo("`%s' loaded OK, chance: %d", path, sample.chanceModifier());
+            logDebug("`%s' loaded OK, chance: %d", path, sample.chanceModifier());
 #endif
         } else {
-            logInfo("Duplicate detected, rejecting: `%s'", path);
+            logDebug("Duplicate detected, rejecting: `%s'", path);
         }
     } else {
         logWarn("Failed to load sample `%s'", path);

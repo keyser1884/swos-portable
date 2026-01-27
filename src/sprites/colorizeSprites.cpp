@@ -106,62 +106,27 @@ void finishSpriteColorizer()
 
 void colorizeGameSprites(int res, const TeamGame *topTeam, const TeamGame *bottomTeam)
 {
-    logInfo("=== colorizeGameSprites START ===");
-    logInfo("res=%d, topTeam=%p, bottomTeam=%p", res, (void*)topTeam, (void*)bottomTeam);
-    flushLog();
-
     m_res = res;
 
-    logInfo("Getting team textures for top team...");
-    flushLog();
     auto topTeamTextures = getTeamTextures(topTeam);
-    logInfo("Top team textures: %p", (void*)topTeamTextures);
-
-    logInfo("Getting team textures for bottom team...");
-    flushLog();
     auto bottomTeamTextures = getTeamTextures(bottomTeam);
-    logInfo("Bottom team textures: %p", (void*)bottomTeamTextures);
-    flushLog();
 
-    logInfo("Colorizing players...");
-    flushLog();
     colorizePlayers(topTeam, bottomTeam, topTeamTextures->playerTextures, bottomTeamTextures->playerTextures);
-    logInfo("Players colorized");
-
-    logInfo("Filling player sprites...");
-    flushLog();
     fillPlayerSprites(topTeamTextures->playerTextures.data(), bottomTeamTextures->playerTextures.data(),
         topTeamTextures->playerTextures.size(), kPlayerBackground[m_res].data(), kPlayerBackground[m_res].size());
-    logInfo("Player sprites filled");
-    flushLog();
 
-    logInfo("Colorizing goalkeepers...");
-    flushLog();
     const auto& goalkeeperFaces = colorizeGoalkeepers(topTeam, bottomTeam,
         topTeamTextures->goalkeeperTextures, bottomTeamTextures->goalkeeperTextures);
-    logInfo("Goalkeepers colorized");
 
     const auto& goalkeeperPerFaceTextures = std::make_pair(topTeamTextures->goalkeeperTextures, bottomTeamTextures->goalkeeperTextures);
     auto goalkeeperTextures = getGoalkeeperTextures(goalkeeperFaces, goalkeeperPerFaceTextures);
 
-    logInfo("Filling goalkeeper sprites...");
-    flushLog();
     fillGoalkeeperSprites(goalkeeperTextures.first.data(), goalkeeperTextures.second.data(),
         goalkeeperTextures.first.size(), kGoalkeeperBackground[m_res].data(), kGoalkeeperBackground[m_res].size());
-    logInfo("Goalkeeper sprites filled");
-    flushLog();
 
-    logInfo("Colorizing bench players...");
     colorizeBenchPlayers(topTeam, bottomTeam, &topTeamTextures->benchTexture, &bottomTeamTextures->benchTexture);
-    logInfo("Bench players colorized");
-
-    logInfo("Filling bench sprites...");
     fillBenchSprites(&topTeamTextures->benchTexture, &bottomTeamTextures->benchTexture,
         kBenchBackground[m_res].data(), kBenchBackground[m_res].size());
-    logInfo("Bench sprites filled");
-
-    logInfo("=== colorizeGameSprites COMPLETED ===");
-    flushLog();
 }
 
 int getGoalkeeperIndexFromFace(bool topTeam, int face)

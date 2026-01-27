@@ -267,7 +267,7 @@ void SetPlayerDowntimeAfterTackle() {
     int16_t playerX = (int16_t)readMemory(A1 + kSpriteX + 2, 2);
     int16_t playerY = (int16_t)readMemory(A1 + kSpriteY + 2, 2);
 
-    logInfo("[TACKLE_DOWN] Player %d at (%d,%d): tacklingTimer=%d (%s) tackleSkill=%d tableOffset=%u tableIdx=%d tableAddr=%d downtime=%d",
+    logDebug("[TACKLE_DOWN] Player %d at (%d,%d): tacklingTimer=%d (%s) tackleSkill=%d tableOffset=%u tableIdx=%d tableAddr=%d downtime=%d",
             playerOrdinal, playerX, playerY, tacklingTimer, controlType, tackling, tableOffset, tableIndex, tableAddress, downtime);
 
     writeMemory(A1 + 13, 1, downtime & 0xFF);
@@ -768,7 +768,7 @@ void GoalkeeperJumping() {
     int16_t newDestY = destOffsetY + keeperY;
     writeMemory(A1 + kSpriteDestY, 2, newDestY);
 
-    logInfo("[GK_JUMP] DIVING %s! ballDist=%d gkSpeed=%d ballZ=%d dir=%d destDir=%d gkPos=(%d,%d) dest=(%d,%d)",
+    logDebug("[GK_JUMP] DIVING %s! ballDist=%d gkSpeed=%d ballZ=%d dir=%d destDir=%d gkPos=(%d,%d) dest=(%d,%d)",
             diveType, ballDistance, gkSpeed, ballNotHighZ, direction, destDirection,
             keeperX, keeperY, newDestX, newDestY);
 }
@@ -1694,7 +1694,7 @@ void ApplyBallAfterTouch() {
             writeMemory(A1 + kSpriteDestY, 2, destY + spinYFinal);
 
             int16_t ballSpeed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
-            logInfo("[SPIN_KICK] spinDir=%s timer=%d mult=%d plDir=%d tableIdx=%d spinFactor=(%d,%d) spinApplied=(%d,%d) dest:(%d,%d)->(%d,%d) ballSpeed=%d",
+            logDebug("[SPIN_KICK] spinDir=%s timer=%d mult=%d plDir=%d tableIdx=%d spinFactor=(%d,%d) spinApplied=(%d,%d) dest:(%d,%d)->(%d,%d) ballSpeed=%d",
                     spinDirection == 0 ? "LEFT" : "RIGHT", spinTimer, multiplier, controlledPlDir, tableIndex,
                     spinX, spinY, spinXFinal, spinYFinal,
                     destX, destY, destX + spinXFinal, destY + spinYFinal, ballSpeed);
@@ -1745,7 +1745,7 @@ void ApplyBallAfterTouch() {
                         int16_t addition = speed >> 3;
                         speed = speed - reduction + addition;
                         writeMemory(A1 + kSpriteSpeed, 2, speed);
-                        logInfo("[KICK_HIGH] High kick (diagonal): plDir=%d origSpeed=%d -> baseSpeed=%d -> finalSpeed=%d deltaZ=0x%08X",
+                        logDebug("[KICK_HIGH] High kick (diagonal): plDir=%d origSpeed=%d -> baseSpeed=%d -> finalSpeed=%d deltaZ=0x%08X",
                                 controlledPlDir, origSpeed, kHighKickBallSpeed, speed, kHighKickDeltaZ);
                     }
                 } else {
@@ -1753,7 +1753,7 @@ void ApplyBallAfterTouch() {
                     int16_t speed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
                     speed = speed - (speed >> 2);
                     writeMemory(A1 + kSpriteSpeed, 2, speed);
-                    logInfo("[KICK_HIGH] High kick (cardinal): plDir=%d origSpeed=%d -> baseSpeed=%d -> finalSpeed=%d deltaZ=0x%08X",
+                    logDebug("[KICK_HIGH] High kick (cardinal): plDir=%d origSpeed=%d -> baseSpeed=%d -> finalSpeed=%d deltaZ=0x%08X",
                             controlledPlDir, origSpeed, kHighKickBallSpeed, speed, kHighKickDeltaZ);
                 }
             } else if (doNormalKick) {
@@ -1771,14 +1771,14 @@ void ApplyBallAfterTouch() {
                         int16_t addition = speed >> 3;
                         speed = speed - reduction + addition;
                         writeMemory(A1 + kSpriteSpeed, 2, speed);
-                        logInfo("[KICK_NORMAL] Normal kick (diagonal): plDir=%d origSpeed=%d -> baseSpeed=%d -> finalSpeed=%d deltaZ=0x%08X",
+                        logDebug("[KICK_NORMAL] Normal kick (diagonal): plDir=%d origSpeed=%d -> baseSpeed=%d -> finalSpeed=%d deltaZ=0x%08X",
                                 controlledPlDir, origSpeed, kNormalKickBallSpeed, speed, kNormalKickDeltaZ);
                     }
                 } else {
                     int16_t speed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
                     speed = speed - (speed >> 2);
                     writeMemory(A1 + kSpriteSpeed, 2, speed);
-                    logInfo("[KICK_NORMAL] Normal kick (cardinal): plDir=%d origSpeed=%d -> baseSpeed=%d -> finalSpeed=%d deltaZ=0x%08X",
+                    logDebug("[KICK_NORMAL] Normal kick (cardinal): plDir=%d origSpeed=%d -> baseSpeed=%d -> finalSpeed=%d deltaZ=0x%08X",
                             controlledPlDir, origSpeed, kNormalKickBallSpeed, speed, kNormalKickDeltaZ);
                 }
             }
@@ -1880,7 +1880,7 @@ void ApplyBallAfterTouch() {
         writeMemory(A1 + kSpriteDestY, 2, destY + spinYFinal);
 
         int16_t ballSpeed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
-        logInfo("[SPIN_PASS] spinDir=%s timer=%d mult=%d ballDir=%d tableIdx=%d spinFactor=(%d,%d) spinApplied=(%d,%d) dest:(%d,%d)->(%d,%d) ballSpeed=%d",
+        logDebug("[SPIN_PASS] spinDir=%s timer=%d mult=%d ballDir=%d tableIdx=%d spinFactor=(%d,%d) spinApplied=(%d,%d) dest:(%d,%d)->(%d,%d) ballSpeed=%d",
                 spinDirection == 0 ? "LEFT" : "RIGHT", spinTimer, multiplier, ballDirection, tableIndex,
                 spinX, spinY, spinXFinal, spinYFinal,
                 destX, destY, destX + spinXFinal, destY + spinYFinal, ballSpeed);
@@ -1897,7 +1897,7 @@ void ApplyBallAfterTouch() {
             int16_t oldSpeed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
             int16_t speed = oldSpeed + (oldSpeed >> 3);
             writeMemory(A1 + kSpriteSpeed, 2, speed);
-            logInfo("[PASS_LONG] Long pass (no direction): speed %d -> %d (+12.5%%)", oldSpeed, speed);
+            logDebug("[PASS_LONG] Long pass (no direction): speed %d -> %d (+12.5%%)", oldSpeed, speed);
         } else {
             int16_t controlledPlDir = (int16_t)readMemory(A6 + kTeamControlledPlDirection, 2);
             int16_t diff = controlledPlDir - currentAllowedDir;
@@ -1910,7 +1910,7 @@ void ApplyBallAfterTouch() {
                     int16_t oldSpeed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
                     int16_t speed = oldSpeed + (oldSpeed >> 3);
                     writeMemory(A1 + kSpriteSpeed, 2, speed);
-                    logInfo("[PASS_LONG] Long pass: plDir=%d allowedDir=%d diff=%d speed %d -> %d (+12.5%%)",
+                    logDebug("[PASS_LONG] Long pass: plDir=%d allowedDir=%d diff=%d speed %d -> %d (+12.5%%)",
                             controlledPlDir, currentAllowedDir, diff, oldSpeed, speed);
                 } else if (diff >= 3 && diff <= 5) {
                     // Long spin pass - increase speed by 12.5%
@@ -1918,7 +1918,7 @@ void ApplyBallAfterTouch() {
                     int16_t oldSpeed = (int16_t)readMemory(A1 + kSpriteSpeed, 2);
                     int16_t speed = oldSpeed + (oldSpeed >> 3);
                     writeMemory(A1 + kSpriteSpeed, 2, speed);
-                    logInfo("[PASS_LONGSPIN] Long spin pass: plDir=%d allowedDir=%d diff=%d speed %d -> %d (+12.5%%)",
+                    logDebug("[PASS_LONGSPIN] Long spin pass: plDir=%d allowedDir=%d diff=%d speed %d -> %d (+12.5%%)",
                             controlledPlDir, currentAllowedDir, diff, oldSpeed, speed);
                 }
             }
@@ -2063,7 +2063,7 @@ static void DoFlyingHeader() {
     int16_t reduction = speed >> 2;
     writeMemory(A2 + kSpriteSpeed, 2, speed - reduction);
 
-    logInfo("[HEADER_FLYING] DoFlyingHeader: oldDeltaZ=0x%08X -> newDeltaZ=0x%08X (kHeaderLowJumpHeight), oldSpeed=%d -> newSpeed=%d",
+    logDebug("[HEADER_FLYING] DoFlyingHeader: oldDeltaZ=0x%08X -> newDeltaZ=0x%08X (kHeaderLowJumpHeight), oldSpeed=%d -> newSpeed=%d",
             oldDeltaZ, kHeaderLowJumpHeight, oldSpeed, speed - reduction);
 
     SetPlayerJumpHeaderHitAnimationTable();
@@ -2082,7 +2082,7 @@ static void DoLobHeader() {
     int16_t reduction = speed >> 4;
     writeMemory(A2 + kSpriteSpeed, 2, speed - reduction);
 
-    logInfo("[HEADER_LOB] DoLobHeader: oldDeltaZ=0x%08X -> newDeltaZ=0x%08X (kHeaderHighJumpHeight), oldSpeed=%d -> newSpeed=%d",
+    logDebug("[HEADER_LOB] DoLobHeader: oldDeltaZ=0x%08X -> newDeltaZ=0x%08X (kHeaderHighJumpHeight), oldSpeed=%d -> newSpeed=%d",
             oldDeltaZ, kHeaderHighJumpHeight, oldSpeed, speed - reduction);
 
     SetPlayerJumpHeaderHitAnimationTable();
@@ -2226,11 +2226,11 @@ void PlayerHittingJumpHeader() {
     int16_t playerY = (int16_t)readMemory(A1 + kSpriteY + 2, 2);
     int16_t playerOrdinal = (int16_t)readMemory(A1 + 2, 2);
 
-    logInfo("[HEADER_JUMP] Player %d at (%d,%d): type=%s playerDir=%d allowedDir=%d diff=%d finalDir=%d",
+    logDebug("[HEADER_JUMP] Player %d at (%d,%d): type=%s playerDir=%d allowedDir=%d diff=%d finalDir=%d",
             playerOrdinal, playerX, playerY, headerType, playerDir, origAllowedDir, origDiff, finalDirection);
-    logInfo("[HEADER_JUMP]   ballPos=(%d,%d,z=%d) destOffset=(%d,%d) ballDest=(%d,%d)",
+    logDebug("[HEADER_JUMP]   ballPos=(%d,%d,z=%d) destOffset=(%d,%d) ballDest=(%d,%d)",
             ballX, ballY, ballZ, destOffsetX, destOffsetY, ballX + destOffsetX, ballY + destOffsetY);
-    logInfo("[HEADER_JUMP]   deltaZ: 0x%08X -> 0x%08X, speed: %d -> %d (skill=%d bonus=%d)",
+    logDebug("[HEADER_JUMP]   deltaZ: 0x%08X -> 0x%08X, speed: %d -> %d (skill=%d bonus=%d)",
             origBallDeltaZ, finalBallDeltaZ, origBallSpeed, finalBallSpeed, headingSkill, speedBonus);
 
     // Play kick sample and reset spin timers
@@ -2542,7 +2542,7 @@ void ShouldGoalkeeperDive() {
     int16_t goalkeeperX = (int16_t)readMemory(A1 + kSpriteX + 2, 2);
     int16_t ballSpeed = (int16_t)readMemory(A2 + kSpriteSpeed, 2);
 
-    logInfo("[GK_DIVE] Called: ballPos=(%d,%d) gkPos=(%d,%d) yDiff=%d ballSpeed=%d team=%s",
+    logDebug("[GK_DIVE] Called: ballPos=(%d,%d) gkPos=(%d,%d) yDiff=%d ballSpeed=%d team=%s",
             ballX, ballY, goalkeeperX, goalkeeperY, yDiff, ballSpeed,
             A6 == kTopTeamDataOffset ? "top" : "bottom");
 
@@ -2555,12 +2555,12 @@ void ShouldGoalkeeperDive() {
     if (yDiff < 0) {
         if (yDiff < -10) {
             // Ball too far behind - won't dive
-            logInfo("[GK_DIVE] REJECT: Ball too far behind (yDiff=%d < -10)", yDiff);
+            logDebug("[GK_DIVE] REJECT: Ball too far behind (yDiff=%d < -10)", yDiff);
             D0 = 0;
             return;
         }
         // Ball slightly behind - try saving anyway
-        logInfo("[GK_DIVE] ACCEPT: Ball slightly behind, attempting save (yDiff=%d)", yDiff);
+        logDebug("[GK_DIVE] ACCEPT: Ball slightly behind, attempting save (yDiff=%d)", yDiff);
         D0 = 1;
         return;
     }
@@ -2589,13 +2589,13 @@ void ShouldGoalkeeperDive() {
 
         if (yDiff > threshold) {
             // Ball too far - won't dive
-            logInfo("[GK_DIVE] REJECT penalty: yDiff=%d > threshold=%d", yDiff, threshold);
+            logDebug("[GK_DIVE] REJECT penalty: yDiff=%d > threshold=%d", yDiff, threshold);
             D0 = 0;
             return;
         }
 
         // At penalty goalkeeper always dives
-        logInfo("[GK_DIVE] ACCEPT penalty: yDiff=%d <= threshold=%d", yDiff, threshold);
+        logDebug("[GK_DIVE] ACCEPT penalty: yDiff=%d <= threshold=%d", yDiff, threshold);
         D0 = 1;
         return;
     }
@@ -2603,7 +2603,7 @@ void ShouldGoalkeeperDive() {
     // Normal shot
     if (yDiff > kKeeperSaveDistance) {
         // Ball too far - won't dive
-        logInfo("[GK_DIVE] REJECT: Ball too far (yDiff=%d > kKeeperSaveDistance=%d)", yDiff, kKeeperSaveDistance);
+        logDebug("[GK_DIVE] REJECT: Ball too far (yDiff=%d > kKeeperSaveDistance=%d)", yDiff, kKeeperSaveDistance);
         D0 = 0;
         return;
     }
@@ -2621,7 +2621,7 @@ void ShouldGoalkeeperDive() {
     int16_t framesY = GetFramesNeededToCoverDistance(ballDeltaY, absYDiff);
     if (framesY == 0) {
         // Ball not moving in Y - won't dive
-        logInfo("[GK_DIVE] REJECT: Ball not moving in Y (ballDeltaY=0x%08X, absYDiff=%d, framesY=0)", ballDeltaY, absYDiff);
+        logDebug("[GK_DIVE] REJECT: Ball not moving in Y (ballDeltaY=0x%08X, absYDiff=%d, framesY=0)", ballDeltaY, absYDiff);
         D0 = 0;
         return;
     }
@@ -2640,19 +2640,19 @@ void ShouldGoalkeeperDive() {
     int16_t framesX = GetFramesNeededToCoverDistance(goalkeeperDeltaX, absXDiff);
     if (framesX == 0) {
         // Already at ball X - won't dive
-        logInfo("[GK_DIVE] REJECT: Already at ball X (gkDeltaX=0x%08X, absXDiff=%d, framesX=0)", goalkeeperDeltaX, absXDiff);
+        logDebug("[GK_DIVE] REJECT: Already at ball X (gkDeltaX=0x%08X, absXDiff=%d, framesX=0)", goalkeeperDeltaX, absXDiff);
         D0 = 0;
         return;
     }
 
     // If goalkeeper can reach ball X before ball reaches goalkeeper Y, no need to dive
     if (framesX <= framesY) {
-        logInfo("[GK_DIVE] REJECT: GK can reach ball without diving (framesX=%d <= framesY=%d)", framesX, framesY);
+        logDebug("[GK_DIVE] REJECT: GK can reach ball without diving (framesX=%d <= framesY=%d)", framesX, framesY);
         D0 = 0;
         return;
     }
 
-    logInfo("[GK_DIVE] Checking dive timing: framesX=%d > framesY=%d, absXDiff=%d, ballDefX=%d, gkX=%d",
+    logDebug("[GK_DIVE] Checking dive timing: framesX=%d > framesY=%d, absXDiff=%d, ballDefX=%d, gkX=%d",
             framesX, framesY, absXDiff, ballDefX, goalkeeperX);
 
     // At this point goalkeeper can't reach ball by X but it's in range by Y
@@ -2682,25 +2682,25 @@ void ShouldGoalkeeperDive() {
 
     // Calculate frames to dive to ball position
     int16_t framesDive = GetFramesNeededToCoverDistance(diveDelta, absXDiff);
-    logInfo("[GK_DIVE] Dive calc: skillIndex=%d, diveDelta=0x%08X, absXDiff=%d, framesDive=%d, framesY=%d",
+    logDebug("[GK_DIVE] Dive calc: skillIndex=%d, diveDelta=0x%08X, absXDiff=%d, framesDive=%d, framesY=%d",
             skillIndex, diveDelta, absXDiff, framesDive, framesY);
 
     if (framesDive == 0) {
         // Can't dive - won't dive
-        logInfo("[GK_DIVE] REJECT: framesDive=0 (diveDelta=0x%08X, absXDiff=%d)", diveDelta, absXDiff);
+        logDebug("[GK_DIVE] REJECT: framesDive=0 (diveDelta=0x%08X, absXDiff=%d)", diveDelta, absXDiff);
         D0 = 0;
         return;
     }
 
     // If dive frames >= frames until ball reaches goalkeeper Y, we can save
     if (framesDive >= framesY) {
-        logInfo("[GK_DIVE] ACCEPT: framesDive=%d >= framesY=%d - WILL DIVE!", framesDive, framesY);
+        logDebug("[GK_DIVE] ACCEPT: framesDive=%d >= framesY=%d - WILL DIVE!", framesDive, framesY);
         D0 = 1;
         return;
     }
 
     // Can't reach in time - won't dive
-    logInfo("[GK_DIVE] REJECT: Can't reach in time (framesDive=%d < framesY=%d)", framesDive, framesY);
+    logDebug("[GK_DIVE] REJECT: Can't reach in time (framesDive=%d < framesY=%d)", framesDive, framesY);
     D0 = 0;
 }
 
@@ -3220,7 +3220,7 @@ determine_ball_speed:
         int16_t speedBonus = (int16_t)readMemory(kBallSpeedPassingIncrease + skillIdx, 2);
         int16_t finalSpeed = baseSpeed + speedBonus;
 
-        logInfo("[PASS_SPEED] dist=%u baseSpeed=%d passSkill=%d speedBonus=%d finalSpeed=%d",
+        logDebug("[PASS_SPEED] dist=%u baseSpeed=%d passSkill=%d speedBonus=%d finalSpeed=%d",
                 ballDistance, baseSpeed, passSkill, speedBonus, finalSpeed);
 
         writeMemory(A1 + kSpriteSpeed, 2, finalSpeed);

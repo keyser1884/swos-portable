@@ -146,7 +146,7 @@ static DisplayModeList getDisplayModes(int displayIndex)
     if (numModes < 1)
         logWarn("No display modes, SDL reported: %s", SDL_GetError());
     else
-        logInfo("Enumerating display modes, %d found", numModes);
+        logDebug("Enumerating display modes, %d found", numModes);
 
     auto startTicks = SDL_GetTicks();
     bool shownWarning = false;
@@ -156,7 +156,7 @@ static DisplayModeList getDisplayModes(int displayIndex)
     for (int i = 0; i < numModes; i++) {
         SDL_DisplayMode mode;
         if (!SDL_GetDisplayMode(displayIndex, i, &mode)) {
-            logInfo("  %2d %d x %d, format: %x, refresh rate: %d", i, mode.w, mode.h, mode.format, mode.refresh_rate);
+            logDebug("  %2d %d x %d, format: %x, refresh rate: %d", i, mode.w, mode.h, mode.format, mode.refresh_rate);
 
             if (!shownWarning && SDL_GetTicks() > startTicks + kPleaseWaitLimitMs) {
                 if (!m_pleaseWaitText)
@@ -184,9 +184,9 @@ static DisplayModeList getDisplayModes(int displayIndex)
         }
     }
 
-    logInfo("Accepted display modes:");
+    logDebug("Accepted display modes:");
     for (size_t i = 0; i < result.size(); i++)
-        logInfo("  %2d %d x %d", i, result[i].first, result[i].second);
+        logDebug("  %2d %d x %d", i, result[i].first, result[i].second);
 
     std::sort(result.rbegin(), result.rend());
     return result;
@@ -313,7 +313,7 @@ static void changeResolutionSelected()
             *space = '\0';
         }
 
-        logInfo("Successfully switched to %s", buffer);
+        logDebug("Successfully switched to %s", buffer);
     } else {
         logWarn("Failed to switch to %s", entry->string());
         snprintf(buffer, kBufferSize, "FAILED TO SWITCH TO %s", entry->string());

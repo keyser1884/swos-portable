@@ -95,30 +95,15 @@ static void loadCustomCommentary();
 
 void loadCommentary()
 {
-    logInfo("loadCommentary START - soundEnabled=%d, commentaryEnabled=%d, trainingGame=%d",
-            soundEnabled(), commentaryEnabled(), swos.g_trainingGame);
-    flushLog();
-
-    if (!soundEnabled() || !commentaryEnabled() || swos.g_trainingGame) {
-        logInfo("loadCommentary - skipping (disabled or training)");
+    if (!soundEnabled() || !commentaryEnabled() || swos.g_trainingGame)
         return;
-    }
-
-    logInfo("Loading commentary...");
-    flushLog();
 
     if (sampleTablesEmpty() || !m_commentaryLoaded) {
-        logInfo("Sample tables empty or not loaded, calling loadCustomCommentary...");
-        flushLog();
         loadCustomCommentary();
         m_commentaryLoaded = true;
-        logInfo("loadCustomCommentary returned, m_commentaryLoaded set to true");
-        flushLog();
     }
 
     m_muteCommentary = !commentaryEnabled();
-    logInfo("loadCommentary COMPLETED");
-    flushLog();
 }
 
 void playEndGameCrowdSampleAndComment()
@@ -231,37 +216,22 @@ void toggleMuteCommentary()
 
 static void loadCustomCommentary()
 {
-    logInfo("loadCustomCommentary START");
-    flushLog();
-
     assert(m_sampleTables.size() == kNumSampleTables);
     assert(!strcmp(m_sampleTables[kEndGameSoClose].dir(), "end_game_so_close"));
     assert(!strcmp(m_sampleTables[kYellowCard].dir(), "yellow_card"));
 
     if (usingCustomAudioDir()) {
         const std::string audioPath = joinPaths("audio", "commentary");
-        logInfo("Loading samples from: %s", audioPath.c_str());
 
         for (int i = 0; i < kNumSampleTables; i++) {
             auto& table = m_sampleTables[i];
             table.loadSamples(audioPath);
         }
-        logInfo("Sample tables loaded");
-        flushLog();
 
-        logInfo("Calling loadZipComments...");
-        flushLog();
         loadZipComments();
-        logInfo("loadZipComments returned");
-        flushLog();
     } else {
-        logInfo("Custom audio directory missing, loading legacy commentary from CD layout");
-        flushLog();
         loadLegacyCommentaryFromCdLayout();
     }
-
-    logInfo("loadCustomCommentary COMPLETED");
-    flushLog();
 }
 
 static void loadZipComments()
@@ -299,17 +269,8 @@ static void loadZipComments()
     const auto& relativePath = joinPaths("audio", "commentary.zip");
     const auto& zipPath = pathInRootDir(relativePath.c_str());
 
-    logInfo("Loading zipped commentaries from: %s", zipPath.c_str());
-    flushLog();
-    bool zipResult = traverseZipFile(zipPath.c_str(), filterCustomComments, processCommentData);
-    logInfo("traverseZipFile returned: %d", zipResult);
-    flushLog();
-    if (zipResult)
-        logInfo("Zipped commentaries loaded successfully");
-    else
+    if (!traverseZipFile(zipPath.c_str(), filterCustomComments, processCommentData))
         logWarn("Couldn't open commentary zip file");
-    logInfo("loadZipComments completed");
-    flushLog();
 }
 
 static bool sampleTablesEmpty()

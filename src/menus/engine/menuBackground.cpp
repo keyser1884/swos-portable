@@ -66,7 +66,7 @@ void setMenuBackgroundImage(const char *name)
 void unloadMenuBackground()
 {
     if (m_background) {
-        logInfo("Destroying menu background");
+        logDebug("Destroying menu background");
         SDL_DestroyTexture(m_background);
     }
     m_background = nullptr;
@@ -84,7 +84,7 @@ static void loadMenuBackground(const std::string& name)
             m_background = IMG_LoadTexture_RW(getRenderer(), f, true);
             if (m_background) {
                 m_backgroundName = name;
-                logInfo("Menu background set to \"%s\"", name.c_str());
+                logDebug("Menu background set to \"%s\"", name.c_str());
             } else {
                 logWarn("Failed to load background image \"%s\", error: %s", name.c_str(), IMG_GetError());
             }

@@ -69,17 +69,11 @@ static bool shouldZoomSprite(int imageIndex);
 
 void initGameSprites(const TeamGame *topTeam, const TeamGame *bottomTeam)
 {
-    logInfo("=== initGameSprites START ===");
-    logInfo("topTeam=%p, bottomTeam=%p", (void*)topTeam, (void*)bottomTeam);
-    flushLog();
-
     m_topTeam = topTeam;
     m_bottomTeam = bottomTeam;
 
-    logInfo("Initializing %zu sprites...", std::size(kAllSprites));
     for (auto sprite : kAllSprites)
         sprite->init();
-    logInfo("Base sprites initialized");
     for (auto sprite : kCornerFlagSprites) {
         sprite->init();
         sprite->teamNumber = 3;
@@ -102,33 +96,23 @@ void initGameSprites(const TeamGame *topTeam, const TeamGame *bottomTeam)
 
     bookedPlayerNumberSprite()->setImage(kPlayerMarkSprite);
 
-    logInfo("Calling initializePlayerSpriteFrameIndices...");
-    flushLog();
     initializePlayerSpriteFrameIndices();
-    logInfo("initializePlayerSpriteFrameIndices completed");
-    logInfo("=== initGameSprites COMPLETED ===");
-    flushLog();
 }
 
 // Prepares display sprites for rendering. Sorts them by y-axis.
 void initDisplaySprites()
 {
-    logInfo("=== initDisplaySprites START ===");
     m_numSpritesToRender = 0;
 
     for (auto sprite : kAllSprites)
         if (sprite->visible)
             m_sortedSprites[m_numSpritesToRender++] = sprite;
 
-    logInfo("Visible sprites to render: %d", m_numSpritesToRender);
     sortDisplaySprites();
-    logInfo("=== initDisplaySprites COMPLETED ===");
-    flushLog();
 }
 
 void initializePlayerSpriteFrameIndices()
 {
-    logInfo("=== initializePlayerSpriteFrameIndices START ===");
     const auto kTeamData = {
         std::make_tuple(swos.team1SpritesTable, m_topTeam, true),
         std::make_tuple(swos.team2SpritesTable, m_bottomTeam, false)
@@ -140,21 +124,16 @@ void initializePlayerSpriteFrameIndices()
         auto spriteTable = std::get<0>(teamData);
         bool topTeam = std::get<2>(teamData);
 
-        logInfo("Processing team %d: team=%p, spriteTable=%p, isTop=%d", teamIndex, (void*)team, (void*)spriteTable, topTeam);
-
         if (!team) {
-            logError("ERROR: team pointer is NULL for team %d!", teamIndex);
-            flushLog();
+            logError("Team pointer is NULL for team %d", teamIndex);
             teamIndex++;
             continue;
         }
 
         if (!spriteTable[0]) {
-            logError("ERROR: spriteTable[0] is NULL for team %d!", teamIndex);
-            flushLog();
+            logError("spriteTable[0] is NULL for team %d", teamIndex);
         } else {
             spriteTable[0]->frameOffset = getGoalkeeperSpriteOffset(topTeam, team[0].players[0].face);
-            logInfo("Team %d goalkeeper sprite offset set", teamIndex);
         }
 
         for (size_t i = 1; i < std::size(swos.team1SpritesTable); i++) {
@@ -162,18 +141,15 @@ void initializePlayerSpriteFrameIndices()
             auto& sprite = spriteTable[i];
 
             if (!sprite) {
-                logError("ERROR: spriteTable[%zu] is NULL for team %d!", i, teamIndex);
+                logError("spriteTable[%zu] is NULL for team %d", i, teamIndex);
                 continue;
             }
 
             assert(player.face <= 3);
             sprite->frameOffset = getPlayerSpriteOffsetFromFace(player.face);
         }
-        logInfo("Team %d all player sprites processed", teamIndex);
         teamIndex++;
     }
-    logInfo("=== initializePlayerSpriteFrameIndices COMPLETED ===");
-    flushLog();
 }
 
 #ifdef DEBUG

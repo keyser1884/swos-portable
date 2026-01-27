@@ -44,45 +44,21 @@ void finishSprites()
 
 static void initMatchSprites(bool withGameSprites)
 {
-    logInfo("=== initMatchSprites(internal) START ===");
-    logInfo("withGameSprites=%d, m_res=%d", withGameSprites, m_res);
-    logInfo("m_topTeam=%p, m_bottomTeam=%p", (void*)m_topTeam, (void*)m_bottomTeam);
-    flushLog();
-
-    logInfo("Calling colorizeGameSprites...");
-    flushLog();
     colorizeGameSprites(m_res, m_topTeam, m_bottomTeam);
-    logInfo("colorizeGameSprites completed");
-    flushLog();
 
     //CopyAdvertisementsData
-    if (withGameSprites) {
-        logInfo("Calling initGameSprites...");
-        flushLog();
+    if (withGameSprites)
         initGameSprites(m_topTeam, m_bottomTeam);
-        logInfo("initGameSprites completed");
-        flushLog();
-    }
 
-    logInfo("Calling updateLegacySprites...");
     updateLegacySprites();
-    logInfo("updateLegacySprites completed");
-    logInfo("=== initMatchSprites(internal) COMPLETED ===");
-    flushLog();
 }
 
 void initMatchSprites(const TeamGame *topTeam, const TeamGame *bottomTeam)
 {
-    logInfo("=== initMatchSprites(public) START ===");
-    logInfo("topTeam=%p, bottomTeam=%p", (void*)topTeam, (void*)bottomTeam);
-    flushLog();
-
     m_topTeam = topTeam;
     m_bottomTeam = bottomTeam;
 
     initMatchSprites(true);
-    logInfo("=== initMatchSprites(public) COMPLETED ===");
-    flushLog();
 }
 
 static void traverseMenuTextures(std::function<void(int, int)> f)

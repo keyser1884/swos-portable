@@ -6428,7 +6428,7 @@ goto l_player_down_tackling;        // jnz short @@player_down_tackling
 
 {
     int16_t playerOrdinal = (int16_t)readMemory(esi + 2, 2);
-    logInfo("[TACKLING_STATE] Player %d: PL_TACKLING downTimer=0 -> PL_NORMAL (getting up from tackle)", playerOrdinal);
+    logDebug("[TACKLING_STATE] Player %d: PL_TACKLING downTimer=0 -> PL_NORMAL (getting up from tackle)", playerOrdinal);
 }
 writeMemory(esi + 12, 1, 0);            // mov [esi+Sprite.playerState], PL_NORMAL
 A0 = 453234;                            // mov A0, offset playerNormalStandingAnimTable
@@ -6512,7 +6512,7 @@ goto l_player_still_tackling_and_moving; // jg short @@player_still_tackling_and
 
 {
     int16_t playerOrdinal = (int16_t)readMemory(esi + 2, 2);
-    logInfo("[TACKLING_STATE] Player %d: tackle slide ended (speed=0), calling SetPlayerDowntimeAfterTackle", playerOrdinal);
+    logDebug("[TACKLING_STATE] Player %d: tackle slide ended (speed=0), calling SetPlayerDowntimeAfterTackle", playerOrdinal);
 }
 writeMemory(esi + 44, 2, 0);            // mov [esi+Sprite.speed], 0
 if (g_portedToggles.useCpp_SetPlayerDowntimeAfterTackle) PlayerFunctions::SetPlayerDowntimeAfterTackle(); else SetPlayerDowntimeAfterTackle(); // call SetPlayerDowntimeAfterTackle
@@ -7498,7 +7498,7 @@ esi = A1;                               // mov esi, A1
         int16_t playerOrdinal = (int16_t)readMemory(esi + 2, 2);
         int16_t playerX = (int16_t)readMemory(esi + 32, 2);
         int16_t playerY = (int16_t)readMemory(esi + 36, 2);
-        logInfo("[TACKLED_STATE] Player %d at (%d,%d): PL_TACKLED state, downTimer=%d (%.1fs remaining)",
+        logDebug("[TACKLED_STATE] Player %d at (%d,%d): PL_TACKLED state, downTimer=%d (%.1fs remaining)",
                 playerOrdinal, playerX, playerY, src, src / 70.0f);
     }
     int8_t dstSigned = src;
@@ -7525,7 +7525,7 @@ goto l_get_up_normally;             // jz short @@get_up_normally
 
 {
     int16_t playerOrdinal = (int16_t)readMemory(esi + 2, 2);
-    logInfo("[TACKLED_STATE] Player %d: downTimer=0, injuryLevel=%d -> PL_ROLLING_INJURED", playerOrdinal, ax);
+    logDebug("[TACKLED_STATE] Player %d: downTimer=0, injuryLevel=%d -> PL_ROLLING_INJURED", playerOrdinal, ax);
 }
 writeMemory(esi + 44, 2, 0);            // mov [esi+Sprite.speed], 0
 writeMemory(esi + 12, 1, 13);           // mov [esi+Sprite.playerState], PL_ROLLING_INJURED
@@ -7537,7 +7537,7 @@ goto l_update_player_speed_and_deltas;  // jmp @@update_player_speed_and_deltas
 l_get_up_normally:;
 {
     int16_t playerOrdinal = (int16_t)readMemory(esi + 2, 2);
-    logInfo("[TACKLED_STATE] Player %d: downTimer=0, no injury -> PL_NORMAL (getting up)", playerOrdinal);
+    logDebug("[TACKLED_STATE] Player %d: downTimer=0, no injury -> PL_NORMAL (getting up)", playerOrdinal);
 }
 esi = A1;                               // mov esi, A1
 writeMemory(esi + 12, 1, 0);            // mov [esi+Sprite.playerState], PL_NORMAL

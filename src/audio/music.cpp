@@ -42,7 +42,7 @@ void initMusic()
 
 void finishMusic()
 {
-    logInfo("Ending music");
+    logDebug("Ending music");
 
     Mix_FreeMusic(m_menuMusic);
     m_menuMusic = nullptr;
@@ -52,7 +52,7 @@ void finishMusic()
 void startFadingOutMusic()
 {
     if (!noMusic()) {
-        logInfo("Initiating music fade out");
+        logDebug("Initiating music fade out");
 
         synchronizeMixVolume();
         Mix_FadeOutMusic(kFadeOutMenuMusicLength);
@@ -65,7 +65,7 @@ void waitForMusicToFadeOut()
     if (noMusic() || m_state == State::kPlaybackError)
         return;
 
-    logInfo("Waiting for music to fade out...");
+    logDebug("Waiting for music to fade out...");
 
     if (Mix_FadingMusic() == MIX_FADING_OUT) {
         while (Mix_PlayingMusic())
@@ -201,7 +201,7 @@ static Mix_Music *playMixSong(const char *basename, bool loop, Mix_Music *musicC
         if (isOgg)
             Mix_VolumeMusic(0);
 
-        logInfo("Playing %s music \"%s\"", basename, filename.c_str());
+        logDebug("Playing %s music \"%s\"", basename, filename.c_str());
         Mix_PlayMusic(musicChunk, loop ? -1 : 0);
 
         if (!isOgg)
@@ -225,7 +225,7 @@ static void playMenuSong()
     m_menuMusic = playMixSong("menu", true, m_menuMusic);
 
     if (!m_menuMusic) {
-        logInfo("Couldn't find a suitable menu music file");
+        logDebug("Couldn't find a suitable menu music file");
         m_state = State::kPlaybackError;
     }
 }
@@ -244,7 +244,7 @@ static bool playTitleSong()
     if (m_titleMusic) {
         return true;
     } else {
-        logInfo("Couldn't find a suitable title music file");
+        logDebug("Couldn't find a suitable title music file");
         return false;
     }
 }

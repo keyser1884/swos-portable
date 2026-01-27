@@ -75,13 +75,13 @@ bool VirtualJoypad::init()
 
 void VirtualJoypad::setForceRender(bool force)
 {
-    logInfo("Virtual joypad rendering is %s", force ? "on" : "off");
+    logDebug("Virtual joypad rendering is %s", force ? "on" : "off");
     m_forceShow = force;
 }
 
 void VirtualJoypad::setPlayerNumber(int playerNumber)
 {
-    logInfo("Setting virtual joypad player number to %d", playerNumber);
+    logDebug("Setting virtual joypad player number to %d", playerNumber);
     m_playerNumber = playerNumber;
 }
 
@@ -265,7 +265,7 @@ void VirtualJoypad::updateLastSelected(uint64_t time)
 
 void VirtualJoypad::createTexture()
 {
-    logInfo("Creating virtual joypad texture");
+    logDebug("Creating virtual joypad texture");
 
     if (m_texture)
         SDL_DestroyTexture(m_texture);

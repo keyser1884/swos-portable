@@ -51,10 +51,10 @@ bool promptForDefaultGameEvents(QuickConfigContext& context)
         context.warningY = kWarningY;
     context.redrawMenuFn = std::bind(drawQuickConfigMenu, std::cref(context));
 
-    logInfo("Configuring %s for player %d", context.controls == QuickConfigControls::kJoypad ? "joypad" : "keyboard",
+    logDebug("Configuring %s for player %d", context.controls == QuickConfigControls::kJoypad ? "joypad" : "keyboard",
         context.player == kPlayer1 ? 1 : 2);
     if (context.controls == QuickConfigControls::kJoypad)
-        logInfo("Joypad: #%d", context.joypadIndex);
+        logDebug("Joypad: #%d", context.joypadIndex);
 
     redrawMenu(context);
 
@@ -78,13 +78,13 @@ bool promptForDefaultGameEvents(QuickConfigContext& context)
 
         switch (waitForConfirmation()) {
         case FinalPromptResult::kSuccess:
-            logInfo("Quick config successful");
+            logDebug("Quick config successful");
             return true;
         case FinalPromptResult::kAbort:
-            logInfo("Quick config aborted");
+            logDebug("Quick config aborted");
             return false;
         case FinalPromptResult::kRestart:
-            logInfo("Restarting quick config...");
+            logDebug("Restarting quick config...");
             context.reset();
             break;
         }

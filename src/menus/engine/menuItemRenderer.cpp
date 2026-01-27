@@ -303,7 +303,7 @@ void cacheMenuItemBackgrounds()
         createAndFillTextureAtlases(queuedTextures);
         m_cachedMenus.emplace_back(getCurrentPackedMenu(), m_screenDimensions);
         auto interval = SDL_GetPerformanceCounter() - startTime;
-        logInfo("Background cache built in %.2fms", static_cast<double>(interval * 1000) / SDL_GetPerformanceFrequency());
+        logDebug("Background cache built in %.2fms", static_cast<double>(interval * 1000) / SDL_GetPerformanceFrequency());
     }
 }
 
@@ -394,7 +394,7 @@ static bool updateScreenDimensions()
         m_maxTextureAtlasWidth = std::max(m_maxTextureAtlasWidth, kMinTextureWidth);
         m_maxTextureAtlasHeight = std::min(info.max_texture_height, m_screenDimensions.second);
         m_maxTextureAtlasHeight = std::max(m_maxTextureAtlasHeight, kMinTextureHeight);
-        logInfo("Screen dimensions changed, cached: %d, %d -> actual: %d, %d", m_screenDimensions.first,
+        logDebug("Screen dimensions changed, cached: %d, %d -> actual: %d, %d", m_screenDimensions.first,
             m_screenDimensions.second, screenDimensions.first, screenDimensions.second);
         m_screenDimensions = screenDimensions;
         return true;

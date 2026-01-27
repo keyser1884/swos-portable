@@ -79,13 +79,13 @@ const ToggleInfo* getPortedFunctionToggleInfo()
 void loadPortedFunctionToggles()
 {
     auto path = pathInRootDir(kIniFilename);
-    logInfo("Loading ported function toggles from %s", path.c_str());
+    logDebug("Loading ported function toggles from %s", path.c_str());
 
     CSimpleIniA ini(true);
     auto errorCode = ini.LoadFile(path.c_str());
 
     if (errorCode < 0) {
-        logInfo("Could not load INI for ported functions (error %d), using defaults", errorCode);
+        logDebug("Could not load INI for ported functions (error %d), using defaults", errorCode);
         return;
     }
 
@@ -97,7 +97,7 @@ void loadPortedFunctionToggles()
 void savePortedFunctionToggles()
 {
     auto path = pathInRootDir(kIniFilename);
-    logInfo("Saving ported function toggles to %s", path.c_str());
+    logDebug("Saving ported function toggles to %s", path.c_str());
 
     CSimpleIniA ini(true);
     ini.LoadFile(path.c_str());  // Load existing content first
@@ -167,7 +167,7 @@ void initComparisonLog()
         fprintf(s_comparisonLogFile, "AI Comparison Log - ASM vs C++\n");
         fprintf(s_comparisonLogFile, "================================\n\n");
         fflush(s_comparisonLogFile);
-        logInfo("Comparison log opened: %s", path.c_str());
+        logDebug("Comparison log opened: %s", path.c_str());
     } else {
         logWarn("Failed to open comparison log: %s", path.c_str());
     }
@@ -181,7 +181,7 @@ void closeComparisonLog()
         fprintf(s_comparisonLogFile, "Total mismatches: %d\n", g_comparisonMismatchCount);
         fclose(s_comparisonLogFile);
         s_comparisonLogFile = nullptr;
-        logInfo("Comparison log closed. Total mismatches: %d", g_comparisonMismatchCount);
+        logDebug("Comparison log closed. Total mismatches: %d", g_comparisonMismatchCount);
     }
 }
 
@@ -1215,7 +1215,7 @@ static void createTestTeam(TeamFile* team, const char* name, int teamNum)
 
 void startQuickMatch()
 {
-    logInfo("Starting quick match for AI comparison testing...");
+    logDebug("Starting quick match for AI comparison testing...");
 
     // Initialize the game core (sprites, audio, timers, etc.)
     initializeGameCore();
@@ -1247,12 +1247,12 @@ void startQuickMatch()
     swos.gameTeam1 = &testTeam1;
     swos.gameTeam2 = &testTeam2;
 
-    logInfo("About to initialize ingame teams...");
+    logDebug("About to initialize ingame teams...");
 
     // Initialize the ingame teams
     initializeIngameTeams(0, 3, &testTeam1, &testTeam2);
 
-    logInfo("Teams initialized: %s vs %s", swos.topTeamInGame.teamName, swos.bottomTeamInGame.teamName);
+    logDebug("Teams initialized: %s vs %s", swos.topTeamInGame.teamName, swos.bottomTeamInGame.teamName);
 
     // Disable pre-match menus for faster start
     setPreMatchMenus(false);
@@ -1264,14 +1264,14 @@ void startQuickMatch()
     initNewReplay();
 
     // Start the game!
-    logInfo("Starting game loop...");
+    logDebug("Starting game loop...");
     gameLoop(&swos.topTeamInGame, &swos.bottomTeamInGame);
 
-    logInfo("Quick match ended.");
+    logDebug("Quick match ended.");
 
     // Show comparison results
     if (g_comparePortedFunctions) {
         closeComparisonLog();
-        logInfo("Total mismatches found: %d", g_comparisonMismatchCount);
+        logDebug("Total mismatches found: %d", g_comparisonMismatchCount);
     }
 }

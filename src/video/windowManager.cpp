@@ -65,7 +65,7 @@ SDL_Window *createWindow()
         flags |= SDL_WINDOW_RESIZABLE;
     }
 
-    logInfo("Creating %dx%d window, flags: %d", width, height, flags);
+    logDebug("Creating %dx%d window, flags: %d", width, height, flags);
     m_window = SDL_CreateWindow("SWOS", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags);
     if (!m_window)
         sdlErrorExit("Could not create window");
@@ -146,7 +146,7 @@ static void clampWindowSize(int& width, int& height)
         if (SDL_GetDisplayBounds(displayIndex, &rect) == 0) {
             width = std::min(width, rect.w);
             height = std::min(height, rect.h);
-            logInfo("Clamping window size to %dx%d", width, height);
+            logDebug("Clamping window size to %dx%d", width, height);
         }
     }
 }
@@ -154,7 +154,7 @@ static void clampWindowSize(int& width, int& height)
 static void normalizeWindowSize(int& width, int& height, int defaultWidth, int defaultHeight)
 {
     if (width < kMinimumWindowWidth || height < kMinimumWindowHeight) {
-        logInfo("Got invalid width/height (%dx%d), setting to default (%dx%d)", width, height, defaultWidth, defaultHeight);
+        logDebug("Got invalid width/height (%dx%d), setting to default (%dx%d)", width, height, defaultWidth, defaultHeight);
         width = defaultWidth;
         height = defaultHeight;
     }
@@ -207,7 +207,7 @@ void setWindowSize(int width, int height)
 
     clampWindowSize(width, height);
 
-    logInfo("Setting new window size: %dx%d", width, height);
+    logDebug("Setting new window size: %dx%d", width, height);
 
     SDL_SetWindowSize(m_window, width, height);
     SDL_GetWindowSize(m_window, &m_windowWidth, &m_windowHeight);
@@ -255,7 +255,7 @@ static bool setDisplayMode(int width, int height)
 {
     assert(m_window);
 
-    logInfo("Trying to switch to %dx%d", width, height);
+    logDebug("Trying to switch to %dx%d", width, height);
 
     SDL_DisplayMode mode;
     mode.w = width;
@@ -296,7 +296,7 @@ static void setWindowMode(WindowMode newMode)
     assert(m_window);
 
     if (m_windowMode != newMode)
-        logInfo("Window mode change requested, from %d to %d", m_windowMode, newMode);
+        logDebug("Window mode change requested, from %d to %d", m_windowMode, newMode);
 
     switch (newMode) {
     case kModeWindow:
@@ -322,7 +322,7 @@ static void setWindowMode(WindowMode newMode)
     m_windowMode = newMode;
 
     if (success) {
-        logInfo("Successfully switched into %s mode", mode);
+        logDebug("Successfully switched into %s mode", mode);
     } else {
         logWarn("Failed to change window mode to %s", mode);
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Resolution switch failure", "Failed to change window mode", m_window);

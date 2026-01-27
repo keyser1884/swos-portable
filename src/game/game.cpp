@@ -702,8 +702,6 @@ static void clearTeamState(TeamGeneralInfo* team)
 // Sets ball to center, determines kickoff team, and prepares game state
 void SWOS::PrepareForInitialKick()
 {
-    logInfo("PrepareForInitialKick called, teamStarting=%d, teamPlayingUp=%d",
-            swos.teamStarting, swos.teamPlayingUp);
     // Set ball position to center of pitch (336, 449)
     D1 = 336;
     D2 = 449;
@@ -762,8 +760,6 @@ void SWOS::PrepareForInitialKick()
 // Sets up walk-on positions for all players
 void SWOS::InitPlayersBeforeEnteringPitch()
 {
-    logInfo("InitPlayersBeforeEnteringPitch called, teamPlayingUp=%d, gameState=%d",
-            swos.teamPlayingUp, static_cast<int>(swos.gameState));
     RemoveReferee();
 
     // Walk-on starting coordinates (x, y pairs for 22 players)
@@ -834,13 +830,8 @@ void SWOS::InitPlayersBeforeEnteringPitch()
             A1 = player;
             A0 = &swos.playerNormalStandingAnimTable;
             SetPlayerAnimationTable();
-            
-            logInfo("  Player[%d][%d] placed at (%d, %d) dest=(%d, %d)",
-                    teamIdx, playerIdx, player->x.whole(), player->y.whole(),
-                    player->destX, player->destY);
         }
     }
-    logInfo("InitPlayersBeforeEnteringPitch done");
 }
 
 // C++ implementation of StopAllPlayers
@@ -877,9 +868,6 @@ void SWOS::SetPlayerWithNoBallDestination()
 
     // Get tactics for this team
     int tacticsIndex = team->tactics;
-    
-    static int logCount = 0;
-    bool shouldLog = (logCount++ < 50);  // Only log first 50 calls
     TeamTactics* tactics = swos.g_tacticsTable[tacticsIndex];
 
     // Check for special game states (keeper's ball or goal out)
@@ -942,10 +930,6 @@ void SWOS::SetPlayerWithNoBallDestination()
 
         player->destX = destX;
         player->destY = destY;
-        if (shouldLog) {
-            logInfo("SetPlayerWithNoBallDestination: player=%d tactics=%d quadrant=%d -> dest=(%d,%d)",
-                    playerOrdinal, tacticsIndex, swos.ballQuadrantIndex, destX, destY);
-        }
         return;
     }
 
@@ -991,8 +975,6 @@ void SWOS::SetBallPosition()
 {
     int16_t x = D1.asWord();
     int16_t y = D2.asWord();
-
-    logInfo("SetBallPosition: placing ball at (%d, %d)", x, y);
 
     swos.ballSprite.speed = 0;
     swos.ballSprite.x.set(x, 0);      // Clear fraction to 0 (matches assembly)

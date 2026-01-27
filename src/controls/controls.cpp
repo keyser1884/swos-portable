@@ -66,8 +66,6 @@ bool setControls(PlayerNumber player, Controls controls, int joypadIndex)
     auto currentJoypadIndex = player == kPlayer1 ? getPl1JoypadIndex() : getPl2JoypadIndex();
 
     if (controls != plControls || controls == kJoypad && joypadIndex != currentJoypadIndex) {
-        logInfo("Setting player %d controls to %s", player == kPlayer1 ? 1 : 2, controlsToString(controls));
-
         plControls = controls;
         bool success = setJoypad(player, joypadIndex);
 
@@ -205,12 +203,10 @@ static void processEvent(const SDL_Event& event)
         break;
 
     case SDL_JOYDEVICEADDED:
-        logInfo("Adding joypad %d", event.jdevice.which);
         addNewJoypad(event.jdevice.which);
         break;
 
     case SDL_JOYDEVICEREMOVED:
-        logInfo("Removing joypad %d", event.jdevice.which);
         removeJoypad(event.jdevice.which);
         break;
 
@@ -314,8 +310,6 @@ void loadControlOptions(const CSimpleIni& ini)
         m_pl2Controls = static_cast<Controls>(pl2Controls);
 
     m_showSelectMatchControlsMenu = ini.GetBoolValue(kControlsSection, kShowSelectMatchControlsMenu, true);
-
-    logInfo("Controls set to: %s (player 1), %s (player 2)", controlsToString(m_pl1Controls), controlsToString(m_pl2Controls));
 }
 
 void printEventInfoComment(CSimpleIni& ini)

@@ -74,11 +74,6 @@ static int doLoadFile(SDL_RWops *f, const char *path, void *buffer, int bufferSi
         return -1;
     }
 
-#ifndef DEBUG
-    bool plural = bufferSize != 1;
-    logInfo("Loading \"%s\" [%s byte%s]", path, formatNumberWithCommas(bufferSize).c_str(), plural ? "s" : "");
-#endif
-
     bool readOk = SDL_RWread(f, buffer, bufferSize, 1) == 1;
     SDL_RWclose(f);
 
@@ -176,8 +171,6 @@ int SWOS::LoadFile()
 
 bool saveFile(const char *path, void *buffer, int size)
 {
-    logInfo("Writing `%s' [%s bytes]", path, formatNumberWithCommas(size).c_str());
-
     auto f = openFile(path, "wb");
     bool ok = f && SDL_RWwrite(f, buffer, 1, size) == static_cast<size_t>(size);
 
@@ -346,8 +339,6 @@ FoundFileList findFiles(const char *extension, const char *dirName /* = nullptr 
 
     FoundFileList result;
 
-    logInfo("Searching for files, extension: %s", extension && *extension ? extension : "*.*");
-
     auto dirPath = pathInRootDir(dirName ? dirName : ".");
     auto dir = opendir(dirPath.c_str());
     if (!dir)
@@ -368,8 +359,6 @@ FoundFileList findFiles(const char *extension, const char *dirName /* = nullptr 
             result.emplace_back(filename, extensionOffset);
         return true;
     });
-
-    logInfo("Found %d files", result.size());
 
     return result;
 }
