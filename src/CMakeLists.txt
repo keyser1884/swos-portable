@@ -65,6 +65,10 @@ set(SOURCES_CONTROLS_MOUSE
     ${CMAKE_CURRENT_SOURCE_DIR}/controls/mouse/mouse.cpp
 )
 
+set(SOURCES_DATA
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/CompetitionData.cpp
+)
+
 set(SOURCES_DEBUG
     ${CMAKE_CURRENT_SOURCE_DIR}/debug/dump.cpp
 )
@@ -116,6 +120,7 @@ set(SOURCES_GAME_UPDATEPLAYERS
 )
 
 set(SOURCES_MENUS
+    ${CMAKE_CURRENT_SOURCE_DIR}/menus/careerMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/menus/continueAbortMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/menus/continueMenu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/menus/mainMenu.cpp
@@ -215,6 +220,7 @@ set(ALL_SOURCES
     ${SOURCES_CONTROLS_JOYPADS_UI}
     ${SOURCES_CONTROLS_KEYBOARD}
     ${SOURCES_CONTROLS_MOUSE}
+    ${SOURCES_DATA}
     ${SOURCES_DEBUG}
     ${SOURCES_FILES}
     ${SOURCES_GAME}
@@ -249,6 +255,7 @@ target_include_directories(swos-port PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/controls/joypads/ui
     ${CMAKE_CURRENT_SOURCE_DIR}/controls/keyboard
     ${CMAKE_CURRENT_SOURCE_DIR}/controls/mouse
+    ${CMAKE_CURRENT_SOURCE_DIR}/data
     ${CMAKE_CURRENT_SOURCE_DIR}/debug
     ${CMAKE_CURRENT_SOURCE_DIR}/files
     ${CMAKE_CURRENT_SOURCE_DIR}/game
@@ -489,6 +496,7 @@ source_group("Source Files\\controls\\joypads" FILES ${SOURCES_CONTROLS_JOYPADS}
 source_group("Source Files\\controls\\joypads\\ui" FILES ${SOURCES_CONTROLS_JOYPADS_UI})
 source_group("Source Files\\controls\\keyboard" FILES ${SOURCES_CONTROLS_KEYBOARD})
 source_group("Source Files\\controls\\mouse" FILES ${SOURCES_CONTROLS_MOUSE})
+source_group("Source Files\\data" FILES ${SOURCES_DATA})
 source_group("Source Files\\debug" FILES ${SOURCES_DEBUG})
 source_group("Source Files\\files" FILES ${SOURCES_FILES})
 source_group("Source Files\\game" FILES ${SOURCES_GAME})
