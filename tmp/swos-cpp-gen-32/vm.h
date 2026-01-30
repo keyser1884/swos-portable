@@ -381,7 +381,7 @@ struct SwosVariables
     int16_t cameraXVelocity;
     int16_t cameraYVelocity;
     word hideBall;
-    word dseg_130FF9;
+    word savedCameraDirection;
     word lastPlayerTurnFlags;
     byte filler__0102[2];
     union {
@@ -789,7 +789,7 @@ enum Offsets : uint32_t
     cameraXVelocity = 449796,
     cameraYVelocity = 449798,
     hideBall = 449800,
-    dseg_130FF9 = 449802,
+    savedCameraDirection = 449802,
     lastPlayerTurnFlags = 449804,
     frameIndicesTablesStart = 449808,
     refSecondYellowFrames = 452136,

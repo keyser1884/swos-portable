@@ -17792,7 +17792,7 @@ void ResetBothTeamsPlayerPassingKicking()
     push(A1);                               // push A1
     push(A2);                               // push A2
     ax = *(word *)&g_memByte[523140];       // mov ax, cameraDirection
-    *(word *)&g_memByte[449802] = ax;       // mov dseg_130FF9, ax
+    *(word *)&g_memByte[449802] = ax;       // mov savedCameraDirection, ax
     ax = *(word *)&g_memByte[523142];       // mov ax, playerTurnFlags
     *(word *)&g_memByte[449804] = ax;       // mov lastPlayerTurnFlags, ax
     A0 = 522804;                            // mov A0, offset topTeamData

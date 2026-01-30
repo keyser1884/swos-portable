@@ -737,7 +737,7 @@ void SWOS::PrepareForInitialKick()
     swos.stoppageTimerActive = 0;
 
     // Save camera state before stopping players
-    swos.dseg_130FF9 = swos.cameraDirection;
+    swos.savedCameraDirection = swos.cameraDirection;
     swos.lastPlayerTurnFlags = swos.playerTurnFlags;
 
     // Stop all players on both teams
@@ -839,7 +839,7 @@ void SWOS::InitPlayersBeforeEnteringPitch()
 void SWOS::StopAllPlayers()
 {
     // Save camera state
-    swos.dseg_130FF9 = swos.cameraDirection;
+    swos.savedCameraDirection = swos.cameraDirection;
     swos.lastPlayerTurnFlags = swos.playerTurnFlags;
 
     // Stop top team players and clear state
