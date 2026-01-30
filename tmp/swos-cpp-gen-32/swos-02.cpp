@@ -95,7 +95,7 @@ extern void ExtractSurname();
 extern void cseg_13A55();
 extern void FormTopSkillsString();
 extern void cseg_247C8();
-extern void cseg_8F66C();
+extern void SetupTeamSubstitutes();
 extern void cseg_63E05();
 extern void cseg_6481C();
 extern void cseg_63EC4();
@@ -167,10 +167,10 @@ void nullsub_12();
 void Int2StrWithCommas();
 void Int2AsciiLessThan100Check();
 void Int2AsciiSaveD0();
-void cseg_2F0E2();
-void cseg_2F194();
+void UpdateCareerTeamPlayers();
+void UpdatePlayerCareerStats();
 void UpdatePlayerInjuries();
-void cseg_2F3AB();
+void UpdatePlayerGoalStats();
 void InitInGameTeamStructure();
 void SetPlayerNameAndFace();
 void InitInGamePlayer();
@@ -186,7 +186,7 @@ void MeasureTeamKitsSimilarity();
 void GetTeamKitsSimilarityFactor();
 void AreBasicColorsConflicting();
 void AreShortsAndStripeColorsConflicting();
-void cseg_30BD1();
+void ProcessPostGameStats();
 void ApplyTeamTactics();
 void AdjustPlayerSkills();
 void GetPlayerPricePercentageChange();
@@ -3234,7 +3234,7 @@ void Int2AsciiSaveD0()
 //      A1 -> team (game)
 //      A2 -> team (file)
 //
-void cseg_2F0E2()
+void UpdateCareerTeamPlayers()
 {
     ax = *(word *)&g_memByte[465960];       // mov ax, g_trainingGame
     flags.carry = false;
@@ -3316,7 +3316,7 @@ cseg_2F179:;
 //      A1 -> team (game)
 //      A2 -> team (file)
 //
-void cseg_2F194()
+void UpdatePlayerCareerStats()
 {
     ax = *(word *)&g_memByte[465960];       // mov ax, g_trainingGame
     flags.carry = false;
@@ -3556,7 +3556,7 @@ l_next_player:;
 //      A2 -> team (file)
 //      D7 -  some offset
 //
-void cseg_2F3AB()
+void UpdatePlayerGoalStats()
 {
     esi = A1;                               // mov esi, A1
     al = (byte)readMemory(esi + 40, 1);     // mov al, [esi+TeamGame.numOwnGoals]
@@ -5997,7 +5997,7 @@ void AreShortsAndStripeColorsConflicting()
 
 // =============== S U B R O U T I N E =======================================
 //
-void cseg_30BD1()
+void ProcessPostGameStats()
 {
     push(D0);                               // push D0
     push(D1);                               // push D1
@@ -33937,7 +33937,7 @@ l_copy_positions_loop:;
     writeMemory(esi + 59, 1, 1);            // mov [esi+TeamFile.someFlag], 1
     ax = *(word *)&g_memByte[336380];       // mov ax, maxSubstitutesEntries
     *(word *)&D0 = ax;                      // mov word ptr D0, ax
-    cseg_8F66C();                           // call cseg_8F66C
+    SetupTeamSubstitutes();                 // call SetupTeamSubstitutes
 
     UpdateCheckMarkSprite();
 }

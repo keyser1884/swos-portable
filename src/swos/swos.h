@@ -168,11 +168,11 @@ struct PlayerGame
     PlayerPosition position;
     byte face;
     byte isInjured;
-    byte field_7;
-    byte field_8;
-    byte field_9;
-    byte cards;
-    byte field_B;
+    byte field_31;              // Unknown purpose
+    byte fasterTackle;          // Related to tackling ability
+    byte previousCards;         // Cards at start of match (from career)
+    byte cards;                 // Current cards this match (numYellowCards in assembly)
+    byte disallowSubs;          // Flag to disallow substitutions for this player
     char shortName[15];
     byte passing;
     byte shooting;
@@ -346,7 +346,7 @@ struct TeamGeneralInfo
     word fireCounter;
     word allowedPlDirection;
     word shooting;
-    byte ofs60;
+    byte field_3C;              // Unknown purpose, initialized to 0
     byte plVeryCloseToBall;
     byte plCloseToBall;
     byte plNotFarFromBall;
@@ -356,10 +356,10 @@ struct TeamGeneralInfo
     byte ball12To17;
     byte ballAbove17;
     byte prevPlVeryCloseToBall;
-    word ofs70;
+    word field_46;              // Unknown purpose, read during player updates
     SwosDataPointer<Sprite> lastHeadingPlayer;
     word goalkeeperSavedCommentTimer;
-    word ofs78;
+    word field_4E;              // Unknown purpose, initialized to 0
     word goalkeeperJumpingRight;
     word goalkeeperJumpingLeft;
     word ballOutOfPlayOrKeeper;
@@ -373,11 +373,11 @@ struct TeamGeneralInfo
     word ballY;
     word passKickTimer;
     SwosDataPointer<Sprite> passingKickingPlayer;
-    word ofs108;
+    word ballControlTurnTimer;  // unkBallTimer: counts direction changes, compared to ball control skill
     word ballCanBeControlled;
     word ballControllingPlayerDirection;
-    word ofs114;
-    word ofs116;
+    word field_72;              // Unknown purpose, initialized to 0
+    word field_74;              // Unknown purpose, reset when controlling player updates
     word spinTimer;
     word leftSpin;
     word rightSpin;
@@ -385,10 +385,10 @@ struct TeamGeneralInfo
     word longSpinPass;
     word passInProgress;
     word AITimer;
-    word ofs134;
-    word ofs136;
-    word ofs138;    // timer
-    word unkTimer;
+    word retryPassCounter;      // field_84: AI retry pass window countdown
+    word aiAfterTouchStrength;  // AI_afterTouchStrength: 0=weak, 1=medium, 2=strong
+    word aiBallSpinDirection;   // AI_ballSpinDirection: -1=left, 0=none, 1=right
+    word wonTheBallTimer;       // Timer set when player wins ball, prevents immediate re-steal
     word goalkeeperPlaying;
     word resetControls;
     byte secondaryFire;

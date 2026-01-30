@@ -117,11 +117,11 @@ void initializeIngameTeams(int minSubs, int maxSubs, TeamFile *team1, TeamFile *
 
     A0 = team1;
     D0 = maxSubs;
-    cseg_8F66C();
+    SetupTeamSubstitutes();
 
     A0 = team2;
     D0 = maxSubs;
-    cseg_8F66C();
+    SetupTeamSubstitutes();
 
     swos.teamsLoaded = 0;
     swos.poolplyrLoaded = 0;
@@ -480,7 +480,7 @@ static void processPostGameData(TeamFile *team1, TeamFile *team2, int paramD7)
             A1 = team1;
             A2 = team2;
             D0 = swos.plg_D3_param;
-            cseg_30BD1();
+            ProcessPostGameStats();
 
             if (paramD7 < 0) {
                 return;
@@ -492,7 +492,7 @@ static void processPostGameData(TeamFile *team1, TeamFile *team2, int paramD7)
                     A1 = teamGame;
                     A2 = teamFile;
                     D7 = paramD7;
-                    cseg_2F3AB();
+                    UpdatePlayerGoalStats();
 
                     A1 = teamGame;
                     A2 = teamFile;
@@ -500,11 +500,11 @@ static void processPostGameData(TeamFile *team1, TeamFile *team2, int paramD7)
 
                     A1 = teamGame;
                     A2 = teamFile;
-                    cseg_2F194();
+                    UpdatePlayerCareerStats();
 
                     A1 = teamGame;
                     A2 = teamFile;
-                    cseg_2F0E2();
+                    UpdateCareerTeamPlayers();
                 }
             }
         } else {
@@ -686,7 +686,7 @@ static void clearTeamState(TeamGeneralInfo* team)
     team->playerSwitchTimer = 0;
     team->passingKickingPlayer = nullptr;
     team->playerHasBall = 0;
-    team->ofs138 = 0;  // wonTheBallTimer
+    team->aiBallSpinDirection = 0;  // Reset spin direction
     team->currentAllowedDirection = static_cast<word>(-1);
     team->passKickTimer = 0;
     team->ballCanBeControlled = 0;

@@ -72,9 +72,9 @@ struct AICompareState {
     uint8_t normalFire;
     uint8_t firePressed;
     uint8_t fireThisFrame;
-    int16_t ofs134;  // field_84 (retry pass counter)
-    int16_t ofs136;  // AI_afterTouchStrength
-    int16_t ofs138;  // AI_ballSpinDirection
+    int16_t retryPassCounter;      // field_84 (retry pass countdown)
+    int16_t aiAfterTouchStrength;  // AI_afterTouchStrength
+    int16_t aiBallSpinDirection;   // AI_ballSpinDirection
     int16_t AITimer;
 
     bool operator==(const AICompareState& other) const;
@@ -93,8 +93,8 @@ struct AICompareInputState {
     bool hasControlledPlayer;
     int16_t playerDirection;
     // Additional diagnostics for handleBallAfterTouch path
-    int16_t ofs136_initial;  // AI_afterTouchStrength at entry
-    int16_t ofs138_initial;  // AI_ballSpinDirection at entry
+    int16_t aiAfterTouchStrength_initial;  // AI_afterTouchStrength at entry
+    int16_t aiBallSpinDirection_initial;   // AI_ballSpinDirection at entry
     bool isPenalties;        // playingPenalties || penalty
     // Additional diagnostics for fireThisFrame and shooting paths
     int16_t ballZ;           // Ball height
@@ -103,7 +103,7 @@ struct AICompareInputState {
     int32_t goalDistSqr;     // Distance to opponent's goal squared
     uint32_t oppCtrlDist;    // Opponent's controlled player ball distance (0 if none)
     uint32_t oppPassDist;    // Opponent's pass-to player ball distance (0 if none)
-    int16_t ofs134_initial;  // field_84 (retry pass counter)
+    int16_t retryPassCounter_initial;  // field_84 (retry pass counter)
 };
 
 // Log a mismatch between ASM and C++ outputs

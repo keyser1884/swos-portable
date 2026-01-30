@@ -21,7 +21,7 @@ extern void IsPlayerInjured();
 extern void IsTeamNational();
 extern void cseg_3E04F();
 extern void DrawMultipleItems();
-extern void cseg_8F66C();
+extern void SetupTeamSubstitutes();
 extern void cseg_3E608();
 extern void DrawMenuItem();
 extern void ShowDesignDIYTournamentMenu();
@@ -4567,7 +4567,7 @@ cseg_13936:;
     esi = A0;                               // mov esi, A0
     writeMemory(esi + 59, 1, 1);            // mov byte ptr [esi+3Bh], 1
     *(word *)&D0 = 5;                       // mov word ptr D0, 5
-    cseg_8F66C();                           // call cseg_8F66C
+    SetupTeamSubstitutes();                           // call SetupTeamSubstitutes
 
     UpdateBigCheckMark();
 }
@@ -23470,14 +23470,14 @@ void CalculateViewResult()
     A0 = eax;                               // mov A0, eax
     ax = *(word *)&g_memByte[379626];       // mov ax, dseg_11F8D2
     *(word *)&D0 = ax;                      // mov word ptr D0, ax
-    cseg_8F66C();                           // call cseg_8F66C
+    SetupTeamSubstitutes();                           // call SetupTeamSubstitutes
     ax = D0;                                // mov ax, word ptr D0
     *(word *)&g_memByte[379636] = ax;       // mov dseg_11F8DC, ax
     eax = *(dword *)&g_memByte[379632];     // mov eax, dseg_11F8D8
     A0 = eax;                               // mov A0, eax
     ax = *(word *)&g_memByte[379626];       // mov ax, dseg_11F8D2
     *(word *)&D0 = ax;                      // mov word ptr D0, ax
-    cseg_8F66C();                           // call cseg_8F66C
+    SetupTeamSubstitutes();                           // call SetupTeamSubstitutes
     ax = D0;                                // mov ax, word ptr D0
     *(word *)&g_memByte[379638] = ax;       // mov dseg_11F8DE, ax
     eax = *(dword *)&g_memByte[379628];     // mov eax, dseg_11F8D4

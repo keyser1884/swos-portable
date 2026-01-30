@@ -21,7 +21,7 @@ extern void ExtractSurname();
 extern void IsTeamNational();
 extern void cseg_247C8();
 extern void SetMenuEntryPlayerFace();
-extern void cseg_8F66C();
+extern void SetupTeamSubstitutes();
 extern void InitializeTacticsPositions();
 extern void DrawSprite();
 extern void DrawSpriteCentered();
@@ -5119,7 +5119,7 @@ l_copy_skills_loop:;
     writeMemory(esi + 24, 1, 18);           // mov [esi+TeamFile.tactics], 18
     push(D7);                               // push D7
     push(A0);                               // push A0
-    cseg_8F66C();                           // call cseg_8F66C
+    SetupTeamSubstitutes();                           // call SetupTeamSubstitutes
     pop(A0);                                // pop A0
     pop(D7);                                // pop D7
     al = D7;                                // mov al, byte ptr D7

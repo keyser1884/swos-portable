@@ -4802,7 +4802,7 @@ flags.zero = ax == 0;                   // or ax, ax
 if (!flags.zero)
 goto cseg_80EAA;                    // jnz short cseg_80EAA
 
-writeMemory(esi + 108, 2, 0);           // mov [esi+TeamGeneralInfo.unkBallTimer], 0
+writeMemory(esi + 108, 2, 0);           // mov [esi+TeamGeneralInfo.ballControlTurnTimer], 0
 
 cseg_80EAA:;
 esi = A6;                               // mov esi, A6

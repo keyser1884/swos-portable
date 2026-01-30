@@ -3271,8 +3271,8 @@ constexpr uint32_t kBallSpeedDeltaWhenControlled = 523916;        // Was incorre
 constexpr uint32_t kDseg17E276 = 523868;  // Ball control turn timer table (was incorrectly 524870)
 constexpr uint32_t kCurrentTick = 323902;
 constexpr int kTeamPlayerHasBall = 40;  // playerHasBall in TeamGeneralInfo struct
-constexpr int kTeamWonTheBallTimer = 138;  // ofs138 in struct, wonTheBallTimer in assembly
-constexpr int kTeamUnkBallTimer = 108;  // unkBallTimer in assembly struct
+constexpr int kTeamWonTheBallTimer = 138;  // wonTheBallTimer in struct
+constexpr int kTeamBallControlTurnTimer = 108;  // ballControlTurnTimer in struct
 
 // CalculateIfPlayerWinsBall - determines if player wins contested ball
 // Assembly at 108037-108281
@@ -3472,16 +3472,16 @@ set_team_direction:
     // Check if player changing direction
     int16_t controlledDir = (int16_t)readMemory(A6 + kTeamControlledPlDirection, 2);
     if (controlledDir != playerDir) {
-        // Player changing direction
-        int16_t unkTimer = (int16_t)readMemory(A6 + kTeamUnkBallTimer, 2);
-        writeMemory(A6 + kTeamUnkBallTimer, 2, unkTimer + 1);
+        // Player changing direction - increment turn timer
+        int16_t turnTimer = (int16_t)readMemory(A6 + kTeamBallControlTurnTimer, 2);
+        writeMemory(A6 + kTeamBallControlTurnTimer, 2, turnTimer + 1);
 
-        // Check ball control threshold
+        // Check ball control threshold based on player skill
         int8_t ballControl = (int8_t)readMemory(A4 + kPlayerGameBallControl, 1);
         int16_t skillIndex = ((int16_t)ballControl) << 1;
         int16_t threshold = (int16_t)readMemory(kDseg17E276 + skillIndex, 2);
 
-        if (threshold <= unkTimer + 1) {
+        if (threshold <= turnTimer + 1) {
             writeMemory(A6 + kTeamWonTheBallTimer, 2, 8);
         }
     }

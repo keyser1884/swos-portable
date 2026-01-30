@@ -396,7 +396,7 @@ findClosestPlayer:
             target->teamNumber == controlledPlayer->teamNumber) {
             // Our player is closest - go to @@our_player_closest (118537)
             // Assembly: if timers not ready, just RETURN (don't change direction!)
-            team->ofs134 = 0;  // field_84 at offset 0x84 = 132
+            team->retryPassCounter = 0;  // field_84 at offset 0x84 = 132
 
             if (AI_resumePlayTimer != 0)
                 return true;  // Wait for timer
@@ -516,7 +516,7 @@ checkDistanceForStrength:
     }
 
 setStrengthDone:
-    team->ofs136 = afterTouchStrength;  // AI_afterTouchStrength (offset 134)
+    team->aiAfterTouchStrength = afterTouchStrength;  // AI_afterTouchStrength (offset 134)
 
     team->currentAllowedDirection = playerDirection;
     team->normalFire = 1;
@@ -525,7 +525,7 @@ setStrengthDone:
     // Penalties: no spin (@@no_after_touch at 118861-118865)
     // Note: gameState is already defined in handleStoppedState's outer scope
     if (gameState == ST_PENALTY || gameState == ST_PENALTIES) {
-        team->ofs138 = 0;  // No spin for penalties
+        team->aiBallSpinDirection = 0;  // No spin for penalties
         return true;
     }
 
@@ -534,7 +534,7 @@ setStrengthDone:
         int16_t randVal = AI_rand & 7;
         if (randVal >= 6) {
             // No spin
-            team->ofs138 = 0;
+            team->aiBallSpinDirection = 0;
             return true;
         }
         // Try to turn direction and set spin
@@ -552,17 +552,17 @@ setStrengthDone:
         int16_t dirMask = 1 << newDir;
         if (!(swos.playerTurnFlags & dirMask)) {
             // Direction not allowed - no spin
-            team->ofs138 = 0;
+            team->aiBallSpinDirection = 0;
             return true;
         }
-        team->ofs138 = spinDir;
+        team->aiBallSpinDirection = spinDir;
         return true;
     }
 
     // Normal case: Determine spin direction based on angle difference
     // Assembly at 118836-118840: compares D2.lo as SIGNED BYTE
     int16_t spinDir = (dirDiffByte >= 0) ? -1 : 1;
-    team->ofs138 = spinDir;  // AI_ballSpinDirection (offset 136) equivalent
+    team->aiBallSpinDirection = spinDir;  // AI_ballSpinDirection (offset 136) equivalent
 
     return true;
 }
@@ -604,7 +604,7 @@ bool triggerShot(int16_t afterTouchStrength) {
         return true;  // Not ready yet
 
     // Set up the shot
-    team->ofs136 = afterTouchStrength;  // AI_afterTouchStrength (offset 134)
+    team->aiAfterTouchStrength = afterTouchStrength;  // AI_afterTouchStrength (offset 134)
     AI_resumePlayTimer = 15;
     team->currentAllowedDirection = playerDirection;
     team->normalFire = 1;
@@ -613,7 +613,7 @@ bool triggerShot(int16_t afterTouchStrength) {
     // Assembly at 118717-118721: compares D2.lo as a SIGNED BYTE, not int16
     int8_t angleDiffByte = static_cast<int8_t>((playerDirection << 5) - goalAngle);
     int16_t spinDir = (angleDiffByte >= 0) ? -1 : 1;
-    team->ofs138 = spinDir;  // AI_ballSpinDirection (offset 136)
+    team->aiBallSpinDirection = spinDir;  // AI_ballSpinDirection (offset 136)
 
     return true;  // Shot triggered
 }
@@ -702,7 +702,7 @@ bool triggerLongRangeShot() {
     // Set afterTouchStrength based on distance
     // Assembly at 118586-118590: strength = 2 if distance > 115600, else 1
     int16_t afterTouchStrength = (goalDistanceSqr > 115600) ? 2 : 1;
-    team->ofs136 = afterTouchStrength;
+    team->aiAfterTouchStrength = afterTouchStrength;
 
     AI_resumePlayTimer = 15;
     team->currentAllowedDirection = playerDirection;
@@ -763,7 +763,7 @@ bool triggerLongRangeShot() {
         }
     }
 
-    team->ofs138 = spinDir;
+    team->aiBallSpinDirection = spinDir;
 
     return true;
 }
@@ -801,15 +801,15 @@ void handleBallControl() {
 
     // Assembly at cseg_84AEB (118302-118323): "Retry pass" mechanism
     // If field_84 > 0, decrement it and try to find pass target before doing opponent checks
-    if (team->ofs134 > 0) {
-        team->ofs134--;
+    if (team->retryPassCounter > 0) {
+        team->retryPassCounter--;
         int16_t searchDir = playerDirection << 5;
         Sprite* target = FindClosestPlayerToBallFacing(searchDir);
 
         if (target && controlledPlayer &&
             target->teamNumber == controlledPlayer->teamNumber) {
             // Our player closest - go to pass (@@our_player_closest)
-            team->ofs134 = 0;
+            team->retryPassCounter = 0;
             if (AI_resumePlayTimer != 0)
                 return;
             if (!AI_ResumeGameDelay())
@@ -877,7 +877,7 @@ void handleBallControl() {
 
                     if (target && target->teamNumber == controlledPlayer->teamNumber) {
                         // Our player is closest - pass to them
-                        team->ofs134 = 0;  // field_84 at offset 0x84 = 132
+                        team->retryPassCounter = 0;  // field_84 at offset 0x84 = 132
                         triggerPass();
                         return;
                     }
@@ -902,7 +902,7 @@ void handleBallControl() {
                     Sprite* target = FindClosestPlayerToBallFacing(searchDir);
 
                     if (target && target->teamNumber == controlledPlayer->teamNumber) {
-                        team->ofs134 = 0;  // field_84 at offset 0x84 = 132
+                        team->retryPassCounter = 0;  // field_84 at offset 0x84 = 132
                         triggerPass();
                         return;
                     }
@@ -916,8 +916,8 @@ void handleBallControl() {
     // cseg_84D10 (118418-118430): Check if we should start retry pass window
     // Only when passingFailed and field_84 == 0 and (frameCount & 0x7F) < 0x20
     if (passingFailed) {
-        if (team->ofs134 == 0 && (swos.frameCount & 0x7F) < 0x20) {
-            team->ofs134 = 4;  // Start 4-frame retry window
+        if (team->retryPassCounter == 0 && (swos.frameCount & 0x7F) < 0x20) {
+            team->retryPassCounter = 4;  // Start 4-frame retry window
             // Fall through to alternating turns (cseg_84D57)
         } else {
             // Go to normal dribbling (cseg_84DD3) instead of alternating turns
@@ -1046,7 +1046,7 @@ void handleBallAfterTouch() {
 
     // Apply spin based on spinDir (AI_ballSpinDirection)
     {
-        int16_t spinDir = team->ofs138;
+        int16_t spinDir = team->aiBallSpinDirection;
         int16_t* table;
 
         if (spinDir < 0) {
@@ -1062,7 +1062,7 @@ void handleBallAfterTouch() {
 
         // Apply table adjustment: newDir = (ctrlDir + table[afterTouchStrength]) & 7
         // Note: Assembly's (ctrlDir -/+ 1) calculations are dead code - D0 gets overwritten
-        int16_t adjustment = table[team->ofs136];
+        int16_t adjustment = table[team->aiAfterTouchStrength];
         int16_t newDir = (ctrlDir + adjustment) & 7;
         team->currentAllowedDirection = newDir;
         return;
@@ -1071,14 +1071,14 @@ void handleBallAfterTouch() {
 noAfterTouch:
     // Assembly @@no_ball_after_touch at 119032-119050
     // If afterTouchStrength == 1 (medium), set direction to -1 and return
-    if (team->ofs136 == 1) {
+    if (team->aiAfterTouchStrength == 1) {
         team->currentAllowedDirection = -1;
         return;
     }
 
     // Otherwise, do long kick - apply AI_longKickTable adjustment
     {
-        int16_t adjustment = AI_longKickTable[team->ofs136];
+        int16_t adjustment = AI_longKickTable[team->aiAfterTouchStrength];
         int16_t newDir = (ctrlDir + adjustment) & 7;
         team->currentAllowedDirection = newDir;
     }
@@ -1259,9 +1259,9 @@ struct TeamAIState {
     byte firePressed;
     byte fireThisFrame;
     int16_t AITimer;
-    int16_t ofs134;
-    int16_t ofs136;
-    int16_t ofs138;
+    int16_t retryPassCounter;
+    int16_t aiAfterTouchStrength;
+    int16_t aiBallSpinDirection;
     // These are swapped in handleNoBallNearby and must be saved/restored
     SwosDataPointer<Sprite> controlledPlayerSprite;
     SwosDataPointer<Sprite> passToPlayerPtr;
@@ -1276,9 +1276,9 @@ static TeamAIState saveTeamAIState(TeamGeneralInfo* team)
     state.firePressed = team->firePressed;
     state.fireThisFrame = team->fireThisFrame;
     state.AITimer = team->AITimer;
-    state.ofs134 = team->ofs134;
-    state.ofs136 = team->ofs136;
-    state.ofs138 = team->ofs138;
+    state.retryPassCounter = team->retryPassCounter;
+    state.aiAfterTouchStrength = team->aiAfterTouchStrength;
+    state.aiBallSpinDirection = team->aiBallSpinDirection;
     state.controlledPlayerSprite = team->controlledPlayerSprite;
     state.passToPlayerPtr = team->passToPlayerPtr;
     return state;
@@ -1292,9 +1292,9 @@ static void restoreTeamAIState(TeamGeneralInfo* team, const TeamAIState& state)
     team->firePressed = state.firePressed;
     team->fireThisFrame = state.fireThisFrame;
     team->AITimer = state.AITimer;
-    team->ofs134 = state.ofs134;
-    team->ofs136 = state.ofs136;
-    team->ofs138 = state.ofs138;
+    team->retryPassCounter = state.retryPassCounter;
+    team->aiAfterTouchStrength = state.aiAfterTouchStrength;
+    team->aiBallSpinDirection = state.aiBallSpinDirection;
     team->controlledPlayerSprite = state.controlledPlayerSprite;
     team->passToPlayerPtr = state.passToPlayerPtr;
 }
@@ -1360,8 +1360,8 @@ void CallWithComparison(bool useCpp)
     }
     // Capture initial values for handleBallAfterTouch path analysis
     // These are captured from the ORIGINAL state (restored before ASM runs)
-    inputState.ofs136_initial = teamStateOriginal.ofs136;
-    inputState.ofs138_initial = teamStateOriginal.ofs138;
+    inputState.aiAfterTouchStrength_initial = teamStateOriginal.aiAfterTouchStrength;
+    inputState.aiBallSpinDirection_initial = teamStateOriginal.aiBallSpinDirection;
     inputState.isPenalties = (swos.playingPenalties || swos.penalty);
 
     // Additional diagnostics for fireThisFrame and shooting paths
@@ -1379,7 +1379,7 @@ void CallWithComparison(bool useCpp)
     int32_t dx = ballX - 336;  // pitch center X
     int32_t dy = ballY - goalLineY;
     inputState.goalDistSqr = dx * dx + dy * dy;
-    inputState.ofs134_initial = teamStateOriginal.ofs134;
+    inputState.retryPassCounter_initial = teamStateOriginal.retryPassCounter;
 
     // Opponent info
     inputState.oppCtrlDist = 0;

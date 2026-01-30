@@ -167,7 +167,7 @@ void cseg_8F0A2();
 void cseg_8F0E6();
 void cseg_8F120();
 void cseg_8F1F2();
-void cseg_8F66C();
+void SetupTeamSubstitutes();
 void cseg_8FA09();
 void GetPlayerPrice();
 void CountNearnessFactor();
@@ -10885,7 +10885,7 @@ cseg_8F5EF:;
 //      A0 -> team (file)
 //      D0 - max substitutes
 //
-void cseg_8F66C()
+void SetupTeamSubstitutes()
 {
     *(word *)&g_memByte[456230] = 1;        // mov skillDiv, 1
     *(word *)&D5 = 0;                       // mov word ptr D5, 0

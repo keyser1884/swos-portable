@@ -133,9 +133,9 @@ bool AICompareState::operator==(const AICompareState& other) const
            normalFire == other.normalFire &&
            firePressed == other.firePressed &&
            fireThisFrame == other.fireThisFrame &&
-           ofs134 == other.ofs134 &&
-           ofs136 == other.ofs136 &&
-           ofs138 == other.ofs138 &&
+           retryPassCounter == other.retryPassCounter &&
+           aiAfterTouchStrength == other.aiAfterTouchStrength &&
+           aiBallSpinDirection == other.aiBallSpinDirection &&
            AITimer == other.AITimer;
 }
 
@@ -148,9 +148,9 @@ AICompareState captureAIState(void* teamPtr)
     state.normalFire = team->normalFire;
     state.firePressed = team->firePressed;
     state.fireThisFrame = team->fireThisFrame;
-    state.ofs134 = team->ofs134;
-    state.ofs136 = team->ofs136;
-    state.ofs138 = team->ofs138;
+    state.retryPassCounter = team->retryPassCounter;
+    state.aiAfterTouchStrength = team->aiAfterTouchStrength;
+    state.aiBallSpinDirection = team->aiBallSpinDirection;
     state.AITimer = team->AITimer;
     return state;
 }
@@ -205,8 +205,8 @@ void logAICompareMismatch(uint32_t frame, void* teamPtr,
             fprintf(s_comparisonLogFile, "  INPUT: spinTimer=%d, plVeryClose=%d, plClose=%d, aiRand=%u (odd=%d), hasPlayer=%d, playerDir=%d\n",
                     inputState->spinTimer, inputState->plVeryCloseToBall, inputState->plCloseToBall,
                     inputState->aiRandValue, inputState->aiRandValue & 1, inputState->hasControlledPlayer ? 1 : 0, inputState->playerDirection);
-            fprintf(s_comparisonLogFile, "  INPUT: ofs134_init=%d, ofs136_init=%d, ofs138_init=%d, isPenalties=%d\n",
-                    inputState->ofs134_initial, inputState->ofs136_initial, inputState->ofs138_initial, inputState->isPenalties ? 1 : 0);
+            fprintf(s_comparisonLogFile, "  INPUT: retryPassCounter_init=%d, afterTouchStrength_init=%d, spinDirection_init=%d, isPenalties=%d\n",
+                    inputState->retryPassCounter_initial, inputState->aiAfterTouchStrength_initial, inputState->aiBallSpinDirection_initial, inputState->isPenalties ? 1 : 0);
             fprintf(s_comparisonLogFile, "  BALL: z=%d, deltaZ=%d, ctrlDist=%u, goalDistSqr=%d\n",
                     inputState->ballZ, inputState->ballDeltaZ, inputState->ctrlBallDist, inputState->goalDistSqr);
             fprintf(s_comparisonLogFile, "  OPPONENT: ctrlDist=%u, passDist=%u\n",
@@ -215,13 +215,13 @@ void logAICompareMismatch(uint32_t frame, void* teamPtr,
             // Derive expected path based on input state
             if (inputState->spinTimer >= 0) {
                 // Should enter handleBallAfterTouch
-                bool shouldNoAfterTouch = inputState->isPenalties || (inputState->aiRandValue & 1) == 0 || inputState->ofs138_initial == 0;
-                if (shouldNoAfterTouch && inputState->ofs136_initial == 1) {
-                    fprintf(s_comparisonLogFile, "  EXPECTED: direction=-1 (noAfterTouch, ofs136==1)\n");
+                bool shouldNoAfterTouch = inputState->isPenalties || (inputState->aiRandValue & 1) == 0 || inputState->aiBallSpinDirection_initial == 0;
+                if (shouldNoAfterTouch && inputState->aiAfterTouchStrength_initial == 1) {
+                    fprintf(s_comparisonLogFile, "  EXPECTED: direction=-1 (noAfterTouch, afterTouchStrength==1)\n");
                 } else if (shouldNoAfterTouch) {
-                    fprintf(s_comparisonLogFile, "  EXPECTED: longKick path (noAfterTouch, ofs136=%d)\n", inputState->ofs136_initial);
+                    fprintf(s_comparisonLogFile, "  EXPECTED: longKick path (noAfterTouch, afterTouchStrength=%d)\n", inputState->aiAfterTouchStrength_initial);
                 } else {
-                    fprintf(s_comparisonLogFile, "  EXPECTED: spin path (ofs138=%d)\n", inputState->ofs138_initial);
+                    fprintf(s_comparisonLogFile, "  EXPECTED: spin path (spinDirection=%d)\n", inputState->aiBallSpinDirection_initial);
                 }
             } else {
                 fprintf(s_comparisonLogFile, "  EXPECTED: handleBallControl or handleNoBallNearby (spinTimer<0)\n");
@@ -248,17 +248,17 @@ void logAICompareMismatch(uint32_t frame, void* teamPtr,
             fprintf(s_comparisonLogFile, "  fireThisFrame: ASM=%d, C++=%d\n",
                     asmState.fireThisFrame, cppState.fireThisFrame);
         }
-        if (asmState.ofs134 != cppState.ofs134) {
-            fprintf(s_comparisonLogFile, "  ofs134 (field_84): ASM=%d, C++=%d\n",
-                    asmState.ofs134, cppState.ofs134);
+        if (asmState.retryPassCounter != cppState.retryPassCounter) {
+            fprintf(s_comparisonLogFile, "  retryPassCounter: ASM=%d, C++=%d\n",
+                    asmState.retryPassCounter, cppState.retryPassCounter);
         }
-        if (asmState.ofs136 != cppState.ofs136) {
-            fprintf(s_comparisonLogFile, "  ofs136 (afterTouch): ASM=%d, C++=%d\n",
-                    asmState.ofs136, cppState.ofs136);
+        if (asmState.aiAfterTouchStrength != cppState.aiAfterTouchStrength) {
+            fprintf(s_comparisonLogFile, "  aiAfterTouchStrength: ASM=%d, C++=%d\n",
+                    asmState.aiAfterTouchStrength, cppState.aiAfterTouchStrength);
         }
-        if (asmState.ofs138 != cppState.ofs138) {
-            fprintf(s_comparisonLogFile, "  ofs138 (spinDir): ASM=%d, C++=%d\n",
-                    asmState.ofs138, cppState.ofs138);
+        if (asmState.aiBallSpinDirection != cppState.aiBallSpinDirection) {
+            fprintf(s_comparisonLogFile, "  aiBallSpinDirection: ASM=%d, C++=%d\n",
+                    asmState.aiBallSpinDirection, cppState.aiBallSpinDirection);
         }
         if (asmState.AITimer != cppState.AITimer) {
             fprintf(s_comparisonLogFile, "  AITimer: ASM=%d, C++=%d\n",
