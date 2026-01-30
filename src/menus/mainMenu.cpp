@@ -42,9 +42,9 @@ void initMainMenuGlobals()
 
     swos.g_exitMenu = 0;
     swos.fireResetFlag = 0;
-    swos.dseg_10E848 = 0;
-    swos.dseg_10E846 = 0;
-    swos.dseg_11F41C = -1;
+    swos.inCareerSeasonUpdate = 0;
+    swos.inDIYRestore = 0;
+    swos.viewTeamIndex = -1;
     swos.coachOrPlayer = 1;
     SetDefaultNameAndSurname();
     swos.plNationality = kEng;       // English is the default

@@ -1068,7 +1068,7 @@ cseg_89147:;
         flags.carry = (word)(dstSigned - srcSigned) > (word)dstSigned;
         flags.sign = (res & 0x8000) != 0;
         flags.zero = res == 0 != 0;
-    }                                       // cmp dseg_10E848, 1
+    }                                       // cmp inCareerSeasonUpdate, 1
     if (flags.zero)
         goto l_return_zero_flag_set;        // jz @@return_zero_flag_set
 
@@ -10093,7 +10093,7 @@ cseg_8ECF1:;
     goto cseg_8EE5D;                        // jmp cseg_8EE5D
 
 cseg_8ED49:;
-    *(word *)&g_memByte[317172] = 1;        // mov dseg_10E846, 1
+    *(word *)&g_memByte[317172] = 1;        // mov inDIYRestore, 1
     push(D0);                               // push D0
     push(A0);                               // push A0
     push(A1);                               // push A1
@@ -10135,7 +10135,7 @@ cseg_8ED49:;
     push(A1);                               // push A1
     RestoreSelectedTeams();                 // call RestoreSelectedTeams
     pop(A1);                                // pop A1
-    *(word *)&g_memByte[317172] = 0;        // mov dseg_10E846, 0
+    *(word *)&g_memByte[317172] = 0;        // mov inDIYRestore, 0
     A1 = 318643;                            // mov A1, offset DIY_competitionStart
     cseg_8EF2C();                           // call cseg_8EF2C
 
@@ -14376,7 +14376,7 @@ void cseg_91428()
     *(word *)&g_memByte[91732] = 0;         // mov playRelegatedAnimation, 0
     cseg_936C0();                           // call cseg_936C0
     SaveSelectedTeams();                    // call SaveSelectedTeams
-    *(word *)&g_memByte[317174] = 1;        // mov dseg_10E848, 1
+    *(word *)&g_memByte[317174] = 1;        // mov inCareerSeasonUpdate, 1
     ax = *(word *)&g_memByte[91676];        // mov ax, isNationalSelector
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
@@ -14475,7 +14475,7 @@ cseg_914F1:;
         goto l_fatal_error;                 // jnz short @@fatal_error
 
     cseg_92BBF();                           // call cseg_92BBF
-    *(word *)&g_memByte[317174] = 0;        // mov dseg_10E848, 0
+    *(word *)&g_memByte[317174] = 0;        // mov inCareerSeasonUpdate, 0
     RestoreSelectedTeams();                 // call RestoreSelectedTeams
     {
         word src = *(word *)&g_memByte[529844];

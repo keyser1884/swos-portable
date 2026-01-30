@@ -19688,7 +19688,7 @@ cseg_295D0:;
         flags.carry = (word)(dstSigned - srcSigned) > (word)dstSigned;
         flags.sign = (res & 0x8000) != 0;
         flags.zero = res == 0 != 0;
-    }                                       // cmp dseg_10E848, 1
+    }                                       // cmp inCareerSeasonUpdate, 1
     if (flags.zero)
         goto cseg_29628;                    // jz short cseg_29628
 

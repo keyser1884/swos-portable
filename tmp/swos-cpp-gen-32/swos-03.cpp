@@ -29263,9 +29263,9 @@ void ViewFutureTeamLeague()
     *(word *)&D0 = ax;                      // mov word ptr D0, ax
     esi = A1;                               // mov esi, A1
     ax = (word)readMemory(esi, 2);          // mov ax, [esi]
-    *(word *)&g_memByte[378420] = ax;       // mov dseg_11F41C, ax
+    *(word *)&g_memByte[378420] = ax;       // mov viewTeamIndex, ax
     cseg_3AA17();                           // call cseg_3AA17
-    *(word *)&g_memByte[378420] = 65535;    // mov dseg_11F41C, 0FFFFh
+    *(word *)&g_memByte[378420] = 65535;    // mov viewTeamIndex, 0FFFFh
     GotJobOfferFinish();                    // jmp GotJobOfferFinish
 }
 

@@ -21067,14 +21067,14 @@ cseg_3ABAD:;
 void cseg_3ABB2()
 {
     *(word *)&g_memByte[129476] = 1;        // mov dseg_E0052, 1
-    ax = *(word *)&g_memByte[317174];       // mov ax, dseg_10E848
+    ax = *(word *)&g_memByte[317174];       // mov ax, inCareerSeasonUpdate
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
     if (!flags.zero)
         goto cseg_3ABDA;                    // jnz short cseg_3ABDA
 
-    ax = *(word *)&g_memByte[317172];       // mov ax, dseg_10E846
+    ax = *(word *)&g_memByte[317172];       // mov ax, inDIYRestore
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
@@ -21164,14 +21164,14 @@ cseg_3ACC3:;
 
 cseg_3ACD9:;
     *(word *)&g_memByte[129476] = 1;        // mov dseg_E0052, 1
-    ax = *(word *)&g_memByte[317174];       // mov ax, dseg_10E848
+    ax = *(word *)&g_memByte[317174];       // mov ax, inCareerSeasonUpdate
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
     if (!flags.zero)
         goto cseg_3AD01;                    // jnz short cseg_3AD01
 
-    ax = *(word *)&g_memByte[317172];       // mov ax, dseg_10E846
+    ax = *(word *)&g_memByte[317172];       // mov ax, inDIYRestore
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
@@ -21226,14 +21226,14 @@ cseg_3AD01:;
 void cseg_3ADAE()
 {
     *(word *)&g_memByte[129476] = 1;        // mov dseg_E0052, 1
-    ax = *(word *)&g_memByte[317174];       // mov ax, dseg_10E848
+    ax = *(word *)&g_memByte[317174];       // mov ax, inCareerSeasonUpdate
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
     if (!flags.zero)
         goto cseg_3ADD6;                    // jnz short cseg_3ADD6
 
-    ax = *(word *)&g_memByte[317172];       // mov ax, dseg_10E846
+    ax = *(word *)&g_memByte[317172];       // mov ax, inDIYRestore
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
@@ -21294,14 +21294,14 @@ void cseg_3AE87()
     if (!flags.zero)
         goto cseg_3AEB3;                    // jnz short cseg_3AEB3
 
-    ax = *(word *)&g_memByte[317174];       // mov ax, dseg_10E848
+    ax = *(word *)&g_memByte[317174];       // mov ax, inCareerSeasonUpdate
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
     if (!flags.zero)
         goto cseg_3AEB3;                    // jnz short cseg_3AEB3
 
-    ax = *(word *)&g_memByte[317172];       // mov ax, dseg_10E846
+    ax = *(word *)&g_memByte[317172];       // mov ax, inDIYRestore
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
@@ -21476,7 +21476,7 @@ cseg_3B02A:;
         goto cseg_3B071;                    // ja short cseg_3B071
 
 cseg_3B03B:;
-    ax = *(word *)&g_memByte[317172];       // mov ax, dseg_10E846
+    ax = *(word *)&g_memByte[317172];       // mov ax, inDIYRestore
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
@@ -21546,7 +21546,7 @@ cseg_3B0E3:;
         flags.carry = (word)(dstSigned - srcSigned) > (word)dstSigned;
         flags.sign = (res & 0x8000) != 0;
         flags.zero = res == 0 != 0;
-    }                                       // cmp dseg_11F41C, 0FFFFh
+    }                                       // cmp viewTeamIndex, 0FFFFh
     if (!flags.zero)
         goto cseg_3B051;                    // jnz cseg_3B051
 
@@ -21600,14 +21600,14 @@ void cseg_3B18F()
     if (!flags.zero)
         goto cseg_3B1BB;                    // jnz short cseg_3B1BB
 
-    ax = *(word *)&g_memByte[317174];       // mov ax, dseg_10E848
+    ax = *(word *)&g_memByte[317174];       // mov ax, inCareerSeasonUpdate
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
     if (!flags.zero)
         goto cseg_3B1BB;                    // jnz short cseg_3B1BB
 
-    ax = *(word *)&g_memByte[317172];       // mov ax, dseg_10E846
+    ax = *(word *)&g_memByte[317172];       // mov ax, inDIYRestore
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
@@ -21806,7 +21806,7 @@ cseg_3B393:;
         goto cseg_3B3DA;                    // ja short cseg_3B3DA
 
 cseg_3B3A4:;
-    ax = *(word *)&g_memByte[317172];       // mov ax, dseg_10E846
+    ax = *(word *)&g_memByte[317172];       // mov ax, inDIYRestore
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
@@ -21902,7 +21902,7 @@ cseg_3B4B6:;
         flags.carry = (word)(dstSigned - srcSigned) > (word)dstSigned;
         flags.sign = (res & 0x8000) != 0;
         flags.zero = res == 0 != 0;
-    }                                       // cmp dseg_11F41C, 0FFFFh
+    }                                       // cmp viewTeamIndex, 0FFFFh
     if (!flags.zero)
         goto cseg_3B3BA;                    // jnz cseg_3B3BA
 
@@ -38854,7 +38854,7 @@ void cseg_45B51()
     *(word *)&g_memByte[501287] = ax;       // mov dseg_1773AA, ax
     ax = D2;                                // mov ax, word ptr D2
     *(word *)&g_memByte[501291] = ax;       // mov dseg_1773AE, ax
-    ax = *(word *)&g_memByte[317174];       // mov ax, dseg_10E848
+    ax = *(word *)&g_memByte[317174];       // mov ax, inCareerSeasonUpdate
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
@@ -38932,7 +38932,7 @@ cseg_45C20:;
 cseg_45C42:;
     *(word *)&g_memByte[318645] = 1;        // mov dseg_10EEAB, 1
     *(word *)&g_memByte[501301] = 0;        // mov dseg_1773B8, 0
-    ax = *(word *)&g_memByte[317174];       // mov ax, dseg_10E848
+    ax = *(word *)&g_memByte[317174];       // mov ax, inCareerSeasonUpdate
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
@@ -42672,7 +42672,7 @@ void ShowDiyLeaguesTournamentMenu()
     ax = D2;                                // mov ax, word ptr D2
     *(word *)&g_memByte[379904] = ax;       // mov dseg_11F9E8, ax
     cseg_883DD();                           // call cseg_883DD
-    ax = *(word *)&g_memByte[317174];       // mov ax, dseg_10E848
+    ax = *(word *)&g_memByte[317174];       // mov ax, inCareerSeasonUpdate
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
@@ -42732,7 +42732,7 @@ cseg_483F2:;
 
 cseg_48414:;
     *(word *)&g_memByte[318645] = 1;        // mov dseg_10EEAB, 1
-    ax = *(word *)&g_memByte[317174];       // mov ax, dseg_10E848
+    ax = *(word *)&g_memByte[317174];       // mov ax, inCareerSeasonUpdate
     flags.carry = false;
     flags.sign = (ax & 0x8000) != 0;
     flags.zero = ax == 0;                   // or ax, ax
@@ -44730,7 +44730,7 @@ cseg_49B48:;
     *(word *)&D3 = 9;                       // mov word ptr D3, 9
 
 cseg_49B65:;
-    ax = *(word *)&g_memByte[378420];       // mov ax, dseg_11F41C
+    ax = *(word *)&g_memByte[378420];       // mov ax, viewTeamIndex
     *(word *)&D0 = ax;                      // mov word ptr D0, ax
     esi = A1;                               // mov esi, A1
     ax = (word)readMemory(esi, 2);          // mov ax, [esi]

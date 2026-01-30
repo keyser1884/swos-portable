@@ -193,8 +193,8 @@ struct SwosVariables
     byte filler__0039[394];
     char importTacticsFilename[256];
     byte filler__0040[14];
-    word dseg_10E846;
-    word dseg_10E848;
+    word inDIYRestore;
+    word inCareerSeasonUpdate;
     byte filler__0041[410];
     word g_exitMenu;
     byte filler__0042[6306];
@@ -334,7 +334,7 @@ struct SwosVariables
     byte filler__0093[5779];
     SwosDataPointer<TeamTactics> g_tacticsTable[18];
     byte filler__0094[5580];
-    word dseg_11F41C;
+    word viewTeamIndex;
     byte filler__0095[294];
     const char saveFileTitle[70];
     byte filler__0096[78];
@@ -662,8 +662,8 @@ enum Offsets : uint32_t
     controlMask = 252400,
     twoPlayers = 316506,
     importTacticsFilename = 316902,
-    dseg_10E846 = 317172,
-    dseg_10E848 = 317174,
+    inDIYRestore = 317172,
+    inCareerSeasonUpdate = 317174,
     g_exitMenu = 317586,
     teamsLoaded = 323894,
     poolplyrLoaded = 323896,
@@ -749,7 +749,7 @@ enum Offsets : uint32_t
     g_currentMenu = 347300,
     skillsPerQuadrant = 366744,
     g_tacticsTable = 372768,
-    dseg_11F41C = 378420,
+    viewTeamIndex = 378420,
     saveFileTitle = 378716,
     chooseTacticsTeamPtr = 378864,
     kRandomTable = 379922,
