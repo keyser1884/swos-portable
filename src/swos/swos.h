@@ -90,9 +90,9 @@ struct MultilineText
 
 struct CharTable
 {
-    word unk1;
+    word reserved1;             // Unknown purpose
     word charHeight;
-    dword unk2;
+    dword reserved2;            // Unknown purpose
     word charSpacing;
     word spaceWidth;
     word spriteIndexOffset;
@@ -104,13 +104,13 @@ constexpr int kStdMenuTextSize = 70;
 /* sprite graphics structure - from *.dat files */
 struct SpriteGraphics {
     SwosDataPointer<unsigned char> data; /* pointer to actual graphics              */
-    char unk1[6];               /* unknown                                          */
+    char reserved[6];           /* unknown/unused                                   */
     int16_t width;              /* width (in pixels)                                */
     int16_t height;             /* height                                           */
     int16_t wquads;             /* (number of bytes / 8) in one line                */
     int16_t centerX;            /* center x coordinate                              */
     int16_t centerY;            /* center y coordinate                              */
-    byte unk2;                  /* unknown                                          */
+    byte flags;                 /* unkFlags in assembly                             */
     byte nlinesDiv4;            /* height / 4                                       */
     int16_t ordinal;            /* ordinal number in sprite.dat                     */
 
@@ -238,8 +238,8 @@ struct TeamFileHeader
     word globalTeamNumber;
     TeamControls teamControls;
     char teamName[17];
-    byte writesZeroHere;
-    byte andWith0xFE;
+    byte ownGoalsTotal;         // Own goals counter, incremented per goal
+    byte trainingGameFlags;     // Bit 0: training game played
     byte tactics;
     byte league;
     byte prShirtType;
@@ -253,7 +253,7 @@ struct TeamFileHeader
     byte secShortsColor;
     byte secSocksColor;
     byte coachName[23];
-    byte someFlag;
+    byte teamModifiedFlag;      // Set to 1 when team/tactics changed
     byte playerNumbers[kNumPlayersInTeam];
 };
 
@@ -262,7 +262,7 @@ static_assert(sizeof(TeamFileHeader) == 76, "TeamFile header is invalid");
 struct PlayerFile
 {
     byte nationality;
-    byte unk_1;
+    byte field_1;               // Unknown, related to player positions
     byte shirtNumber;
     char playerName[23];
     byte positionAndFace;
@@ -272,11 +272,11 @@ struct PlayerFile
     byte tacklingBallControl;
     byte speedFinishing;
     byte price;
-    byte unk_2;
-    byte unk_3;
-    byte unk_4;
-    byte unk_5;
-    byte someFlag;
+    byte field_21;              // Reset to 0 on new season
+    byte field_22;              // Reset to 0 on new season
+    byte field_23;              // Reset to 0 on new season
+    byte field_24;              // Reset to 0 on new season
+    byte playerModifiedFlag;    // Reset to 0 on new season
 };
 
 static_assert(sizeof(PlayerFile) == 38, "PlayerFile is invalid");
@@ -307,9 +307,9 @@ struct TeamGame
     word secSocksCol;
     int16_t markedPlayer;
     char teamName[17];
-    byte unk_1;
+    byte reserved1;             // Unknown purpose
     byte numOwnGoals;
-    byte unk_2;
+    byte reserved2;             // Unknown purpose
     PlayerGame players[kNumPlayersInTeam];
     byte unknownTail[686];
 };

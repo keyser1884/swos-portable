@@ -508,8 +508,8 @@ static void processPostGameData(TeamFile *team1, TeamFile *team2, int paramD7)
                 }
             }
         } else {
-            swos.gameTeam1->andWith0xFE |= 1;
-            swos.gameTeam2->andWith0xFE |= 1;
+            swos.gameTeam1->trainingGameFlags |= 1;
+            swos.gameTeam2->trainingGameFlags |= 1;
 
             A1 = &swos.topTeamInGame;
             A2 = team1;
